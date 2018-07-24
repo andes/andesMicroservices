@@ -1,0 +1,21 @@
+{
+  "name": "patient-validator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --project .",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/plex": "^3.2.5",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "http-status-codes": "^1.3.0",
+    "require-dir": "^1.0.0",
+    "typescript": "^2.9.2"
+  }
+}
