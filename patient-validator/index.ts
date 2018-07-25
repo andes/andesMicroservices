@@ -1,14 +1,18 @@
-import { initAPI } from '../bootstrap/initialization';
-import * as express from 'express';
+import { Microservice, MSRouter, Middleware } from 'bootstrap';
 
-const app = express();
-const router = express.Router();
+let ms = new Microservice();
 
-router.get('/example', (req, res) => {
-    res.json({msg: 'This is an example'})
+const router = MSRouter();
+
+router.group('/example', (group) => {
+    group.use(Middleware.authenticate());
+    group.get('/', (_req, res) => {
+        res.json({msg: 'This is an example'});
+    });
+    group.get('/all', (_req, res) => {
+        res.json({msg: 'ALL'});
+    });
 });
 
-initAPI(app, router);
-
-let port = process.env.PORT ||  7777;
-let server = app.listen(port, () => console.log(port));
+ms.add(router);
+ms.start();
