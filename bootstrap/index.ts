@@ -8,11 +8,11 @@ import * as debug from 'debug';
 const log = debug('bootstrap');
 
 interface MSRouter extends express.Router {
-    group (path:String, callback: (router: MSRouter) => void) : void;
-    group (callback: (router: MSRouter) => void) : void;
+    group (path: String, callback: (router: MSRouter) => void): void;
+    group (callback: (router: MSRouter) => void): void;
 }
 
-export function MSRouter () : MSRouter {
+export function MSRouter (): MSRouter {
     let r = express.Router.apply(this, arguments);
     r.group = function (arg1, arg2) {
         let fn, path;
@@ -21,9 +21,9 @@ export function MSRouter () : MSRouter {
             fn = arg1;
         } else {
             path = arg1;
-            fn = arg2
+            fn = arg2;
         }
-    
+
         let router = MSRouter();
         fn(router);
         this.use(path, router);
@@ -32,7 +32,7 @@ export function MSRouter () : MSRouter {
     return r;
 }
 
-export function Router () : express.Router {
+export function Router (): express.Router {
     return express.Router();
 }
 
@@ -41,8 +41,9 @@ export { Middleware } from './auth';
 export class Microservice {
     private _app: Express;
     private _routes: any[] = [];
-    constructor () {
-
+    private _info: any;
+    constructor (info) {
+        this._info = info;
     }
 
     add (router) {
@@ -63,6 +64,13 @@ export class Microservice {
 
         app.get('/alive', (_req, res) => {
             res.json({ status: 'OK' });
+        });
+
+        app.get('/version', (req, res) => {
+            res.json({
+                name: this._info.name,
+                version: this._info.version
+            });
         });
 
         for (let router of this._routes) {

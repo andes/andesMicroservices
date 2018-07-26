@@ -1,6 +1,7 @@
 import { Microservice, MSRouter, Middleware } from 'bootstrap';
+let pkg = require('./package.json');
 
-let ms = new Microservice();
+let ms = new Microservice(pkg);
 
 const router = MSRouter();
 
