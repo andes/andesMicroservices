@@ -12,12 +12,13 @@ const router = MSRouter();
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar/:efector', (req: any, res) => {
-        console.log("Borye: ", req.body);
+        // console.log("Borye: ", req.body);
         let cs = configPrivate.efectores;
         let target = req.params.efector;
+        let dni = req.body.data.documento;
 
         if (cs.indexOf(target, 0) >= 0) {
-            ejecutaCDA.ejecutar(target);
+            ejecutaCDA.ejecutar(target, dni);
         } else {
             // console.log('Para ejecutar este proceso correctamente, deberá pasar como argumento algo de los siguientes: ', cs);
             // console.log('Ejemplo: node lib/scheduler.js heller');

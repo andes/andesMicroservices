@@ -2,16 +2,16 @@ import * as Sistemas from './queries/sistemas';
 import * as Verificator from './verificaCDA';
 import { CdaBuilder } from './../service/cda.service';
 
-const sql = require('mssql')
+const sql = require('mssql');
 
-export async function ejecutar(target) {
+export async function ejecutar(target, dni) {
     // Paso 1: llamamos al Motor de base de datos que nos devuelve un array de prestaciones
 
     sql.close();
     let counter = 0;
 
     /* Ejecuta la consulta del hospital pasado por parámetro*/
-    let data = Sistemas.getTargetQuery(target);
+    let data = Sistemas.getTargetQuery(target, dni);
 
     let pool = await sql.connect(data.connectionString);
     let resultado = await Sistemas.getData(data.query, pool);
@@ -26,7 +26,6 @@ export async function ejecutar(target) {
                 await generarCDA(dto);
 
             } else {
-                console.log('Motivo de error desde la verificación: ', dto.msgError);
                 // Inserta en la colección de cda Rejected debido a que no cumplió la verificación básica
                 let info = {
                     idPrestacion: dto.id,
@@ -39,17 +38,12 @@ export async function ejecutar(target) {
                     try {
                         let cdaBuilder = new CdaBuilder();
                         let res = await cdaBuilder.build(dto);
-                        // res = JSON.parse(res);
-
-                        console.log('finaliza de generar el cda e insertar en la bd y continua con el siguiente');
                         resolve();
                     } catch (ex) {
                         reject(ex);
                     }
-                })
+                });
             }
-            counter = counter + 1;
-            console.log('cantidad hasta el momento: ', counter);
             if (counter >= resultado.recordset.length) {
                 console.log('Proceso finalizado... y sigue escuchando');
                 // pool.close();

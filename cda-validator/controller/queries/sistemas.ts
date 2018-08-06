@@ -1,11 +1,11 @@
 import * as ConfigPrivate from './../../config.private';
 let sql = require('mssql');
 
-export function getTargetQuery(target) {
+export function getTargetQuery(target, dni) {
     let query;
     let connectionString;
     let data;
-
+    console.log('El dni: ', dni);
     switch (target) {
         case 'hpn':
             {
@@ -17,7 +17,7 @@ export function getTargetQuery(target) {
                     database: ConfigPrivate.staticConfiguration.hpn.database,
                     requestTimeout: 20000
                 },
-                query = `select top(10) 
+                query = `select
                 -- Id
                 ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo)) as id,
                 --
@@ -50,12 +50,12 @@ export function getTargetQuery(target) {
                 'Especialidad: ' + Turnos_Especialidades.Nombre COLLATE SQL_Latin1_General_CP1_CI_AI + '<br><br>' + ('Diagnóstico: ' + ISNULL(diagnostico1, 'Sin diagnóstico')) as texto
                 -- Tablas
                 FROM Turnos_Agendas_de_Consultorios  
-                INNER JOIN Personal_Agentes ON Agente = Personal_Agentes.Numero  
+                INNER JOIN Personal_Agentes ON Agente = Personal_Agentes.Numero
                 INNER JOIN Turnos_AgendasPP ON app = Turnos_AgendasPP.codigo
                 INNER JOIN Turnos_Especialidades ON Turnos_AgendasPP.Especialidad = Turnos_Especialidades.codigo
                 LEFT JOIN Turnos_RegistrosConsultorio ON Turnos_Agendas_de_Consultorios.Codigo = Turnos_RegistrosConsultorio.Agenda
                 INNER JOIN Historias_Clinicas ON Paciente = HC_Numero AND HC_Tipo_de_documento <> 'SN'
-                WHERE Turnos_Agendas_de_Consultorios.Estado = 1 `;
+                WHERE Turnos_Agendas_de_Consultorios.Estado = 1 and Historias_Clinicas.HC_Documento = '` + dni + `'`;
                 break;
             }
         case 'heller':
@@ -156,10 +156,8 @@ export function getData(query, pool): any {
     return new Promise(async (resolve, reject) => {
         pool.request().query(query, function(err, recordSet) {
             if (err) {
-                console.log('Error: ', err);
                 reject(err);
             }
-            console.log('Obtuvo resultado ok');
             resolve(recordSet);
         });
     })
