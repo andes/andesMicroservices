@@ -149,9 +149,7 @@ export function getTargetQuery(target) {
         connectionString: connectionString,
         query: query
     };
-
 }
-
 
 // Consulta generica
 export function getData(query, pool): any {
@@ -165,34 +163,4 @@ export function getData(query, pool): any {
             resolve(recordSet);
         });
     })
-}
-
-// Inserta la información
-export function insertData(cdaInfo, pool): any {
-    return new Promise(async (resolve, reject) => {
-        let insertQuery = ConfigPrivate.createInsertQuery(cdaInfo);
-        await pool.request().query(insertQuery), (err, result) => {
-            if (err) {
-                console.log('insert error: ', err);
-                reject(err);
-            }
-            console.log('inserto de primavera!!');
-            resolve(result);
-        };
-    })
-}
-
-// Insert rejection
-export function insertRejection(info, pool):any {
-    return new Promise(async (resolve, reject) => {
-        let insertQuery = ConfigPrivate.createInsertRejectQuery(info);
-        await pool.request().query(insertQuery), (err, result) => {
-            if (err) {
-                console.log('insert reject error: ', err);
-                reject(err);
-            }
-            console.log('Inserto en la tabla de rejectados debido a un error en los datos');
-            resolve(result);
-        }
-    });
 }
