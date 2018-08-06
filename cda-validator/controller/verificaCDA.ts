@@ -66,7 +66,7 @@ export function verificar(registro): any {
     let notError = true;
     let msgError = '';
     let paciente;
-    let pacienteVerified:any = vPaciente(registro);
+    let pacienteVerified: any = vPaciente(registro);
     if (pacienteVerified) {
         dto['paciente'] = pacienteVerified;
     } else {

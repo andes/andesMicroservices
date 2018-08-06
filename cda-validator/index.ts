@@ -11,9 +11,8 @@ const router = MSRouter();
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
-    group.get('/ejecutar/:efector', (req: any, res) => {
-        // res.json({msg: 'This is an capo'});
-
+    group.post('/ejecutar/:efector', (req: any, res) => {
+        console.log("Borye: ", req.body);
         let cs = configPrivate.efectores;
         let target = req.params.efector;
 
