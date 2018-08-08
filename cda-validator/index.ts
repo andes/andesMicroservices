@@ -16,18 +16,15 @@ router.group('/cda', (group) => {
 
         let target = req.params.efector;
         let paciente = req.body;
-        
+
         let listaEfectores = Object.keys(efectores);
         var index = listaEfectores.indexOf(target);
 
         if (index !== -1) {
             ejecutaCDA.ejecutar(target, paciente);
         } else {
-            console.log('Para ejecutar este proceso correctamente, deberá pasar como argumento algo de los siguientes: ', prop);
+            console.log('Para ejecutar este proceso correctamente, deberá pasar como argumento alguno de los siguientes efectores: ', listaEfectores);
         }
-    });
-    group.get('/all', (_req, res) => {
-        res.json({ msg: 'ALL' });
     });
 });
 

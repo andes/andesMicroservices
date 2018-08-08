@@ -16,14 +16,25 @@ export async function ejecutar(target, paciente) {
     // let data = Sistemas.getTargetQuery(target, dni);
     let query = new Queries();
     let data;
-    console.log("Targett :", target);
-    if (target === efector.hpn) {
-        data = await query.hpn(paciente);
-    } else if (target === efector.heller) {
-        data = await query.heller(paciente);
-    } else if (target === efector.sips) {
-        data = await query.sips(paciente);
-    } 
+
+    switch (target) {
+        case efector.hpn: {
+            data = await query.hpn(paciente);
+            break;
+        }
+        case efector.heller: {
+            data = await query.heller(paciente);
+            break;
+        }
+        case efector.sips: {
+            data = await query.sips(paciente);
+            break;
+        }
+        default: {
+            console.log('El efector ingresado no existe!');
+            break;
+        }
+    }
 
     let pool = await sql.connect(data.connectionString);
     let resultado = await Sistemas.getData(data.query, pool);

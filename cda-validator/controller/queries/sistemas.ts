@@ -116,13 +116,13 @@ export function getTargetQuery(target, dni) {
             }
         default: // SIPS NIVEL CENTRAL: Todos los C.S.
             {
-                let sipsInstance: any = ConfigPrivate.getSipsInstance(target);
-                connectionString = {
-                    user: sipsInstance.user,
-                    password: sipsInstance.password,
-                    server: sipsInstance.ip,
-                    database: sipsInstance.database
-                },
+                // let sipsInstance: any = ConfigPrivate.getSipsInstance(target);
+                // connectionString = {
+                //     user: sipsInstance.user,
+                //     password: sipsInstance.password,
+                //     server: sipsInstance.ip,
+                //     database: sipsInstance.database
+                // },
                 query =
                 `select top(10) 
                 consulta.idConsulta as id, 
