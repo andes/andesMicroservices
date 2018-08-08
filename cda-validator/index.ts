@@ -2,6 +2,7 @@ import { Microservice, MSRouter, Middleware } from './../bootstrap';
 let pkg = require('./package.json');
 import * as configPrivate from './config.private';
 import * as ejecutaCDA from './controller/ejecutaCDA';
+import * as efectores from './constantes';
 
 let ms = new Microservice(pkg);
 
@@ -12,16 +13,17 @@ const router = MSRouter();
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar/:efector', (req: any, res) => {
-        // console.log("Borye: ", req.body);
-        let cs = configPrivate.efectores;
-        let target = req.params.efector;
-        let dni = req.body.data.documento;
 
-        if (cs.indexOf(target, 0) >= 0) {
-            ejecutaCDA.ejecutar(target, dni);
+        let target = req.params.efector;
+        let paciente = req.body;
+        
+        let listaEfectores = Object.keys(efectores);
+        var index = listaEfectores.indexOf(target);
+
+        if (index !== -1) {
+            ejecutaCDA.ejecutar(target, paciente);
         } else {
-            // console.log('Para ejecutar este proceso correctamente, deberá pasar como argumento algo de los siguientes: ', cs);
-            // console.log('Ejemplo: node lib/scheduler.js heller');
+            console.log('Para ejecutar este proceso correctamente, deberá pasar como argumento algo de los siguientes: ', prop);
         }
     });
     group.get('/all', (_req, res) => {

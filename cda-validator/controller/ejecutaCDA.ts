@@ -1,17 +1,29 @@
 import * as Sistemas from './queries/sistemas';
+import { Queries } from './queries/queries';
 import * as Verificator from './verificaCDA';
 import { CdaBuilder } from './../service/cda.service';
+import * as efector from './../constantes';
 
 const sql = require('mssql');
 
-export async function ejecutar(target, dni) {
+export async function ejecutar(target, paciente) {
     // Paso 1: llamamos al Motor de base de datos que nos devuelve un array de prestaciones
 
     sql.close();
     let counter = 0;
 
     /* Ejecuta la consulta del hospital pasado por parámetro*/
-    let data = Sistemas.getTargetQuery(target, dni);
+    // let data = Sistemas.getTargetQuery(target, dni);
+    let query = new Queries();
+    let data;
+    console.log("Targett :", target);
+    if (target === efector.hpn) {
+        data = await query.hpn(paciente);
+    } else if (target === efector.heller) {
+        data = await query.heller(paciente);
+    } else if (target === efector.sips) {
+        data = await query.sips(paciente);
+    } 
 
     let pool = await sql.connect(data.connectionString);
     let resultado = await Sistemas.getData(data.query, pool);
