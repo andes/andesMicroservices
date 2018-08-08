@@ -154,22 +154,33 @@ export class Queries {
         where NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = consulta.idConsulta)
         AND NOT EXISTS (SELECT * FROM AndesCDARejected where idPrestacion = consulta.idConsulta)
         and pac.numeroDocumento = '` + this.dni + `'`;
-console.log("Queryy: ", this.query);
+        console.log("Queryy: ", this.query);
         return this.data = {
             connectionString: this.connectionString,
             query: this.query
         };
     }
+
+    public getData(query, pool): any {
+        return new Promise(async (resolve, reject) => {
+            pool.request().query(query, function (err, recordSet) {
+                if (err) {
+                    reject(err);
+                }
+                resolve(recordSet);
+            });
+        });
+    }
 }
 
 // Consulta generica
-export function getData(query, pool): any {
-    return new Promise(async (resolve, reject) => {
-        pool.request().query(query, function (err, recordSet) {
-            if (err) {
-                reject(err);
-            }
-            resolve(recordSet);
-        });
-    })
-}
+// export function getData(query, pool): any {
+//     return new Promise(async (resolve, reject) => {
+//         pool.request().query(query, function (err, recordSet) {
+//             if (err) {
+//                 reject(err);
+//             }
+//             resolve(recordSet);
+//         });
+//     })
+// }

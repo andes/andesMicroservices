@@ -1,4 +1,4 @@
-import * as Sistemas from './queries/sistemas';
+// import * as Sistemas from './queries/sistemas';
 import { Queries } from './queries/queries';
 import * as Verificator from './verificaCDA';
 import { CdaBuilder } from './../service/cda.service';
@@ -37,7 +37,7 @@ export async function ejecutar(target, paciente) {
     }
 
     let pool = await sql.connect(data.connectionString);
-    let resultado = await Sistemas.getData(data.query, pool);
+    let resultado = await query.getData(data.query, pool);
 
     if (resultado.recordset.length > 0) {
         resultado.recordset.forEach(async r => {
