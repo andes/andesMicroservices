@@ -1,4 +1,3 @@
-// import * as Sistemas from './queries/sistemas';
 import { Queries } from './queries/queries';
 import * as Verificator from './verificaCDA';
 import { CdaBuilder } from './../service/cda.service';

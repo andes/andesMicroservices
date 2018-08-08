@@ -8,8 +8,6 @@ let ms = new Microservice(pkg);
 
 const router = MSRouter();
 
-// Empezar a codear como loco!!!!!!!!!
-
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar/:efector', (req: any, res) => {

@@ -38,7 +38,7 @@ function vPrestacion(prestacionNombre) {
 // TODO Verificar que sea un código snomed o sino que lo busque en la colección de configuracionPrestaciones
     let prestacion = null;
     if (prestacionNombre) {
-      prestacion = prestacionNombre;          
+      prestacion = prestacionNombre;
     }
     return prestacion;
 }
@@ -113,7 +113,7 @@ export function verificar(registro): any {
     }
 
     if (notError) {
-        return dto
+        return dto;
     } else {
         dto['msgError'] = msgError;
     }
