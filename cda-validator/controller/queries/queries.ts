@@ -16,8 +16,8 @@ export class Queries {
             database: ConfigPrivate.staticConfiguration.hpn.database,
             requestTimeout: 20000
         };
-
-        this.dni = paciente.documento;
+        console.log("Paciente: ", paciente.paciente.documento);
+        this.dni = paciente.paciente.documento;
 
         this.query = `
         select
