@@ -30,7 +30,6 @@ export async function ejecutar(target, paciente) {
             break;
         }
         default: {
-            console.log('El efector ingresado no existe!');
             break;
         }
     }
@@ -41,40 +40,34 @@ export async function ejecutar(target, paciente) {
     if (resultado.recordset.length > 0) {
         resultado.recordset.forEach(async r => {
             // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar 
-            let dto = Verificator.verificar(r);
-
-            if (dto && !dto.msgError) {
+            let dto = await Verificator.verificar(r);
+            // console.log('El dto es: ', dto);
+            if (dto) {
                 // Paso 3: Invocamos a la función que genera el CDA por cada documento
+                // console.log('El dto antes de gnerar: ', dto);
                 await generarCDA(dto);
 
-            } else {
-                // Inserta en la colección de cda Rejected debido a que no cumplió la verificación básica
-                let info = {
-                    idPrestacion: dto.id,
-                    msgError: 'No cumple varificación básica: ' + dto.msgError
-                };
             }
-
-            function generarCDA(dto) {
+            function generarCDA(objecto) {
                 return new Promise(async (resolve: any, reject: any) => {
                     try {
                         let cdaBuilder = new CdaBuilder();
-                        let res = await cdaBuilder.build(dto);
-                        resolve();
+                        console.log('El objeto: ', objecto);
+                        let c = await cdaBuilder.build(objecto);
+                        resolve(c);
                     } catch (ex) {
+                        console.log('palo: ', ex);
                         reject(ex);
                     }
                 });
             }
             if (counter >= resultado.recordset.length) {
                 console.log('Proceso finalizado... y sigue escuchando');
-                // pool.close();
-            } else {
-                console.log('Continúa el procesamiento de información....');
+                pool.close();
             }
         });
     } else {
-        // pool.close();
+        pool.close();
         console.log('No me trajo registros....');
     }
 }

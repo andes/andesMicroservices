@@ -1,3 +1,6 @@
+import { InformBuilder } from './../service/inform.service';
+import { resolve } from 'dns';
+
 let moment = require('moment');
 
 function vPaciente(registro) {
@@ -10,13 +13,10 @@ function vPaciente(registro) {
         fechaNacimiento: registro.pacienteFechaNacimiento ? registro.pacienteFechaNacimiento : null
     }
     if (paciente.nombre && paciente.apellido && paciente.sexo && paciente.fechaNacimiento && paciente.documento) {
-        // TODO
-        // Chequear que la fecha de nacimiento no sea raro como 1900, etc
-        // Ver si es necesario realizar alguna transformación de sexo
         paciente.sexo = (paciente.sexo === 'Femenino') ? 'femenino' : 'masculino';
-        return paciente
+        return paciente;
     } else {
-        return null
+        return null;
     }
 }
 
@@ -25,17 +25,16 @@ function vProfesional(registro) {
         documento : registro.profesionalDocumento ? registro.profesionalDocumento.toString() : null,
         nombre : registro.profesionalNombre ? registro.profesionalNombre : null,
         apellido : registro.profesionalApellido ? registro.profesionalApellido : null,
-    }
+    };
     if (profesional.nombre && profesional.apellido && profesional.documento) {
-        // TODO: Ver si hace falta transformar el sexo
-        return profesional
+        return profesional;
     } else {
-        return null
+        return null;
     }
 }
 
 function vPrestacion(prestacionNombre) {
-// TODO Verificar que sea un código snomed o sino que lo busque en la colección de configuracionPrestaciones
+// TODO Verificar que sea el código correspondiente y que existe en configuracionPrestaciones
     let prestacion = null;
     if (prestacionNombre) {
       prestacion = prestacionNombre;
@@ -49,11 +48,23 @@ function vCie10(cie10) {
     if (cie10) {
         return cie10;
     } else {
-        return c
+        return c;
     }
 }
 
-export function verificar(registro): any {
+async function getInform(url) {
+    return new Promise(async(resolve, reject) =>  {
+        try {
+            let informBuilder = new InformBuilder();
+            let informe = await informBuilder.build(url);
+            resolve(informe);
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+export async function verificar(registro) {
     let dto = {
         paciente: null,
         profesional: null,
@@ -61,11 +72,11 @@ export function verificar(registro): any {
         fecha: null,
         id: null,
         cie10: null,
+        file: null,
         texto: null
-    }
+    };
     let notError = true;
     let msgError = '';
-    let paciente;
     let pacienteVerified: any = vPaciente(registro);
     if (pacienteVerified) {
         dto['paciente'] = pacienteVerified;
@@ -88,6 +99,7 @@ export function verificar(registro): any {
         notError = false;
         msgError = 'La prestación no existe';
     }
+
     notError = registro.fecha ? true : false;
     notError = registro.id ? true : false;
 
@@ -101,9 +113,17 @@ export function verificar(registro): any {
     if (notError) {
         let cie10Verified = vCie10(registro.cie10);
         if (cie10Verified && notError) {
-            dto['cie10'] = registro.cie10; 
+            dto['cie10'] = registro.cie10;
         } else {
             msgError = 'El código CIE10 no es válido';
+        }
+    }
+
+    // No Obligatorio
+    if (notError) {
+        if (registro.url) {
+            dto['file'] = await getInform(registro.url);
+            console.log('luego del getInform');
         }
     }
 
@@ -112,9 +132,9 @@ export function verificar(registro): any {
         dto['texto'] = registro.texto ? registro.texto : null;
     }
 
-    if (notError) {
-        return dto;
-    } else {
-        dto['msgError'] = msgError;
+    if (!notError) {
+        dto = null;
     }
+
+    return dto;
 }

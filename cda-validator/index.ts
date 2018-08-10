@@ -1,6 +1,5 @@
 import { Microservice, MSRouter, Middleware } from './../bootstrap';
 let pkg = require('./package.json');
-import * as configPrivate from './config.private';
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import * as efectores from './constantes';
 
@@ -13,15 +12,13 @@ router.group('/cda', (group) => {
     group.post('/ejecutar/:efector', (req: any, res) => {
 
         let target = req.params.efector;
-        let paciente = req.body;
-
+        let paciente = req.body.data;
+        // Modificar aca y poner un foreach para hacer la consulta para cada efector
         let listaEfectores = Object.keys(efectores);
         var index = listaEfectores.indexOf(target);
 
         if (index !== -1) {
             ejecutaCDA.ejecutar(target, paciente);
-        } else {
-            console.log('Para ejecutar este proceso correctamente, deberá pasar como argumento alguno de los siguientes efectores: ', listaEfectores);
         }
     });
 });

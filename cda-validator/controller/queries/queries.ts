@@ -17,47 +17,38 @@ export class Queries {
             requestTimeout: 20000
         };
 
-        this.dni = paciente.paciente.documento;
+        this.dni = paciente.documento;
 
-        this.query = `select
-                            -- Id
-                            ('T-' + CONVERT(varchar(max), Turnos_Agendas_de_Consultorios.Codigo)) as id,
-                            --
-                            -- Turnos_Especialidades.SNOMED
-                            ISNULL(Turnos_Especialidades.SNOMED, 391000013108) as prestacion,
-                            -- ID Efector HPN/Heller
-                            205 as idEfector,
-                            -- Fecha prestacion
-                            Turnos_Agendas_de_Consultorios.Fecha as fecha,
-                            -- Paciente
-                            Historias_Clinicas.HC_Documento as pacienteDocumento,
-                            Historias_Clinicas.HC_Nombre as pacienteNombre,
-                            Historias_Clinicas.HC_Apellido as pacienteApellido,
-                            Historias_Clinicas.HC_Nacimiento_Fecha as pacienteFechaNacimiento,
-                            Historias_Clinicas.HC_Sexo as pacienteSexo,
-                            -- Profesional
-                            Personal_Agentes.Documento as profesionalDocumento,
-                            Personal_Agentes.Nombre as profesionalNombre,
-                            Personal_Agentes.Apellido as profesionalApellido,
-                            NULL as profesionalMatricula,
-                            -- Código CIE sin texto. Ejemplo: J10.5
-                            (CASE diagnostico1_CIE10_subcausa
-                            WHEN '(Sin subtipo)' THEN RTRIM(SUBSTRING(diagnostico1_CIE10_causa, 1, CHARINDEX(' ', diagnostico1_CIE10_causa))) 
-                            WHEN '((Diagnóstico ilegible))' THEN NULL
-                            WHEN '(Sin especificar)' THEN NULL
-                            WHEN '((Normal))' THEN NULL
-                            ELSE RTRIM(SUBSTRING(diagnostico1_CIE10_subcausa, 1, CHARINDEX(' ', diagnostico1_CIE10_subcausa)))
-                            END) as cie10,
-                            -- Texto (si existe)
-                            'Especialidad: ' + Turnos_Especialidades.Nombre COLLATE SQL_Latin1_General_CP1_CI_AI + '<br><br>' + ('Diagnóstico: ' + ISNULL(diagnostico1, 'Sin diagnóstico')) as texto
-                            -- Tablas
-                            FROM Turnos_Agendas_de_Consultorios
-                            INNER JOIN Personal_Agentes ON Agente = Personal_Agentes.Numero
-                            INNER JOIN Turnos_AgendasPP ON app = Turnos_AgendasPP.codigo
-                            INNER JOIN Turnos_Especialidades ON Turnos_AgendasPP.Especialidad = Turnos_Especialidades.codigo
-                            LEFT JOIN Turnos_RegistrosConsultorio ON Turnos_Agendas_de_Consultorios.Codigo = Turnos_RegistrosConsultorio.Agenda
-                            INNER JOIN Historias_Clinicas ON Paciente = HC_Numero AND HC_Tipo_de_documento <> 'SN'
-                            WHERE Turnos_Agendas_de_Consultorios.Estado = 1 and Historias_Clinicas.HC_Documento = '` + this.dni + `'`;
+        this.query = `
+        select
+        -- Id
+        ('P-' + CONVERT(varchar(max), Prestaciones.id)) as id,
+        -- SNOMED
+        convert(varchar,391000013108) as prestacion,
+        -- ID Efector HPN/Heller
+        205 as idEfector,
+        -- Fecha prestacion
+        Prestaciones.fechaHora as fecha,
+        -- Paciente
+        Pacientes.documento as pacienteDocumento,
+        Pacientes.nombre as pacienteNombre,
+        Pacientes.apellido as pacienteApellido,
+        Pacientes.nacimientoFecha as pacienteFechaNacimiento,
+		Sexos.nombre as pacienteSexo,
+        -- Profesional
+        Medicos.documento as profesionalDocumento,
+        Medicos.nombre as profesionalNombre,
+        Medicos.apellido as profesionalApellido,
+        Medicos.matriculaProvincial as profesionalMatricula,
+        url = 'http://10.1.72.7/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
+        -- Tablas
+        FROM Prestaciones
+		INNER JOIN Prestaciones_Tipos ON idTipo = Prestaciones_Tipos.id
+        INNER JOIN Pacientes ON Prestaciones.idPaciente = Pacientes.id
+        INNER JOIN Medicos ON Medicos.id = (SELECT TOP 1 idProfesional FROM Prestaciones_InformeProfesionales WHERE Prestaciones_InformeProfesionales.idPrestacion = Prestaciones.id)
+        INNER JOIN Sexos on Sexos.id = Pacientes.idSexo
+		WHERE (SELECT TOP 1 idEstado FROM Prestaciones_HistorialEstados WHERE Prestaciones_HistorialEstados.idPrestacion = Prestaciones.id ORDER BY Prestaciones_HistorialEstados.fechaHora DESC) = 100
+		and pacientes.documento = '` + this.dni + `'`;
 
         return this.data = {
             connectionString: this.connectionString,
@@ -78,7 +69,7 @@ export class Queries {
 
         this.dni = paciente.paciente.documento;
 
-        this.query = `select 
+        this.query = `select
                                     replace(CNS_TipoConsultorio.Descripcion,' ','') + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
                                     convert(varchar,391000013108) as prestacion,
                                         999 as idEfector,
@@ -93,7 +84,7 @@ export class Queries {
                                         WHEN CHARINDEX(' ', Profesionales.[Apellido y nombre]) >=1 THEN SUBSTRING(Profesionales.[Apellido y nombre],CHARINDEX(' ', Profesionales.[Apellido y nombre])+1,30 )
                                         ELSE NULL
                                         END as profesionalNombre,
-                                    CASE 
+                                    CASE
                                         WHEN CHARINDEX(' ', Profesionales.[Apellido y nombre]) >=1 THEN LEFT(Profesionales.[Apellido y nombre],CHARINDEX(' ', Profesionales.[Apellido y nombre])-1 )
                                         ELSE Profesionales.[Apellido y nombre]
                                         END  as profesionalApellido,
@@ -154,7 +145,7 @@ export class Queries {
                     where NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = consulta.idConsulta)
                     AND NOT EXISTS (SELECT * FROM AndesCDARejected where idPrestacion = consulta.idConsulta)
                     and pac.numeroDocumento = '` + this.dni + `'`;
-        
+
         return this.data = {
             connectionString: this.connectionString,
             query: this.query
@@ -167,6 +158,7 @@ export class Queries {
                 if (err) {
                     reject(err);
                 }
+                console.log('La query a ejecutar: ', query);
                 resolve(recordSet);
             });
         });

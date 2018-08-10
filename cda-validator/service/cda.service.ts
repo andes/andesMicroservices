@@ -17,8 +17,10 @@ export class CdaBuilder {
                     'Content-Type': 'application/json',
                 }
             };
+            console.log('antes del request');
             let req = http.request(options, function (res) {
                 res.on('data', function (body) {
+                    console.log('El body: ', body.toString());
                     resolve(body.toString());
                 });
             });
