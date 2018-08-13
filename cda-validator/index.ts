@@ -2,10 +2,8 @@ import { Microservice, MSRouter, Middleware } from './../bootstrap';
 let pkg = require('./package.json');
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import * as efectores from './constantes';
-import * as bodyParser from 'body-parser';
 
 let ms = new Microservice(pkg);
-
 const router = MSRouter();
 
 router.group('/cda', (group) => {

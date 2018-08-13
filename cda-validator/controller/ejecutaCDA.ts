@@ -7,15 +7,10 @@ const sql = require('mssql');
 
 export async function ejecutar(target, paciente) {
     // Paso 1: llamamos al Motor de base de datos que nos devuelve un array de prestaciones
-
-    sql.close();
+    // sql.close();
     let counter = 0;
-
-    /* Ejecuta la consulta del hospital pasado por parámetro*/
-    // let data = Sistemas.getTargetQuery(target, dni);
     let query = new Queries();
     let data;
-
     switch (target) {
         case efector.hpn: {
             data = await query.hpn(paciente);
@@ -39,7 +34,7 @@ export async function ejecutar(target, paciente) {
 
     if (resultado.recordset.length > 0) {
         resultado.recordset.forEach(async r => {
-            // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar 
+            // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar
             let dto = await Verificator.verificar(r);
             // console.log('El dto es: ', dto);
             if (dto) {
