@@ -10,6 +10,7 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "base-64": "^0.1.0"
+    "base-64": "^0.1.0",
+    "base64-async": "^2.1.3"
   }
 }

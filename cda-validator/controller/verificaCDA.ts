@@ -123,7 +123,6 @@ export async function verificar(registro) {
     if (notError) {
         if (registro.url) {
             dto['file'] = await getInform(registro.url);
-            console.log('luego del getInform');
         }
     }
 

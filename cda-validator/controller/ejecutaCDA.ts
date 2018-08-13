@@ -46,28 +46,24 @@ export async function ejecutar(target, paciente) {
                 // Paso 3: Invocamos a la función que genera el CDA por cada documento
                 // console.log('El dto antes de gnerar: ', dto);
                 await generarCDA(dto);
-
             }
             function generarCDA(objecto) {
                 return new Promise(async (resolve: any, reject: any) => {
                     try {
                         let cdaBuilder = new CdaBuilder();
-                        console.log('El objeto: ', objecto);
+                        // console.log('El objeto: ', objecto);
                         let c = await cdaBuilder.build(objecto);
                         resolve(c);
                     } catch (ex) {
-                        console.log('palo: ', ex);
                         reject(ex);
                     }
                 });
             }
             if (counter >= resultado.recordset.length) {
-                console.log('Proceso finalizado... y sigue escuchando');
                 pool.close();
             }
         });
     } else {
         pool.close();
-        console.log('No me trajo registros....');
     }
 }
