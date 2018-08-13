@@ -141,9 +141,7 @@ export class Queries {
                     inner join Sys_CIE10 as cie on consultaD.CODCIE10 = cie.ID
                     inner join Sys_Profesional as prof on consulta.idProfesional = prof.idProfesional
                     inner join Sys_Efector as efector on consulta.idEfector = efector.idEfector
-                    where NOT EXISTS (SELECT * FROM AndesCDA WHERE idPrestacion = consulta.idConsulta)
-                    AND NOT EXISTS (SELECT * FROM AndesCDARejected where idPrestacion = consulta.idConsulta)
-                    and pac.numeroDocumento = '` + this.dni + `'`;
+                    where pac.numeroDocumento = '` + this.dni + `'`;
 
         return this.data = {
             connectionString: this.connectionString,
