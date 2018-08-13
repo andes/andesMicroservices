@@ -39,7 +39,7 @@ export class Queries {
         Medicos.nombre as profesionalNombre,
         Medicos.apellido as profesionalApellido,
         Medicos.matriculaProvincial as profesionalMatricula,
-        url = 'http://172.16.1.18/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
+        url = 'http://` + this.connectionString.server + `/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
         -- Tablas
         FROM Prestaciones
 		INNER JOIN Prestaciones_Tipos ON idTipo = Prestaciones_Tipos.id
