@@ -10,17 +10,16 @@ const router = MSRouter();
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
-    group.post('/ejecutar/:efector', (req: any, res) => {
+    group.post('/ejecutar', (req: any, res) => {
 
-        let target = req.params.efector;
         let paciente = req.body.data;
-        // Modificar aca y poner un foreach para hacer la consulta para cada efector
         let listaEfectores = Object.keys(efectores);
-        var index = listaEfectores.indexOf(target);
-
-        if (index !== -1) {
-            ejecutaCDA.ejecutar(target, paciente);
-        }
+        // verificar que funcione bien en forma asincrona
+        listaEfectores.forEach(e => {
+            if (e) {
+                ejecutaCDA.ejecutar(e, paciente);
+            }
+        });
     });
 });
 
