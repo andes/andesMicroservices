@@ -2,6 +2,7 @@ import { Microservice, MSRouter, Middleware } from './../bootstrap';
 let pkg = require('./package.json');
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import * as efectores from './constantes';
+import * as bodyParser from 'body-parser';
 
 let ms = new Microservice(pkg);
 
@@ -12,7 +13,7 @@ router.group('/cda', (group) => {
     group.post('/ejecutar/:efector', (req: any, res) => {
 
         let target = req.params.efector;
-        let paciente = req.body.data;
+        let paciente = req.body;
         // Modificar aca y poner un foreach para hacer la consulta para cada efector
         let listaEfectores = Object.keys(efectores);
         var index = listaEfectores.indexOf(target);
