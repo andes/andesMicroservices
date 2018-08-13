@@ -16,7 +16,7 @@ export class Queries {
             database: ConfigPrivate.staticConfiguration.hpn.database,
             requestTimeout: 20000
         };
-        this.dni = paciente.paciente.documento;
+        this.dni = paciente.documento;
 
         this.query = `
         select
@@ -157,7 +157,6 @@ export class Queries {
                 if (err) {
                     reject(err);
                 }
-                console.log('La query a ejecutar: ', query);
                 resolve(recordSet);
             });
         });

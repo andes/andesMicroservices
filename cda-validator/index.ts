@@ -13,7 +13,7 @@ router.group('/cda', (group) => {
     group.post('/ejecutar/:efector', (req: any, res) => {
 
         let target = req.params.efector;
-        let paciente = req.body;
+        let paciente = req.body.data;
         // Modificar aca y poner un foreach para hacer la consulta para cada efector
         let listaEfectores = Object.keys(efectores);
         var index = listaEfectores.indexOf(target);
