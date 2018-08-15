@@ -49,6 +49,7 @@ export class Queries {
 		WHERE (SELECT TOP 1 idEstado FROM Prestaciones_HistorialEstados WHERE Prestaciones_HistorialEstados.idPrestacion = Prestaciones.id ORDER BY Prestaciones_HistorialEstados.fechaHora DESC) = 100
 		and pacientes.documento = '` + this.dni + `'`;
 
+        console.log('consultaSQL: ', this.query);
         return this.data = {
             connectionString: this.connectionString,
             query: this.query
@@ -66,7 +67,7 @@ export class Queries {
             }
         };
 
-        this.dni = paciente.paciente.documento;
+        this.dni = paciente.documento;
 
         this.query = `select
                                     replace(CNS_TipoConsultorio.Descripcion,' ','') + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
@@ -120,9 +121,10 @@ export class Queries {
             password: ConfigPrivate.staticConfiguration.sips.password,
             server: ConfigPrivate.staticConfiguration.sips.ip,
             database: ConfigPrivate.staticConfiguration.sips.database,
+            requestTimeout: 30000
         };
 
-        this.dni = paciente.paciente.documento;
+        this.dni = paciente.documento;
 
         this.query =
             `select
@@ -153,6 +155,7 @@ export class Queries {
         return new Promise(async (resolve, reject) => {
             pool.request().query(query, function (err, recordSet) {
                 if (err) {
+                    console.log('error: ', err);
                     reject(err);
                 }
                 resolve(recordSet);

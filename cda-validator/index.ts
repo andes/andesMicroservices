@@ -13,9 +13,11 @@ router.group('/cda', (group) => {
         let paciente = req.body.data;
         let listaEfectores = Object.keys(efectores);
         // verificar que funcione bien en forma asincrona
-        listaEfectores.forEach(e => {
+        listaEfectores.forEach(async e => {
             if (e) {
-                ejecutaCDA.ejecutar(e, paciente);
+                console.log('por cada efector: ', e);
+                await ejecutaCDA.ejecutar(e, paciente);
+                console.log('luego de ejecutar el efector: ', e);
             }
         });
     });
