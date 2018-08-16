@@ -8,18 +8,13 @@ const router = MSRouter();
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
-    group.post('/ejecutar', (req: any, res) => {
-
+    group.post('/ejecutar', async (req: any, res) => {
         let paciente = req.body.data;
-        let listaEfectores = Object.keys(efectores);
-        // verificar que funcione bien en forma asincrona
-        listaEfectores.forEach(async e => {
-            if (e) {
-                console.log('por cada efector: ', e);
-                await ejecutaCDA.ejecutar(e, paciente);
-                console.log('luego de ejecutar el efector: ', e);
-            }
-        });
+        let listaEfectores: any = Object.keys(efectores);
+
+        for (let i = 0; i < listaEfectores.length; i++) {
+                await ejecutaCDA.ejecutar(listaEfectores[i], paciente);
+        }
     });
 });
 

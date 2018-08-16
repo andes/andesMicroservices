@@ -121,6 +121,7 @@ export async function verificar(registro) {
 
     // No Obligatorio
     if (notError) {
+        // Por ahora este ws sólo lo devuelve HPN
         if (registro.url) {
             dto['file'] = await getInform(registro.url);
         }

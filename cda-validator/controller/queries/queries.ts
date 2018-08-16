@@ -49,7 +49,7 @@ export class Queries {
 		WHERE (SELECT TOP 1 idEstado FROM Prestaciones_HistorialEstados WHERE Prestaciones_HistorialEstados.idPrestacion = Prestaciones.id ORDER BY Prestaciones_HistorialEstados.fechaHora DESC) = 100
 		and pacientes.documento = '` + this.dni + `'`;
 
-        console.log('consultaSQL: ', this.query);
+
         return this.data = {
             connectionString: this.connectionString,
             query: this.query
