@@ -1,8 +1,5 @@
 import * as http from 'http';
 import * as ConfigPrivate from './../config.private';
-
-declare const Promise;
-
 export class CdaBuilder {
     build(data: any) {
         return new Promise((resolve: any, reject: any) => {

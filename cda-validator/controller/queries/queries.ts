@@ -14,7 +14,8 @@ export class Queries {
             password: ConfigPrivate.staticConfiguration.hpn.password,
             server: ConfigPrivate.staticConfiguration.hpn.ip,
             database: ConfigPrivate.staticConfiguration.hpn.database,
-            requestTimeout: 20000
+            requestTimeout: 20000,
+            webservice_host: ConfigPrivate.staticConfiguration.hpn.webservice_host
         };
         this.dni = paciente.documento;
 
@@ -39,7 +40,7 @@ export class Queries {
         Medicos.nombre as profesionalNombre,
         Medicos.apellido as profesionalApellido,
         Medicos.matriculaProvincial as profesionalMatricula,
-        url = 'http://` + this.connectionString.server + `/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
+        url = 'http://` + this.connectionString.webservice_host + `/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
         -- Tablas
         FROM Prestaciones
 		INNER JOIN Prestaciones_Tipos ON idTipo = Prestaciones_Tipos.id
