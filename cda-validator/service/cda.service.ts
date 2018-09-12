@@ -13,16 +13,16 @@ export class CdaBuilder {
                 path: ConfigPrivate.staticConfiguration.URL.cda + '/create',
                 method: 'POST',
                 headers: {
-                    'Authorization': ConfigPrivate.staticConfiguration.secret.token,
+                    Authorization: ConfigPrivate.staticConfiguration.secret.token,
                     'Content-Type': 'application/json',
                 }
             };
-            let req = http.request(options, function (res) {
-                res.on('data', function (body) {
+            let req = http.request(options, (res) => {
+                res.on('data', (body) => {
                     resolve(body.toString());
                 });
             });
-            req.on('error', function (e) {
+            req.on('error', (e) => {
                 reject(e.message);
             });
             /*write data to request body*/
@@ -30,5 +30,5 @@ export class CdaBuilder {
             req.write(JSON.stringify(data));
             req.end();
         });
-    };
+    }
 }

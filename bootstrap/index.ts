@@ -12,7 +12,7 @@ interface MSRouter extends express.Router {
     group (callback: (router: MSRouter) => void): void;
 }
 
-export function MSRouter (): MSRouter {
+export function MSRouter(): MSRouter {
     let r = express.Router.apply(this, arguments);
     r.group = function (arg1, arg2) {
         let fn, path;
@@ -32,7 +32,7 @@ export function MSRouter (): MSRouter {
     return r;
 }
 
-export function Router (): express.Router {
+export function Router(): express.Router {
     return express.Router();
 }
 
@@ -78,7 +78,7 @@ export class Microservice {
         }
 
         // Error handler
-        app.use(function (err: any, req: any , res: any, next: any) {
+        app.use((err: any, req: any , res: any, next: any) => {
             if (err) {
                 // Parse err
                 let e: Error;

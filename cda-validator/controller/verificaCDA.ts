@@ -1,6 +1,4 @@
 import { InformBuilder } from './../service/inform.service';
-import { resolve } from 'dns';
-
 let moment = require('moment');
 
 function vPaciente(registro) {
@@ -11,7 +9,7 @@ function vPaciente(registro) {
         apellido: registro.pacienteApellido ? registro.pacienteApellido : null,
         sexo: registro.pacienteSexo ? registro.pacienteSexo : null,
         fechaNacimiento: registro.pacienteFechaNacimiento ? registro.pacienteFechaNacimiento : null
-    }
+    };
     if (paciente.nombre && paciente.apellido && paciente.sexo && paciente.fechaNacimiento && paciente.documento) {
         paciente.sexo = (paciente.sexo === 'Femenino') ? 'femenino' : 'masculino';
         return paciente;
@@ -37,7 +35,7 @@ function vPrestacion(prestacionNombre) {
 // TODO Verificar que sea el código correspondiente y que existe en configuracionPrestaciones
     let prestacion = null;
     if (prestacionNombre) {
-      prestacion = prestacionNombre;
+        prestacion = prestacionNombre;
     }
     return prestacion;
 }
@@ -53,7 +51,7 @@ function vCie10(cie10) {
 }
 
 async function getInform(url) {
-    return new Promise(async(resolve, reject) =>  {
+    return new Promise(async (resolve, reject) =>  {
         try {
             let informBuilder = new InformBuilder();
             let informe = await informBuilder.build(url);
@@ -68,7 +66,7 @@ export async function verificar(registro) {
     let dto = {
         paciente: null,
         profesional: null,
-        prestacionSnomed: null,
+        tipoPrestacion: null,
         fecha: null,
         id: null,
         cie10: null,
@@ -94,7 +92,7 @@ export async function verificar(registro) {
 
     let prestacionVerified = vPrestacion(registro.prestacion);
     if (prestacionVerified && notError) {
-        dto['prestacionSnomed'] = prestacionVerified;
+        dto['tipoPrestacion'] = prestacionVerified;
     } else {
         notError = false;
         msgError = 'La prestación no existe';
@@ -123,7 +121,7 @@ export async function verificar(registro) {
     if (notError) {
         // Por ahora este ws sólo lo devuelve HPN
         if (registro.url) {
-            dto['file'] = await getInform(registro.url);
+            // dto['file'] = await getInform(registro.url);
         }
     }
 

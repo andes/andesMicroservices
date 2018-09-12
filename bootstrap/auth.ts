@@ -18,7 +18,7 @@ export function initialize(app: express.Express) {
                 passportJWT.ExtractJwt.fromUrlQueryParameter('token')
             ])
         },
-        function (jwt_payload, done) {
+        (jwt_payload, done) => {
             done(null, jwt_payload);
         }
     ));
@@ -35,7 +35,7 @@ export const Middleware = {
     },
 
     optionalAuth() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             try {
                 let extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
                 let token = extractor(req);

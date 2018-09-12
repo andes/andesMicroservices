@@ -153,12 +153,11 @@ export class Queries {
 
     public getData(query, pool): any {
         return new Promise(async (resolve, reject) => {
-            pool.request().query(query, function (err, recordSet) {
+            pool.request().query(query, (err, recordSet) => {
                 if (err) {
-                    console.log('error: ', err);
-                    reject(err);
+                    return reject(err);
                 }
-                resolve(recordSet);
+                return resolve(recordSet);
             });
         });
     }
