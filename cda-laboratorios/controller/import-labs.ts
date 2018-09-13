@@ -14,7 +14,7 @@ const connection = {
     server: conSql.serverSql.server,
     database: conSql.serverSql.database,
     options: {
-        encrypt: true // Use this if you're on Windows Azure
+        encrypt: true
     }
 };
 

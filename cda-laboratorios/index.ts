@@ -8,12 +8,8 @@ const router = MSRouter();
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
-    group.post('/mpi', (req, res) => {
+    group.post('/ejecutar', (req, res) => {
         importarDatos(req.body.paciente);
-    });
-
-    group.post('/citas', (req, res) => {
-        importarDatos(req.body.turno.paciente);
     });
 });
 
