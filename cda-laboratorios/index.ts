@@ -1,4 +1,4 @@
-import { Microservice, MSRouter, Middleware } from './../bootstrap';
+import { Microservice, MSRouter, Middleware } from '@andes/bootstrap';
 import { importarDatos } from './controller/import-labs';
 let pkg = require('./package.json');
 

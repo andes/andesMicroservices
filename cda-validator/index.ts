@@ -1,4 +1,4 @@
-import { Microservice, MSRouter, Middleware } from './../bootstrap';
+import { Microservice, MSRouter, Middleware } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import * as efectores from './constantes';
 

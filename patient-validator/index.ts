@@ -1,4 +1,4 @@
-import { Microservice, MSRouter, Middleware } from './../bootstrap';
+import { Microservice, MSRouter, Middleware } from '@andes/bootstrap';
 let pkg = require('./package.json');
 
 let ms = new Microservice(pkg);

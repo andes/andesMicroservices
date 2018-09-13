@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "lint": "tslint --project ..",
-    "tsc": "tsc",
-    "tsc:w": "tsc -w"
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bootstrap": "file:../bootstrap"
+    "@andes/bootstrap": "file:../bootstrap"
   }
 }

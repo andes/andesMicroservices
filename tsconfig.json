@@ -11,7 +11,12 @@
       "noImplicitReturns": true,
       "allowUnusedLabels": false,  
       "typeRoots": [
-          "node_modules/@types"
-      ]
+        "node_modules/@types",
+        "./bootstrap/*",
+    ],
+    "baseUrl": ".",
+    "paths": {
+        "@andes/bootstrap/*": [ "./bootstrap/*" ],
+    }
   }
 }
