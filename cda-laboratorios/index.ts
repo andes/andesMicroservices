@@ -9,8 +9,12 @@ const router = MSRouter();
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', (req, res) => {
+        res.send({ message: 'ok' });
+
         importarDatos(req.body.paciente);
     });
+
+
 });
 
 ms.add(router);

@@ -9,13 +9,14 @@ const router = MSRouter();
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', async (req: any, res) => {
-        let paciente = req.body.data;
+        res.send({ message: 'ok' });
+
+        let paciente = req.body.paciente;
         let listaEfectores: any = Object.keys(efectores);
 
         for (let i = 0; i < listaEfectores.length; i++) {
-            await ejecutaCDA.ejecutar(listaEfectores[i], paciente);
+            ejecutaCDA.ejecutar(listaEfectores[i], paciente);
         }
-        res.send({ message: 'ok' });
     });
 });
 
