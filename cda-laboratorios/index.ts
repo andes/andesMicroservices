@@ -11,7 +11,15 @@ router.group('/cda', (group) => {
     group.post('/ejecutar', (req, res) => {
         res.send({ message: 'ok' });
 
-        importarDatos(req.body.paciente);
+        const id = req.body.id;
+        const webhookId = req.body.subscription;
+        const event = req.body.event;
+        const data = req.body.data;
+
+        // Esperamos el paciente desde una prestación.
+        if (data.paciente) {
+            importarDatos(data.paciente);
+        }
     });
 
 

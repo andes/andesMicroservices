@@ -11,11 +11,17 @@ router.group('/cda', (group) => {
     group.post('/ejecutar', async (req: any, res) => {
         res.send({ message: 'ok' });
 
-        let paciente = req.body.paciente;
-        let listaEfectores: any = Object.keys(efectores);
+        const id = req.body.id;
+        const webhookId = req.body.subscription;
+        const event = req.body.event;
+        const data = req.body.data;
+        const paciente = data.paciente;
 
-        for (let i = 0; i < listaEfectores.length; i++) {
-            ejecutaCDA.ejecutar(listaEfectores[i], paciente);
+        if (paciente) {
+            const listaEfectores: any = Object.keys(efectores);
+            for (let i = 0; i < listaEfectores.length; i++) {
+                await ejecutaCDA.ejecutar(listaEfectores[i], paciente);
+            }
         }
     });
 });

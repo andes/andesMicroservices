@@ -6,7 +6,6 @@
   },
   "devDependencies": {
     "@types/express": "^4.16.0",
-    "@types/mssql": "^4.0.10",
     "@types/node": "^10.9.4",
     "tslint": "^5.11.0",
     "tslint-eslint-rules": "^5.3.1",
