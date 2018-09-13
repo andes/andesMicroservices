@@ -1,10 +1,10 @@
-import { Microservice, MSRouter, Middleware } from '@andes/bootstrap';
+import { Microservice, Middleware } from '@andes/bootstrap';
 import { importarDatos } from './controller/import-labs';
 let pkg = require('./package.json');
 
 let ms = new Microservice(pkg);
 
-const router = MSRouter();
+const router = ms.router();
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());

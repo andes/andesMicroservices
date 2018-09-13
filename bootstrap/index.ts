@@ -12,7 +12,7 @@ interface MSRouter extends express.Router {
     group (callback: (router: MSRouter) => void): void;
 }
 
-export function MSRouter(): MSRouter {
+function MSRouter(): MSRouter {
     let r = express.Router.apply(this, arguments);
     r.group = function (arg1, arg2) {
         let fn, path;
@@ -109,6 +109,10 @@ export class Microservice {
             log(`Listening on port ${port}`);
         });
         return app;
+    }
+
+    router() {
+        return MSRouter();
     }
 
 
