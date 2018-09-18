@@ -135,15 +135,7 @@ export async function verificar(registro) {
 
     // NO Obligatorios
     if (notError) {
-        if (registro.texto) {
-            let text = registro.texto;
-            // limpiamos caracteres raros usados en el texto de la evolución
-            text = text.reemplazar('<', 'menor');
-            text = text.reemplazar('>', 'mayor');
-            dto['texto'] = text;
-        } else {
-            dto['texto'] = null;
-        }
+        dto['texto'] = registro.texto ? registro.texto : null;
     }
 
     if (!notError) {
