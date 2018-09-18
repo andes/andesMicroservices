@@ -1,4 +1,6 @@
 import { InformBuilder } from './../service/inform.service';
+import './utils/stringExtensions';
+
 let moment = require('moment');
 
 function vPaciente(registro) {
@@ -20,9 +22,9 @@ function vPaciente(registro) {
 
 function vProfesional(registro) {
     let profesional = {
-        documento : registro.profesionalDocumento ? registro.profesionalDocumento.toString() : null,
-        nombre : registro.profesionalNombre ? registro.profesionalNombre : null,
-        apellido : registro.profesionalApellido ? registro.profesionalApellido : null,
+        documento: registro.profesionalDocumento ? registro.profesionalDocumento.toString() : null,
+        nombre: registro.profesionalNombre ? registro.profesionalNombre : null,
+        apellido: registro.profesionalApellido ? registro.profesionalApellido : null,
     };
     if (profesional.nombre && profesional.apellido && profesional.documento) {
         return profesional;
@@ -32,7 +34,7 @@ function vProfesional(registro) {
 }
 
 function vPrestacion(prestacionNombre) {
-// TODO Verificar que sea el código correspondiente y que existe en configuracionPrestaciones
+    // TODO Verificar que sea el código correspondiente y que existe en configuracionPrestaciones
     let prestacion = null;
     if (prestacionNombre) {
         prestacion = prestacionNombre;
@@ -50,8 +52,13 @@ function vCie10(cie10) {
     }
 }
 
+String.prototype.reemplazar = function (str1, str2, ignore) {
+    console.log('entro al llamado');
+    return this.replace(new RegExp(str1.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, '\\$&'), (ignore ? 'gi' : 'g')), (typeof (str2) === 'string') ? str2.replace(/\$/g, '$$$$') : str2);
+};
+
 async function getInform(url) {
-    return new Promise(async (resolve, reject) =>  {
+    return new Promise(async (resolve, reject) => {
         try {
             let informBuilder = new InformBuilder();
             let informe = await informBuilder.build(url);
@@ -61,6 +68,7 @@ async function getInform(url) {
         }
     });
 }
+
 
 export async function verificar(registro) {
     let dto = {
@@ -127,12 +135,22 @@ export async function verificar(registro) {
 
     // NO Obligatorios
     if (notError) {
-        dto['texto'] = registro.texto ? registro.texto : null;
+        if (registro.texto) {
+            let text = registro.texto;
+            // limpiamos caracteres raros usados en el texto de la evolución
+            text = text.reemplazar('<', 'menor');
+            text = text.reemplazar('>', 'mayor');
+            dto['texto'] = text;
+        } else {
+            dto['texto'] = null;
+        }
     }
 
     if (!notError) {
         dto = null;
     }
+
+
 
     return dto;
 }
