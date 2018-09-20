@@ -37,7 +37,7 @@ export async function ejecutar(target, paciente) {
         if (resultado.recordset.length > 0) {
             let ps = resultado.recordset.map(async r => {
                 // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar
-                let dto = await Verificator.verificar(r);
+                let dto = await Verificator.verificar(r, paciente);
                 if (dto) {
                     // Paso 3: Invocamos a la función que genera el CDA por cada documento
                     let cdaBuilder = new CdaBuilder();

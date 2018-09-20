@@ -1,9 +1,36 @@
 import { InformBuilder } from './../service/inform.service';
 import './utils/stringExtensions';
+import { Matching } from '@andes/match';
 
 let moment = require('moment');
 
-function vPaciente(registro) {
+function vPaciente(registro, pacienteAndes) {
+    const cota = 0.95;
+    function matchPaciente(pacMpi, pac) {
+        const weights = {
+            identity: 0.55,
+            name: 0.10,
+            gender: 0.3,
+            birthDate: 0.05
+        };
+
+        const pacDto = {
+            documento: pacMpi.documento ? pacMpi.documento.toString() : '',
+            nombre: pacMpi.nombre ? pacMpi.nombre : '',
+            apellido: pacMpi.apellido ? pacMpi.apellido : '',
+            fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
+            sexo: pacMpi.sexo ? pacMpi.sexo : ''
+        };
+        const pacElastic = {
+            documento: pac.numeroDocumento ? pac.numeroDocumento.toString() : '',
+            nombre: pac.nombre ? pac.nombre : '',
+            apellido: pac.apellido ? pac.apellido : '',
+            fechaNacimiento: pac.fechaNacimiento ? moment(pac.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+            sexo: (pac.sexo === 'F' ? 'femenino' : (pac.sexo === 'M' ? 'masculino' : ''))
+        };
+        const match = new Matching();
+        return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
+    }
 
     let paciente = {
         documento: registro.pacienteDocumento ? registro.pacienteDocumento.toString() : null,
@@ -14,7 +41,12 @@ function vPaciente(registro) {
     };
     if (paciente.nombre && paciente.apellido && paciente.sexo && paciente.fechaNacimiento && paciente.documento) {
         paciente.sexo = (paciente.sexo === 'Femenino') ? 'femenino' : 'masculino';
-        return paciente;
+        const value = matchPaciente(pacienteAndes, paciente);
+        if (value >= cota) {
+            return pacienteAndes;
+        } else {
+            return null;
+        }
     } else {
         return null;
     }
@@ -70,7 +102,7 @@ async function getInform(url) {
 }
 
 
-export async function verificar(registro) {
+export async function verificar(registro, pacienteAndes) {
     let dto = {
         paciente: null,
         profesional: null,
@@ -83,7 +115,7 @@ export async function verificar(registro) {
     };
     let notError = true;
     let msgError = '';
-    let pacienteVerified: any = vPaciente(registro);
+    let pacienteVerified: any = vPaciente(registro, pacienteAndes);
     if (pacienteVerified) {
         dto['paciente'] = pacienteVerified;
     } else {
@@ -141,7 +173,6 @@ export async function verificar(registro) {
     if (!notError) {
         dto = null;
     }
-
 
 
     return dto;
