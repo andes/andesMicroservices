@@ -101,62 +101,65 @@ export async function importarDatos(paciente) {
     try {
         let laboratorios: any = await operations.getEncabezados(paciente.documento);
         for (const lab of laboratorios.recordset) {
+            try {
+                const details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
+                const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
 
-            const details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
-            const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
+                let validado = true;
+                let hiv = false;
 
-            let validado = true;
-            let hiv = false;
+                details.recordset.forEach(detail => {
+                    validado = validado && (detail.profesional_val !== '');
+                    hiv = hiv || /hiv|vih/i.test(detail.item);
+                });
 
-            details.recordset.forEach(detail => {
-                validado = validado && (detail.profesional_val !== '');
-                hiv = hiv || /hiv|vih/i.test(detail.item);
-            });
+                const value = matchPaciente(paciente, lab);
+                if (value >= cota && validado && details.recordset) {
+                    const fecha = moment(lab.fecha, 'DD/MM/YYYY');
 
-            const value = matchPaciente(paciente, lab);
-            if (value >= cota && validado && details.recordset) {
-                const fecha = moment(lab.fecha, 'DD/MM/YYYY');
+                    const profesional = {
+                        nombre: lab.solicitante,
+                        apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
+                    };
 
-                const profesional = {
-                    nombre: lab.solicitante,
-                    apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
-                };
+                    let pdfUrl;
+                    let response;
+                    if (String(lab.idEfector) === '221') {
+                        response = await donwloadFileHeller(lab.idProtocolo, fecha.format('YYYY'));
+                    } else {
+                        pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
+                        response = await downloadFile(pdfUrl);
+                    }
+                    let adjunto64 = await toBase64(response);
 
-                let pdfUrl;
-                let response;
-                if (String(lab.idEfector) === '221') {
-                    response = await donwloadFileHeller(lab.idProtocolo, fecha.format('YYYY'));
+                    const dto = {
+                        id: lab.idProtocolo,
+                        organizacion: organizacion._id,
+                        fecha: fecha.toDate(),
+                        tipoPrestacion: '4241000179101',
+                        paciente,
+                        profesional,
+                        cie10: 'Z01.7',
+                        file: adjunto64,
+                        texto: 'Exámen de Laboratorio'
+                    };
+
+                    await operations.postCDA(dto);
+
                 } else {
-                    pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-                    response = await downloadFile(pdfUrl);
+                    // Ver que hacer si no matchea
+                    if (value < cota) {
+                        // logger('-----------------------------------');
+                        // logger(paciente.nombre, lab.nombre);
+                        // logger(paciente.apellido, lab.apellido);
+                        // logger(paciente.documento, lab.numeroDocumento);
+                        // logger(paciente.sexo, lab.sexo);
+                        // logger(paciente.fechaNacimiento, lab.fechaNacimiento);
+                    }
+
                 }
-                let adjunto64 = await toBase64(response);
-
-                const dto = {
-                    id: lab.idProtocolo,
-                    organizacion: organizacion._id,
-                    fecha: fecha.toDate(),
-                    tipoPrestacion: '4241000179101',
-                    paciente,
-                    profesional,
-                    cie10: 'Z01.7',
-                    file: adjunto64,
-                    texto: 'Exámen de Laboratorio'
-                };
-
-                await operations.postCDA(dto);
-
-            } else {
-                // Ver que hacer si no matchea
-                if (value < cota) {
-                    // logger('-----------------------------------');
-                    // logger(paciente.nombre, lab.nombre);
-                    // logger(paciente.apellido, lab.apellido);
-                    // logger(paciente.documento, lab.numeroDocumento);
-                    // logger(paciente.sexo, lab.sexo);
-                    // logger(paciente.fechaNacimiento, lab.fechaNacimiento);
-                }
-
+            } catch (e) {
+                //
             }
         }
         return true;
