@@ -22,11 +22,11 @@ function vPaciente(registro, pacienteAndes) {
             sexo: pacMpi.sexo ? pacMpi.sexo : ''
         };
         const pacElastic = {
-            documento: pac.numeroDocumento ? pac.numeroDocumento.toString() : '',
+            documento: pac.documento ? pac.documento.toString() : '',
             nombre: pac.nombre ? pac.nombre : '',
             apellido: pac.apellido ? pac.apellido : '',
             fechaNacimiento: pac.fechaNacimiento ? moment(pac.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
-            sexo: (pac.sexo === 'F' ? 'femenino' : (pac.sexo === 'M' ? 'masculino' : ''))
+            sexo: pac.sexo
         };
         const match = new Matching();
         return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
@@ -83,12 +83,6 @@ function vCie10(cie10) {
         return c;
     }
 }
-
-String.prototype.reemplazar = function (str1, str2, ignore) {
-    console.log('entro al llamado');
-    return this.replace(new RegExp(str1.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, '\\$&'), (ignore ? 'gi' : 'g')), (typeof (str2) === 'string') ? str2.replace(/\$/g, '$$$$') : str2);
-};
-
 async function getInform(url) {
     return new Promise(async (resolve, reject) => {
         try {
