@@ -5,7 +5,7 @@ export async function getOrganizacion(sisa) {
     return new Promise((resolve, reject) => {
         const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
         request(url, (error, response, body) => {
-            if (response.statusCode >= 200 && response.statusCode < 300) {
+            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const orgs: any[] = JSON.parse(body);
                 if (orgs && orgs.length) {
                     return resolve({
@@ -14,7 +14,7 @@ export async function getOrganizacion(sisa) {
                     });
                 }
             }
-            return reject({});
+            return reject(error || body);
         });
     });
 }

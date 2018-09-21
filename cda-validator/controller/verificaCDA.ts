@@ -1,8 +1,9 @@
 import { getInforme } from './../service/inform.service';
-import './utils/stringExtensions';
+import { getOrganizacion } from './../service/organizaciones.service';
 import { Matching } from '@andes/match';
 
 let moment = require('moment');
+
 
 function vPaciente(registro, pacienteAndes) {
     const cota = 0.95;
@@ -86,6 +87,7 @@ function vCie10(cie10) {
 
 export async function verificar(registro, pacienteAndes) {
     let dto = {
+        organizacion: null,
         paciente: null,
         profesional: null,
         tipoPrestacion: null,
@@ -98,12 +100,23 @@ export async function verificar(registro, pacienteAndes) {
     let notError = true;
     let msgError = '';
     let pacienteVerified: any = vPaciente(registro, pacienteAndes);
+
     if (pacienteVerified) {
         dto['paciente'] = pacienteVerified;
     } else {
         notError = false;
         msgError = 'El paciente no ha sido verificado correctamente';
     }
+
+    if (registro.sisa) {
+        try {
+            dto.organizacion = await getOrganizacion(registro.sisa);
+        } catch (e) {
+            notError = false;
+            msgError = 'SISA Code invalido';
+        }
+    }
+
     let profesionalVerified = vProfesional(registro);
     if (profesionalVerified && notError) {
         dto['profesional'] = profesionalVerified;
