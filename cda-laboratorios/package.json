@@ -14,7 +14,8 @@
     "@andes/bootstrap": "file:../bootstrap",
     "@andes/match": "^1.1.12",
     "moment": "^2.22.2",
-    "mssql": "^4.2.1"
+    "mssql": "^4.2.1",
+    "request": "^2.88.0"
   },
   "devDependencies": {}
 }

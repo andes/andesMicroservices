@@ -3,31 +3,23 @@ import * as URL from 'url';
 import * as sql from 'mssql';
 import * as https from 'http';
 import { ANDES_HOST, ANDES_KEY } from '../config.private';
+const request = require('request');
 
 export async function organizacionBySisaCode(sisa) {
     return new Promise((resolve, reject) => {
-        https.get(`${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`, (res) => {
-            let chunks = [];
-            res.on('end', () => {
-                const body = Buffer.concat(chunks).toString();
+        const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
+        request(url, (error, response, body) => {
+            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const orgs: any[] = JSON.parse(body);
                 if (orgs && orgs.length) {
                     return resolve({
                         _id: orgs[0].id,
                         nombre: orgs[0].nombre,
                     });
-                } else {
-                    reject({});
                 }
-            });
-            res.on('data', (buffer) => {
-                chunks.push(buffer);
-            });
-
-            res.on('error', (err) => {
-                // console.log(err);
-            });
-        }).end();
+            }
+            return reject(error || body);
+        });
     });
 }
 
@@ -49,30 +41,23 @@ export async function getDetalles(idProtocolo, idEfector) {
 
 }
 
-export function postCDA(data) {
+export function postCDA(data: any) {
     return new Promise((resolve: any, reject: any) => {
-        let url = URL.parse(`${ANDES_HOST}/modules/cda/create`);
-        let options = {
-            host: url.hostname,
-            port: url.port,
-            path: url.pathname,
+        const url = `${ANDES_HOST}/modules/cda/create`;
+        const options = {
+            url,
             method: 'POST',
+            json: true,
+            body: data,
             headers: {
-                Authorization: `JWT ${ANDES_KEY}`,
-                'Content-Type': 'application/json',
+                Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        let req = https.request(options, (res) => {
-            res.on('data', (buffer) => {
-                resolve(buffer.toString());
-            });
+        request(options, (error, response, body) => {
+            if (response.statusCode >= 200 && response.statusCode < 300) {
+                return resolve(body);
+            }
+            return resolve(error || body);
         });
-        req.on('error', (e) => {
-            reject(e.message);
-        });
-            /*write data to request body*/
-
-        req.write(JSON.stringify(data));
-        req.end();
     });
 }
