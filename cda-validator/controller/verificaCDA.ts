@@ -111,6 +111,7 @@ export async function verificar(registro, pacienteAndes) {
     if (registro.sisa) {
         try {
             dto.organizacion = await getOrganizacion(registro.sisa);
+            dto.organizacion = dto.organizacion._id;
         } catch (e) {
             notError = false;
             msgError = 'SISA Code invalido';
