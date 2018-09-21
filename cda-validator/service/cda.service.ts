@@ -12,9 +12,9 @@ export function postCDA(data: any) {
         };
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
-                return resolve(JSON.parse(body));
+                return resolve(body);
             }
-            return reject(error || body);
+            return resolve(error || body);
         });
     });
 }

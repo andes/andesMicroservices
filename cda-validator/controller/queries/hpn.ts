@@ -28,12 +28,13 @@ function make(paciente: any) {
     Pacientes.apellido as pacienteApellido,
     Pacientes.nacimientoFecha as pacienteFechaNacimiento,
     Sexos.nombre as pacienteSexo,
+    '10580352167033' as sisa,
     -- Profesional
     Medicos.documento as profesionalDocumento,
     Medicos.nombre as profesionalNombre,
     Medicos.apellido as profesionalApellido,
     Medicos.matriculaProvincial as profesionalMatricula,
-    url = 'http://${this.connectionString.webservice_host}/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
+    url = 'http://${connectionString.webservice_host}/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
     -- Tablas
     FROM Prestaciones
     INNER JOIN Prestaciones_Tipos ON idTipo = Prestaciones_Tipos.id

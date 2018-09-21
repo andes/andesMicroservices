@@ -19,8 +19,8 @@ router.group('/cda', (group) => {
 
         if (paciente) {
             for (const efector of efectores) {
-                const make = require('./controller/queries/' + efector);
-                await ejecutaCDA.ejecutar(make, paciente);
+                const factory = require('./controller/queries/' + efector);
+                await ejecutaCDA.ejecutar(factory, paciente);
             }
         }
     });

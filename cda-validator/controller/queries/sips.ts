@@ -17,6 +17,7 @@ function make(paciente: any) {
                 convert(varchar(max),391000013108) as prestacion,
                 efector.idEfector as idEfector,
                 consulta.fecha as fecha,
+                efector.codigoSisa as sisa,
                 pac.numeroDocumento as pacienteDocumento, pac.nombre as pacienteNombre, pac.apellido as pacienteApellido,
                 pac.fechaNacimiento as pacienteFechaNacimiento, sex.nombre as pacienteSexo,
                 prof.numeroDocumento as profesionalDocumento, prof.nombre as profesionalNombre, prof.apellido as profesionalApellido, prof.matricula as profesionalMatricula,

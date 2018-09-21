@@ -54,8 +54,8 @@ function make(paciente: any) {
                                 ORDER BY CNS_Recepcion.Fecha `;
 
     return {
-        connectionString: this.connectionString,
-        query: this.query
+        connectionString,
+        query
     };
 }
 
