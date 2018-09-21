@@ -1,4 +1,4 @@
-import { InformBuilder } from './../service/inform.service';
+import { getInforme } from './../service/inform.service';
 import './utils/stringExtensions';
 import { Matching } from '@andes/match';
 
@@ -83,18 +83,6 @@ function vCie10(cie10) {
         return c;
     }
 }
-async function getInform(url) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            let informBuilder = new InformBuilder();
-            let informe = await informBuilder.build(url);
-            resolve(informe);
-        } catch (err) {
-            reject(err);
-        }
-    });
-}
-
 
 export async function verificar(registro, pacienteAndes) {
     let dto = {
@@ -155,7 +143,7 @@ export async function verificar(registro, pacienteAndes) {
     if (notError) {
         // Por ahora este ws sólo lo devuelve HPN
         if (registro.url) {
-            dto['file'] = await getInform(registro.url);
+            dto['file'] = await getInforme(registro.url);
         }
     }
 

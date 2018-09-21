@@ -1,7 +1,3 @@
-const efector = {
-    hpn: 'hpn',
-    heller: 'heller',
-    sips: 'sips'
-};
-
-export = efector;
+export const efectores = [
+    'hpn', 'heller', 'sips'
+];

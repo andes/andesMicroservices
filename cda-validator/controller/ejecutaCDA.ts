@@ -1,47 +1,20 @@
-import {
-    Queries
-} from './queries/queries';
+import { getData } from './queries';
 import * as Verificator from './verificaCDA';
-import {
-    CdaBuilder
-} from './../service/cda.service';
-import * as efector from './../constantes';
-import {
-    connect
-} from 'net';
-
+import { postCDA } from './../service/cda.service';
 const sql = require('mssql');
 
-export async function ejecutar(target, paciente) {
-    // Paso 1: llamamos al Motor de base de datos que nos devuelve un array de prestaciones
-    let query = new Queries();
-    let data;
-    switch (target) {
-        case efector.hpn:
-            data = await query.hpn(paciente);
-            break;
-        case efector.heller:
-            // data = await query.heller(paciente);
-            break;
-        case efector.sips:
-            data = await query.sips(paciente);
-            break;
-        default:
-            break;
-    }
-
+export async function ejecutar(factory, paciente) {
+    let data = factory(paciente);
     if (data) {
         sql.close();
         let pool = await sql.connect(data.connectionString);
-        let resultado = await query.getData(data.query, pool);
-        if (resultado.recordset.length > 0) {
-            let ps = resultado.recordset.map(async r => {
-                // Paso 2: Verificamos que los datos estén completos por cada registro y si es válido se genera el Data Transfer Object para generar
-                let dto = await Verificator.verificar(r, paciente);
+        let resultado = await getData(pool, data.query);
+        const registros = resultado.recordset;
+        if (registros.length > 0) {
+            let ps = registros.map(async registro => {
+                let dto = await Verificator.verificar(registro, paciente);
                 if (dto) {
-                    // Paso 3: Invocamos a la función que genera el CDA por cada documento
-                    let cdaBuilder = new CdaBuilder();
-                    let c = await cdaBuilder.build(dto);
+                    await postCDA(dto);
                 }
             });
             await Promise.all(ps);

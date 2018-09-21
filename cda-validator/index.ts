@@ -1,6 +1,6 @@
 import { Microservice } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
-import * as efectores from './constantes';
+import { efectores } from './constantes';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -18,9 +18,9 @@ router.group('/cda', (group) => {
         const paciente = data.paciente;
 
         if (paciente) {
-            const listaEfectores: any = Object.keys(efectores);
-            for (let i = 0; i < listaEfectores.length; i++) {
-                await ejecutaCDA.ejecutar(listaEfectores[i], paciente);
+            for (const efector of efectores) {
+                const make = require('./controller/queries/' + efector);
+                await ejecutaCDA.ejecutar(make, paciente);
             }
         }
     });
