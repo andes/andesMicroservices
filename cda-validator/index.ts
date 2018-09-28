@@ -15,7 +15,16 @@ router.group('/cda', (group) => {
         const webhookId = req.body.subscription;
         const event = req.body.event;
         const data = req.body.data;
-        const paciente = data.paciente;
+
+        let paciente;
+        switch (event) {
+            case 'mobile:patient:login':
+                paciente = data.pacientes[0];
+                break;
+            default:
+                paciente = data.paciente;
+                break;
+        }
 
         if (paciente) {
             for (const efector of efectores) {

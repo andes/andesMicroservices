@@ -16,9 +16,19 @@ router.group('/cda', (group) => {
         const event = req.body.event;
         const data = req.body.data;
 
+        let paciente;
+        switch (event) {
+            case 'mobile:patient:login':
+                paciente = data.pacientes[0];
+                break;
+            default:
+                paciente = data.paciente;
+                break;
+        }
+
         // Esperamos el paciente desde una prestación.
-        if (data.paciente) {
-            importarDatos(data.paciente);
+        if (paciente) {
+            importarDatos(paciente);
         }
     });
 
