@@ -138,6 +138,7 @@ export async function importarDatos(paciente) {
                         fecha: fecha.toDate(),
                         tipoPrestacion: '4241000179101',
                         paciente,
+                        confidencialidad: hiv ? 'R' : 'N',
                         profesional,
                         cie10: 'Z01.7',
                         file: adjunto64,
