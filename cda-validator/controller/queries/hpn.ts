@@ -17,8 +17,8 @@ function make(paciente: any) {
     -- Id
     ('P-' + CONVERT(varchar(max), Prestaciones.id)) as id,
     -- SNOMED
-    convert(varchar,391000013108) as prestacion,
-    -- HAY QUE CARGAR EN CONF. PRESTACIONES Prestaciones_Tipos.SNOMED as prestacion,
+    -- convert(varchar,391000013108) as prestacion,
+    Prestaciones_Tipos.SNOMED as prestacion,
     -- ID Efector HPN/Heller
     205 as idEfector,
     -- Fecha prestacion
