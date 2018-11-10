@@ -5,6 +5,8 @@ let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
 
+// Hacer el JOB de sql con Naty: ¿Estamos seguros que no podemos usar solo el microservicio? ¿que es lo que le pasa a PECAS?
+
 router.group('/bi', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/pecas', async (req: any, res) => {

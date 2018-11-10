@@ -1,10 +1,10 @@
 import fs = require('fs');
 import async = require('async');
 import * as moment from 'moment';
-// import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as configPrivate from '../config.private';
-// import { userScheduler } from '../config.private';
+import { getEfector } from '../service/organizacion.service';
+
 
 let poolTurnos;
 const config = {
@@ -25,15 +25,13 @@ const outputFile = type + '.json';
  * @returns resultado
  */
 export async function setInPecas(agenda) {
+
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
         // console.log('ex', ex);
         return (ex);
     }
-
-    // PREGUNTAR ACA!!
-    // let orgExcluidas = organizacionesExcluidas();
 
     let a = agenda;
     a.bloques.forEach(b => {
@@ -52,17 +50,16 @@ export async function setInPecas(agenda) {
 async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
-    // console.log('b => ', b);
     try {
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
         turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
         turno.estadoTurno = t.estado;
-        let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
+        let turnoConPaciente = t.estado === 'asignado' && t.paciente;
+        let organizacion: any = await getEfector(a.organizacion.id);
         let efector = {
-            tipoEfector: 'Hospital',
-            codigo: '12'
+            tipoEfector: organizacion.tipoEstablecimiento.nombre,
+            codigo: organizacion.codigo.sips ? organizacion.codigo.sips : null // VER EN PRODUCCIÓN SI EXISTE SIPS O ES SISA!!
         };
-        // await getEfector(a.organizacion._id) as any;
         let idEfector = efector ? efector.codigo : null;
         let tipoEfector = efector ? efector.tipoEfector : null;
         turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
@@ -364,34 +361,6 @@ async function eliminaTurnoPecas(turno: any) {
     return result;
 }
 
-// Reemplazar por un servicio que le pegue a la api
-
-// function getEfector(idOrganizacion: any) {
-//     return new Promise((resolve, reject) => {
-//         organizacion.findOne({
-//             _id: mongoose.Types.ObjectId(idOrganizacion)
-//         }).exec((err, data) => {
-//             if (err) {
-//                 reject(err);
-//             }
-//             if ((data as any).codigo) {
-//                 const codigoSips = (data as any).codigo as any;
-//                 const efector = {
-//                     codigo: codigoSips.sips ? codigoSips.sips : null,
-//                     tipoEfector: (data as any).tipoEstablecimiento.nombre
-//                 };
-//                 if (codigoSips) {
-//                     resolve(efector);
-//                 } else {
-//                     resolve(null);
-//                 }
-//             } else {
-//                 resolve(null);
-//             }
-//         });
-//     });
-// }
-
 function calcularEdad(fechaNacimiento) {
     let edad: any;
     const fechaActual: Date = new Date();
@@ -441,12 +410,7 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
-// function organizacionesExcluidas() {
-//     let organizaciones = [];
-//     const medicoIntegral = '5a5e3f7e0bd5677324737244';
-//     organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
-//     return organizaciones;
-// }
+
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
