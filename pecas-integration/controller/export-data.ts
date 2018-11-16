@@ -31,7 +31,18 @@ export async function setInPecas(agenda) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
-        // console.log('ex', ex);
+        let fakeRequest = {
+            user: {
+                usuario: 'msPecas',
+                app: 'integracion-pecas',
+                organizacion: 'sss'
+            },
+            ip: 'localhost',
+            connection: {
+                localAddress: ''
+            }
+        };
+        await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
         return (ex);
     }
 
@@ -355,7 +366,17 @@ async function auxiliar(a: any, b: any, t: any) {
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + '\) ';
 
-        console.log('El insert: ', queryInsert);
+        let fakeRequest = {
+            user: {
+                usuario: 'msPecas',
+                app: 'integracion-pecas',
+                organizacion: 'sss'
+            },
+            ip: 'localhost',
+            connection: {
+                localAddress: ''
+            }
+        };
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);
@@ -453,7 +474,6 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-
         let fakeRequest = {
             user: {
                 usuario: 'msPecas',
@@ -465,7 +485,7 @@ async function executeQuery(query: any) {
                 localAddress: ''
             }
         };
-        log(fakeRequest, 'microservices:integration:pecas', undefined, err, null);
+        await log(fakeRequest, 'microservices:integration:pecas', undefined, err, null);
         return err;
     }
 }

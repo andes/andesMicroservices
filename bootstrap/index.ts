@@ -4,8 +4,6 @@ import { Express } from 'express';
 import * as express from 'express';
 import { initialize } from './auth';
 import * as debug from 'debug';
-import { Connections } from '@andes/log';
-import { logDatabase } from './config.private';
 
 const log = debug('bootstrap');
 
@@ -58,9 +56,6 @@ export class Microservice {
 
         initialize(app);
 
-        // Conexión a la base de datos de logs: andesLogs
-        Connections.initialize(logDatabase.log.host, logDatabase.log.options);
-
         // Configura Express
         app.use(bodyParser.json({ limit: '150mb' }));
         app.use(bodyParser.urlencoded({
@@ -81,7 +76,6 @@ export class Microservice {
         for (let router of this._routes) {
             app.use(router);
         }
-
         // Error handler
         app.use((err: any, req: any, res: any, next: any) => {
             if (err) {
@@ -109,7 +103,6 @@ export class Microservice {
                 });
             }
         });
-
         app.listen(port, () => {
             log(`Listening on port ${port}`);
         });
