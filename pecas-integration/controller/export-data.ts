@@ -4,6 +4,8 @@ import * as moment from 'moment';
 import * as sql from 'mssql';
 import * as configPrivate from '../config.private';
 import { getEfector } from '../service/organizacion.service';
+import { getEspecialidades } from '../service/especialidades.service';
+import { log } from '@andes/log';
 
 
 let poolTurnos;
@@ -34,21 +36,36 @@ export async function setInPecas(agenda) {
     }
 
     let a = agenda;
+
+    // Queda pendiente para más adelante.
+
+    // let profesionales = a.profesionales;
+    // let profesionalesEspecialidades = [];
+    // if (profesionales) {
+    //     for (let i = 0; i < profesionales.length; i++) {
+    //         let data = await profesionalEspecialidades(profesionales[i]);
+    //         profesionalesEspecialidades.push(data);
+    //     }
+    // }
     a.bloques.forEach(b => {
         b.turnos.forEach(async t => {
+            // await auxiliar(a, b, t, profesionalesEspecialidades);
             await auxiliar(a, b, t);
         });
     });
     // Se recorren los sobreturnos
     a.sobreturnos.forEach(async t => {
+        // await auxiliar(a, null, t, profesionalesEspecialidades);
         await auxiliar(a, null, t);
 
     });
 }
 
 // castea cada turno asignado y lo inserta en la tabla Sql
+// async function auxiliar(a: any, b: any, t: any, profesionalesEspecialidades) {
 async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
+    let efector: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     try {
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
@@ -56,9 +73,9 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.estadoTurno = t.estado;
         let turnoConPaciente = t.estado === 'asignado' && t.paciente;
         let organizacion: any = await getEfector(a.organizacion.id);
-        let efector = {
+        efector = {
             tipoEfector: organizacion.tipoEstablecimiento.nombre,
-            codigo: organizacion.codigo.sips ? organizacion.codigo.sips : null // VER EN PRODUCCIÓN SI EXISTE SIPS O ES SISA!!
+            codigo: organizacion.codigo.sips
         };
         let idEfector = efector ? efector.codigo : null;
         let tipoEfector = efector ? efector.tipoEfector : null;
@@ -245,8 +262,10 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.Profesional = turno.Profesional.toString().replace('\'', '\'\'');
         turno.TipoProfesional = null;
         turno.CodigoEspecialidad = null;
-        turno.Especialidad = null;
-        turno.CodigoServicio = null;
+        turno.Especialidad = null,
+            // REVISAR ESTA PARTE ¿Tendría que mostrar todas? ¿o por algun criterio?
+            // turno.Especialidad = profesionalesEspecialidades && profesionalesEspecialidades[0] ? profesionalesEspecialidades.especialidades[0].especialidad.nombre : 'Sin datos';
+            turno.CodigoServicio = null;
         turno.Servicio = (a.espacioFisico && a.espacioFisico.servicio ? a.espacioFisico.servicio.nombre : 'Sin servicio');
         turno.IdBarrio = null;
         turno.Barrio = null;
@@ -265,7 +284,7 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.Manzana = null;
         turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
         turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
-        turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre.toString().replace('\'', '\'\'') : null;
+        turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.financiador) ? t.paciente.obraSocial.financiador.toString().replace('\'', '\'\'') : null;
         if (tipoEfector && tipoEfector === 'Centro de Salud') {
             turno.TipoEfector = '1';
         }
@@ -335,6 +354,8 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + '\) ';
+
+        console.log('El insert: ', queryInsert);
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);
@@ -360,7 +381,6 @@ async function eliminaTurnoPecas(turno: any) {
         .query(`DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idTurno = @idTurno`);
     return result;
 }
-
 function calcularEdad(fechaNacimiento) {
     let edad: any;
     const fechaActual: Date = new Date();
@@ -410,6 +430,20 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
+async function profesionalEspecialidades(profesional) {
+    // Devuelve un objeto profesional con sus especialidades
+    let objProfesionalEspecialidades: any = null;
+    const resultado: any = await getEspecialidades(profesional.id);
+    if (resultado) {
+        objProfesionalEspecialidades = {
+            nombre: resultado.nombre,
+            apellido: resultado.apellido,
+            documento: resultado.documento,
+            especialidades: resultado.formacionPosgrado
+        };
+    }
+    return objProfesionalEspecialidades;
+}
 
 async function executeQuery(query: any) {
     try {
@@ -419,11 +453,19 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        // console.log('err ', err);
-        // let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
-        //     encoding: 'utf8'
-        // });
-        // Logger.log(userScheduler, 'scheduler', 'insert', query);
+
+        let fakeRequest = {
+            user: {
+                usuario: 'msPecas',
+                app: 'integracion-pecas',
+                organizacion: 'sss'
+            },
+            ip: 'localhost',
+            connection: {
+                localAddress: ''
+            }
+        };
+        log(fakeRequest, 'microservices:integration:pecas', undefined, err, null);
         return err;
     }
 }

@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@andes/log": "^1.0.9",
     "body-parser": "^1.18.3",
     "debug": "^3.1.0",
     "express": "^4.16.3",

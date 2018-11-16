@@ -4,12 +4,14 @@ import { Express } from 'express';
 import * as express from 'express';
 import { initialize } from './auth';
 import * as debug from 'debug';
+import { Connections } from '@andes/log';
+import { logDatabase } from './config.private';
 
 const log = debug('bootstrap');
 
 interface MSRouter extends express.Router {
-    group (path: String, callback: (router: MSRouter) => void): void;
-    group (callback: (router: MSRouter) => void): void;
+    group(path: String, callback: (router: MSRouter) => void): void;
+    group(callback: (router: MSRouter) => void): void;
 }
 
 function MSRouter(): MSRouter {
@@ -42,19 +44,22 @@ export class Microservice {
     private _app: Express;
     private _routes: any[] = [];
     private _info: any;
-    constructor (info) {
+    constructor(info) {
         this._info = info;
     }
 
-    add (router) {
+    add(router) {
         this._routes.push(router);
     }
 
-    start () {
+    start() {
         const port = process.env.PORT || 3000;
         const app = this._app = express();
 
         initialize(app);
+
+        // Conexión a la base de datos de logs: andesLogs
+        Connections.initialize(logDatabase.log.host, logDatabase.log.options);
 
         // Configura Express
         app.use(bodyParser.json({ limit: '150mb' }));
@@ -78,7 +83,7 @@ export class Microservice {
         }
 
         // Error handler
-        app.use((err: any, req: any , res: any, next: any) => {
+        app.use((err: any, req: any, res: any, next: any) => {
             if (err) {
                 // Parse err
                 let e: Error;

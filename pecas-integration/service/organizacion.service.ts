@@ -7,7 +7,7 @@ export function getEfector(idOrganizacion) {
         const options = {
             url,
             method: 'GET',
-            // json: true,
+            // json: true
             // body: data
             // headers: {
             //     Authorization: `JWT ${ANDES_KEY}`
@@ -15,9 +15,9 @@ export function getEfector(idOrganizacion) {
         };
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
-                return resolve(body);
+                resolve(JSON.parse(body));
             }
-            return resolve(error || body);
+            resolve(error || body);
         });
     });
 }
