@@ -13,9 +13,6 @@ export async function ejecutar(paciente) {
         const registros = resultado.recordset;
         if (registros.length > 0) {
             let ps = registros.map(async registro => {
-                if (registro.grupal === 1) {
-                    registro = await buscarProfesional(registro);
-                }
                 let dto = await Verificator.verificar(registro, paciente);
                 if (dto) {
                     await postCDA(dto);
@@ -28,19 +25,5 @@ export async function ejecutar(paciente) {
         }
     } else {
         return true;
-    }
-}
-
-async function buscarProfesional(registro) {
-    let profesional = factory.profesionalGrupal();
-    registro.profesional = {
-        documento: profesional.profesionalDocumento ? profesional.profesionalDocumento.toString() : null,
-        nombre: profesional.profesionalNombre ? profesional.profesionalNombre : null,
-        apellido: profesional.profesionalApellido ? profesional.profesionalApellido : null,
-    };
-    if (registro.profesional.nombre && registro.profesional.apellido && registro.profesional.documento) {
-        return registro;
-    } else {
-        registro.profesinal = null;
     }
 }
