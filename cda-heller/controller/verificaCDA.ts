@@ -141,7 +141,7 @@ export async function verificar(registro, pacienteAndes) {
         dto['tipoPrestacion'] = prestacionVerified;
     } else {
         notError = false;
-        msgError = msgError + '\n' + 'La prestación no existe';
+        msgError = msgError + '\n' + 'La prestación no existe' + registro.prestacion;
     }
 
     notError = notError && registro.fecha ? true : false;
@@ -151,7 +151,7 @@ export async function verificar(registro, pacienteAndes) {
         dto['fecha'] = moment(registro.fecha).toDate();
         dto['id'] = registro.id;
     } else {
-        msgError = msgError + '\n' + 'El registro no posee fecha de registro o id';
+        msgError = msgError + '\n' + 'El registro no posee fecha de registro o id' + registro.fecha + registro.id;
     }
 
     if (notError) {
@@ -163,7 +163,7 @@ export async function verificar(registro, pacienteAndes) {
             dto['cie10'] = registro.cie10;
         } else {
             notError = false;
-            msgError = msgError + '\n' + 'El código CIE10 no es válido';
+            msgError = msgError + '\n' + 'El código CIE10 no es válido' + registro.cie10;
         }
     }
 
