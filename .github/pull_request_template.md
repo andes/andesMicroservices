@@ -7,10 +7,9 @@ _____________________________________________
    - Indicar como prefijo el nombre del módulo
    - Si la funcionalidad corresponde a una User Story, el nombre debe coincidir son su título
    - No utilizar la palabra fix ni sus derivados
-
   
-3) Asignar revisores que sean miembros del equipo responsable de revisar el pull request
-4) Completar las siguientes secciones:
+2) Asignar revisores que sean miembros del equipo responsable de revisar el pull request
+3) Completar las siguientes secciones:
 
 -->
 ### Requerimiento
