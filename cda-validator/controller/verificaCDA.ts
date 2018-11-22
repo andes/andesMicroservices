@@ -41,7 +41,17 @@ function vPaciente(registro, pacienteAndes) {
         fechaNacimiento: registro.pacienteFechaNacimiento ? registro.pacienteFechaNacimiento : null
     };
     if (paciente.nombre && paciente.apellido && paciente.sexo && paciente.fechaNacimiento && paciente.documento) {
-        paciente.sexo = (paciente.sexo === 'Femenino') ? 'femenino' : 'masculino';
+        switch (paciente.sexo) {
+            case 'Femenino':
+                paciente.sexo = 'femenino';
+                break;
+            case 'Masculino':
+                paciente.sexo = 'masculino';
+                break;
+            default:
+                paciente.sexo = 'otro';
+                break;
+        }
         const value = matchPaciente(pacienteAndes, paciente);
         if (value >= cota) {
             return pacienteAndes;
@@ -105,7 +115,7 @@ export async function verificar(registro, pacienteAndes) {
         dto['paciente'] = pacienteVerified;
     } else {
         notError = false;
-        msgError = 'El paciente no ha sido verificado correctamente';
+        msgError = msgError + '\n' + 'El paciente no ha sido verificado correctamente';
     }
 
     if (registro.sisa) {
@@ -114,44 +124,49 @@ export async function verificar(registro, pacienteAndes) {
             dto.organizacion = dto.organizacion._id;
         } catch (e) {
             notError = false;
-            msgError = 'SISA Code invalido';
+            msgError = msgError + '\n' + 'SISA Code invalido';
         }
     }
 
     let profesionalVerified = vProfesional(registro);
-    if (profesionalVerified && notError) {
+    if (profesionalVerified) {
         dto['profesional'] = profesionalVerified;
     } else {
         notError = false;
-        msgError = 'El profesional no ha sido verificado correctamente';
+        msgError = msgError + '\n' + 'El profesional no ha sido verificado correctamente';
     }
 
     let prestacionVerified = vPrestacion(registro.prestacion);
-    if (prestacionVerified && notError) {
+    if (prestacionVerified) {
         dto['tipoPrestacion'] = prestacionVerified;
     } else {
         notError = false;
-        msgError = 'La prestación no existe';
+        msgError = msgError + '\n' + 'La prestación no existe';
     }
 
-    notError = registro.fecha ? true : false;
-    notError = registro.id ? true : false;
+    notError = notError && registro.fecha ? true : false;
+    notError = notError && registro.id ? true : false;
+
 
     if (notError) {
         dto['fecha'] = moment(registro.fecha).toDate();
         dto['id'] = registro.id;
     } else {
-        msgError = 'El registro no posee fecha de registro o id';
+        msgError = msgError + '\n' + 'El registro no posee fecha de registro o id';
     }
 
     if (notError) {
         let cie10Verified = vCie10(registro.cie10);
-        if (cie10Verified && notError) {
+        if (cie10Verified) {
+            if ((registro.cie10.indexOf('.')) === -1) {
+                registro.cie10 = registro.cie10 + '.9';
+            }
             dto['cie10'] = registro.cie10;
         } else {
-            msgError = 'El código CIE10 no es válido';
+            msgError = msgError + '\n' + 'El código CIE10 no es válido';
         }
     }
+
 
     // No Obligatorio
     if (notError) {
