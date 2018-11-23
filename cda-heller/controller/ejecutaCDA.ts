@@ -2,7 +2,7 @@ import { getData } from './queries';
 import * as Verificator from './verificaCDA';
 import { postCDA } from './../service/cda.service';
 import * as factory from './queries/heller';
-const sql = require('mssql');
+import * as sql from 'mssql';
 
 export async function ejecutar(paciente) {
     let data = factory.make(paciente);
