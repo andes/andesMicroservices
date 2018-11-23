@@ -19,7 +19,7 @@ function vPaciente(registro, pacienteAndes) {
             documento: pacMpi.documento ? pacMpi.documento.toString() : '',
             nombre: pacMpi.nombre ? pacMpi.nombre : '',
             apellido: pacMpi.apellido ? pacMpi.apellido : '',
-            fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
+            fechaNacimiento: pacMpi.fechaNacimiento ? moment(pacMpi.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
             sexo: pacMpi.sexo ? pacMpi.sexo : ''
         };
         const pacElastic = {
