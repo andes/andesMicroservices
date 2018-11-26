@@ -26,6 +26,7 @@ router.group('/cda', (group) => {
         }
         if (paciente) {
             await ejecutaCDA.ejecutar(paciente);
+            await ejecutaCDA.ejecutarMysql(paciente);
         }
     });
 });

@@ -1,24 +1,24 @@
 import * as ConfigPrivate from './../../config.private';
 
 export function make(paciente: any) {
-        const connectionString = {
-                user: ConfigPrivate.staticConfiguration.heller.user,
-                password: ConfigPrivate.staticConfiguration.heller.password,
-                server: ConfigPrivate.staticConfiguration.heller.ip,
-                database: ConfigPrivate.staticConfiguration.heller.database,
-                options: {
-                        tdsVersion: '7_1'
-                }
-        };
+    const connectionString = {
+        user: ConfigPrivate.staticConfiguration.heller.user,
+        password: ConfigPrivate.staticConfiguration.heller.password,
+        server: ConfigPrivate.staticConfiguration.heller.ip,
+        database: ConfigPrivate.staticConfiguration.heller.database,
+        options: {
+                tdsVersion: '7_1'
+            }
+    };
 
-        const dni = paciente.documento;
+    const dni = paciente.documento;
 
-        const query = `select
+    const query = `select
         replace(CNS_TipoConsultorio.Descripcion,' ','') + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
        CASE WHEN (  rtrim(dbo.AndesMapEspecialidad.CodigoSnomed)  = '0' or dbo.AndesMapEspecialidad.CodigoSnomed  IS NULL)THEN
                 '391000013108' ELSE dbo.AndesMapEspecialidad.CodigoSnomed  END AS prestacion,
                 999 as idEfector,
-        CNS_Recepcion.Fecha as fecha,                        
+        CNS_Recepcion.Fecha as fecha,
         '10580352167031' as sisa,
         CNS_Recepcion.DNI AS pacienteDocumento,
                 Pacientes.NOMBRES AS pacienteNombre,
@@ -59,9 +59,52 @@ export function make(paciente: any) {
                             and Pacientes.[Número de Documento] =  '${dni}'
                     ORDER BY CNS_Recepcion.Fecha`;
 
-        return {
-                connectionString,
-                query
-        };
+    return {
+        connectionString,
+        query
+    };
+}
+
+export function makeMysql(paciente: any) {
+    const connectionString = {
+        host: ConfigPrivate.staticConfiguration.hellerMysql.ip,
+        user: ConfigPrivate.staticConfiguration.hellerMysql.user,
+        password: ConfigPrivate.staticConfiguration.hellerMysql.password,
+        database: ConfigPrivate.staticConfiguration.hellerMysql.database
+    };
+
+    const dni = paciente.documento;
+
+    const query = `SELECT
+    CONCAT('Consultorios Ext.Enfermeria','-',rtrim(enf_cns_prestaciones_monitor.idCnsRecepEnfPrestaciones)) as id,
+    '861000013109' AS prestacion,
+    999 as idEfector,
+    enf_cns_prestaciones_monitor.fechaRecep as fecha,
+        '10580352167031' as sisa,
+        dniPac as DNIPaciente,
+        SUBSTRING_INDEX(apenomPac, ',', 1) as ApellidoPaciente,
+        SUBSTRING_INDEX(SUBSTRING_INDEX(apenomPac, ',', 2), ',', -1)as NombrePaciente,
+        enf_cns_prestaciones_monitor.fechaNac as fechaNacPaciente,
+        enf_cns_prestaciones_monitor.sexoPac as Sexo,
+        personaldb.per_persona.NroDoc as DniProfesional,
+        personaldb.per_persona.Nombre as NombreProfesional,
+        personaldb.per_persona.Apellido as ApellidoProfesional,
+        '0' as MatriculaProfesional,
+        CONCAT(enf_cns_prestaciones_tipoatencion.atencionNombre,' ',enf_cns_prestaciones_atenciones.evolucion) as texto
+        FROM enf_cns_prestaciones_monitor
+        INNER JOIN enf_cns_prestaciones_atenciones
+        ON enf_cns_prestaciones_monitor.idCnsRecepEnfPrestaciones = enf_cns_prestaciones_atenciones.idCnsRecepEnfPrestaciones
+        INNER JOIN enf_cns_prestaciones_tipoatencion
+        ON enf_cns_prestaciones_atenciones.idTipoAtencionCnsEnfPrest = enf_cns_prestaciones_tipoatencion.idTipoAtencionCnsEnfPrest
+        INNER JOIN personaldb.per_agentes
+        on personaldb.per_agentes.idAgente = enf_cns_prestaciones_atenciones.idAgente
+        inner join personaldb.per_persona
+        on personaldb.per_agentes.idPersona = personaldb.per_persona.idPersona
+        where dniPac='${dni}'`;
+
+    return {
+        connectionString,
+        query
+    };
 }
 

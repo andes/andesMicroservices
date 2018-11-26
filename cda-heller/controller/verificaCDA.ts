@@ -154,7 +154,7 @@ export async function verificar(registro, pacienteAndes) {
         msgError = msgError + '\n' + 'El registro no posee fecha de registro o id' + registro.fecha + registro.id;
     }
 
-    if (notError) {
+    if (notError && registro.cie10) {
         let cie10Verified = vCie10(registro.cie10);
         if (cie10Verified) {
             if ((registro.cie10.indexOf('.')) === -1) {
