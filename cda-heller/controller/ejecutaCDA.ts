@@ -3,7 +3,7 @@ import * as Verificator from './verificaCDA';
 import { postCDA } from './../service/cda.service';
 import * as factory from './queries/heller';
 import * as sql from 'mssql';
-import * as mysql from 'mysql';
+import * as mysql from 'promise-mysql';
 
 export async function ejecutar(paciente) {
     let data = factory.make(paciente);
