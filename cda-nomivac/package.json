@@ -1,0 +1,24 @@
+{
+    "name": "cda-nomivac",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "lint": "tslint --project ..",
+        "tsc": "../node_modules/typescript/bin/tsc",
+        "tsc:w": "../node_modules/typescript/bin/tsc -w"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@andes/bootstrap": "file:../bootstrap",
+        "@andes/log": "^1.0.10",
+        "@andes/match": "^1.1.12",
+        "async": "^2.6.1",
+        "html-entities": "^1.2.1",
+        "moment": "^2.22.0",
+        "mongoose": "^5.3.12",
+        "mssql": "^5.0.0-alpha.1",
+        "request": "^2.88.0"
+    }
+}
