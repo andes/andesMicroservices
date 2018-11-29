@@ -32,24 +32,23 @@ export async function ejecutar(paciente) {
 export async function ejecutarMysql(paciente) {
     let data = factory.makeMysql(paciente);
     if (data) {
-        // sql.close();
         let pool = await mysql.createConnection(data.connectionString);
-        await pool.connect();
+        const registros = await pool.query(data.query);
+        if (registros.length > 0) {
+            let ps = registros.map(async registro => {
+                let dto = await Verificator.verificar(registro, paciente);
+                if (dto) {
+                    await postCDA(dto);
+                }
+            });
+            await Promise.all(ps);
+            pool.end();
+            return true;
+        } else {
+            pool.end();
+            return true;
+        }
 
-        let resultado = await pool.query(data.query);
-        // const registros = resultado.recordset;
-        // if (registros.length > 0) {
-        //     let ps = registros.map(async registro => {
-        //         let dto = await Verificator.verificar(registro, paciente);
-        //         if (dto) {
-        //             await postCDA(dto);
-        //         }
-        //     });
-        //     await Promise.all(ps);
-        //     return true;
-        // } else {
-        //     return true;
-        // }
     } else {
         return true;
     }

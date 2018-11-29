@@ -129,7 +129,7 @@ export async function verificar(registro, pacienteAndes) {
     }
 
     let profesionalVerified = vProfesional(registro);
-    if (profesionalVerified && notError) {
+    if (profesionalVerified) {
         dto['profesional'] = profesionalVerified;
     } else {
         notError = false;
@@ -137,7 +137,7 @@ export async function verificar(registro, pacienteAndes) {
     }
 
     let prestacionVerified = vPrestacion(registro.prestacion);
-    if (prestacionVerified && notError) {
+    if (prestacionVerified) {
         dto['tipoPrestacion'] = prestacionVerified;
     } else {
         notError = false;
