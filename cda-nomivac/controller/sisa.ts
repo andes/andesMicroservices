@@ -1,6 +1,7 @@
 import { log } from '@andes/log';
 import { getVacunasNomivac } from '../service/nomivacSQL';
 import * as operations from '../service/nomivacCDA';
+import { organizacionId } from '../config.private';
 
 /**
  * Actualiza las vacunas de un paciente de ANDES usando el webservice de NOMIVAC
@@ -17,7 +18,7 @@ export async function getVacunas(paciente) {
             for (let i = 0; i < vacunas.length; i++) {
                 const dto = {
                     id: vacunas[i].ID.toString(), // El id de la vacuna NOMIVAC
-                    organizacion: '57e9670e52df311059bc8964', // ACA podríamos enviar el id de sisa y crearlo como organizacion?
+                    organizacion: organizacionId,
                     fecha: vacunas[i].FechaAplicacion,
                     tipoPrestacion: '33879002', // aplicación de una vacuna para producir inmunidad activa o pasiva
                     paciente,
@@ -30,7 +31,6 @@ export async function getVacunas(paciente) {
                     file: null,
                     texto: `Vacuna: ${vacunas[i].Vacuna} Dosis: ${vacunas[i].Dosis} Esquema: ${vacunas[i].Esquema} pertenece al lote: ${vacunas[i].Lote}`
                 };
-                console.log('antes de los post: ');
                 await operations.postCDA(dto);
 
                 const dtoMongoDB = {
