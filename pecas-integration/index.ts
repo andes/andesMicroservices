@@ -19,10 +19,10 @@ router.group('/bi', (group) => {
         let agenda = data;
         if (agenda) {
             // Conexión a la base de datos de logs: andesLogs
-            Connections.initialize(logDatabase.log.host, logDatabase.log.options);
+            await Connections.initialize(logDatabase.log.host, logDatabase.log.options);
             await setInPecas(agenda);
             // Cierra la conexión a la bd
-            Connections.close(database);
+            await Connections.close(database);
         }
     });
 });
