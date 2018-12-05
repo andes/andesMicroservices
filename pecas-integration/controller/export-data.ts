@@ -55,7 +55,7 @@ export async function setInPecas(agenda) {
 
     // Se recorren los sobreturnos
     a.sobreturnos.forEach(async t => {
-        // await auxiliar(a, null, t, profesionalesEspecialidades);	
+        // await auxiliar(a, null, t, profesionalesEspecialidades);
         await auxiliar(a, null, t);
     });
     // Queda pendiente para más adelante.

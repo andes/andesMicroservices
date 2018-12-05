@@ -1,7 +1,8 @@
 import { log } from '@andes/log';
 import { getVacunasNomivac } from '../service/nomivacSQL';
 import * as operations from '../service/nomivacCDA';
-import { organizacionId } from '../config.private';
+import { organizacionId, SIPS_SQL } from '../config.private';
+import * as sql from 'mssql';
 
 /**
  * Actualiza las vacunas de un paciente de ANDES usando el webservice de NOMIVAC
@@ -13,8 +14,10 @@ export async function getVacunas(paciente) {
     let vacunas;
     if (paciente && paciente.documento) {
         try {
+            let pool = await new sql.ConnectionPool(SIPS_SQL).connect();
             let query = `select * from Nomivac where NroDocumento = ${paciente.documento} order by FechaAplicacion desc`;
-            vacunas = await getVacunasNomivac(query);
+            let r = await getVacunasNomivac(pool, query);
+            vacunas = r.recordset;
             for (let i = 0; i < vacunas.length; i++) {
                 const dto = {
                     id: vacunas[i].ID.toString(), // El id de la vacuna NOMIVAC
@@ -31,6 +34,7 @@ export async function getVacunas(paciente) {
                     file: null,
                     texto: `Vacuna: ${vacunas[i].Vacuna} Dosis: ${vacunas[i].Dosis} Esquema: ${vacunas[i].Esquema} pertenece al lote: ${vacunas[i].Lote}`
                 };
+
                 await operations.postCDA(dto);
 
                 const dtoMongoDB = {
@@ -44,7 +48,7 @@ export async function getVacunas(paciente) {
                     dosis: vacunas[i].Dosis,
                     fechaAplicacion: vacunas[i].FechaAplicacion,
                     efector: vacunas[i].Establecimiento
-                }
+                };
                 await operations.postMongoDB(dtoMongoDB);
             }
         } catch (e) {

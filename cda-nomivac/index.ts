@@ -18,7 +18,6 @@ router.group('/cda', (group) => {
             const webhookId = req.body.subscription;
             const event = req.body.event;
             const data = req.body.data;
-
             let paciente = data;
             if (paciente) {
                 await getVacunas(paciente);
