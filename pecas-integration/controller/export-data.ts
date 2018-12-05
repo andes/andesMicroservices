@@ -85,13 +85,13 @@ async function auxiliar(a: any, b: any, t: any) {
         let turnoConPaciente = t.estado === 'asignado' && t.paciente;
         let organizacion: any = await getEfector(a.organizacion.id);
         efector = {
-            tipoEfector: organizacion.tipoEstablecimiento.nombre,
-            codigo: organizacion.codigo.sips
+            tipoEfector: organizacion.tipoEstablecimiento ? organizacion.tipoEstablecimiento.nombre : null,
+            codigo: organizacion.codigo.sips ? organizacion.codigo.sips : null
         };
-        let idEfector = efector ? efector.codigo : null;
-        let tipoEfector = efector ? efector.tipoEfector : null;
+        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
+        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
         turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
-        turno.idEfector = parseInt(idEfector, 10);
+        turno.idEfector = idEfector;
         turno.Organizacion = a.organizacion.nombre;
         turno.idAgenda = a._id;
         turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
@@ -296,17 +296,25 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
         turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
         turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.financiador) ? t.paciente.obraSocial.financiador.toString().replace('\'', '\'\'') : null;
-        if (tipoEfector && tipoEfector === 'Centro de Salud') {
-            turno.TipoEfector = '1';
-        }
-        if (tipoEfector && tipoEfector === 'Hospital') {
-            turno.TipoEfector = '2';
-        }
-        if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
-            turno.TipoEfector = '3';
-        }
-        if (tipoEfector && tipoEfector === 'ONG') {
-            turno.TipoEfector = '6';
+        if (tipoEfector) {
+            switch (tipoEfector) {
+                case 'Centro de Salud':
+                    turno.TipoEfector = '1';
+                    break;
+                case 'Hospital':
+                    turno.TipoEfector = '2';
+                    break;
+                case 'Puesto Sanitario':
+                    turno.TipoEfector = '3';
+                    break;
+                case 'ONG':
+                    turno.TipoEfector = '6';
+                    break;
+            }
+
+        } else {
+            tipoEfector = '';
+            turno.TipoEfector = '';
         }
         turno.DescTipoEfector = tipoEfector;
         turno.IdZona = null;
@@ -474,6 +482,7 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
+        console.log('err ', err);
         let fakeRequest = {
             user: {
                 usuario: 'msPecas',
