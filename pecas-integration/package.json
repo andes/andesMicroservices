@@ -12,7 +12,7 @@
     "license": "ISC",
     "dependencies": {
         "@andes/bootstrap": "file:../bootstrap",
-        "@andes/log": "^1.0.10",
+        "@andes/log": "^1.0.11",
         "@andes/match": "^1.1.12",
         "async": "^2.6.1",
         "html-entities": "^1.2.1",
