@@ -27,48 +27,51 @@ const outputFile = type + '.json';
  * @returns resultado
  */
 export async function setInPecas(agenda) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            poolTurnos = await new sql.ConnectionPool(config).connect();
+        } catch (ex) {
+            let fakeRequest = {
+                user: {
+                    usuario: 'msPecas',
+                    app: 'integracion-pecas',
+                    organizacion: 'sss'
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
+            return reject(ex);
+        }
 
-    try {
-        poolTurnos = await new sql.ConnectionPool(config).connect();
-    } catch (ex) {
-        let fakeRequest = {
-            user: {
-                usuario: 'msPecas',
-                app: 'integracion-pecas',
-                organizacion: 'sss'
-            },
-            ip: 'localhost',
-            connection: {
-                localAddress: ''
+        let a = agenda;
+
+        // Queda pendiente para más adelante.
+
+        // let profesionales = a.profesionales;
+        // let profesionalesEspecialidades = [];
+        // if (profesionales) {
+        //     for (let i = 0; i < profesionales.length; i++) {
+        //         let data = await profesionalEspecialidades(profesionales[i]);
+        //         profesionalesEspecialidades.push(data);
+        //     }
+        // }
+        // Se recorren los turnos
+        for (let i = 0; i < a.bloques.length; i++) {
+            let b = a.bloques[i];
+            for (let j = 0; j < b.turnos.length; j++) {
+                let t = a.bloques[i].turnos[j];
+                await auxiliar(a, b, t);
             }
-        };
-        await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
-        return (ex);
-    }
-
-    let a = agenda;
-
-    // Queda pendiente para más adelante.
-
-    // let profesionales = a.profesionales;
-    // let profesionalesEspecialidades = [];
-    // if (profesionales) {
-    //     for (let i = 0; i < profesionales.length; i++) {
-    //         let data = await profesionalEspecialidades(profesionales[i]);
-    //         profesionalesEspecialidades.push(data);
-    //     }
-    // }
-    a.bloques.forEach(b => {
-        b.turnos.forEach(async t => {
-            // await auxiliar(a, b, t, profesionalesEspecialidades);
-            await auxiliar(a, b, t);
-        });
-    });
-    // Se recorren los sobreturnos
-    a.sobreturnos.forEach(async t => {
-        // await auxiliar(a, null, t, profesionalesEspecialidades);
-        await auxiliar(a, null, t);
-
+        }
+        // Se recorren los sobreturnos
+        for (let i = 0; i < a.sobreturnos.length; i++) {
+            let t = a.sobreturnos[i];
+            await auxiliar(a, null, t);
+        }
+        return resolve();
     });
 }
 
@@ -388,6 +391,7 @@ async function auxiliar(a: any, b: any, t: any) {
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);
+
             if (queryDel.rowsAffected[0] > 0) {
                 await executeQuery(queryInsert);
             }
@@ -475,6 +479,17 @@ async function profesionalEspecialidades(profesional) {
 }
 
 async function executeQuery(query: any) {
+    let fakeRequest = {
+        user: {
+            usuario: 'msPecas',
+            app: 'integracion-pecas',
+            organizacion: 'sss'
+        },
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
+        }
+    };
     try {
         query += ' select SCOPE_IDENTITY() as id';
         const result = await new sql.Request(poolTurnos).query(query);
@@ -482,18 +497,6 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        console.log('err ', err);
-        let fakeRequest = {
-            user: {
-                usuario: 'msPecas',
-                app: 'integracion-pecas',
-                organizacion: 'sss'
-            },
-            ip: 'localhost',
-            connection: {
-                localAddress: ''
-            }
-        };
         await log(fakeRequest, 'microservices:integration:pecas', undefined, query, err);
         return err;
     }
