@@ -17,7 +17,9 @@ router.group('/bi', (group) => {
         const data = req.body.data;
 
         let agenda = data;
-        if (agenda) {
+        let condicionPecas = agenda && agenda.estado !== 'planificacion' && agenda.estado !== 'borrada' && agenda.bloques !== null && !agenda.bloques.some(b => b.turnos === null);
+
+        if (condicionPecas) {
             // Conexión a la base de datos de logs: andesLogs
             await Connections.initialize(logDatabase.log.host, logDatabase.log.options);
             await setInPecas(agenda);
