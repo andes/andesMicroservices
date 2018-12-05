@@ -485,7 +485,7 @@ async function executeQuery(query: any) {
                 localAddress: ''
             }
         };
-        await log(fakeRequest, 'microservices:integration:pecas', undefined, err, null);
+        await log(fakeRequest, 'microservices:integration:pecas', undefined, query, err);
         return err;
     }
 }
