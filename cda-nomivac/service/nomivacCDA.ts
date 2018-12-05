@@ -1,5 +1,6 @@
 import { ANDES_HOST, ANDES_KEY } from '../config.private';
 const request = require('request');
+import { log } from '@andes/log';
 
 // Invoca a la API de andes para generar un cda con la vacuna
 export function postCDA(data: any) {
@@ -18,6 +19,18 @@ export function postCDA(data: any) {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
+            let fakeRequest = {
+                user: {
+                    usuario: 'msNomivac',
+                    app: 'integracion-nomivac',
+                    organizacion: 'sss'
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            log(fakeRequest, 'microservices:integration:nomivac', undefined, 'postCDA:Nomivac', body);
             return resolve(error || body);
         });
     });
@@ -39,6 +52,18 @@ export function postMongoDB(data: any) {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
+            let fakeRequest = {
+                user: {
+                    usuario: 'msNomivac',
+                    app: 'integracion-nomivac',
+                    organizacion: 'sss'
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            log(fakeRequest, 'microservices:integration:nomivac', undefined, 'postMongodb:Nomivac', body);
             return resolve(error || body);
         });
     });
