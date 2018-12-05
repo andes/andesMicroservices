@@ -27,52 +27,47 @@ const outputFile = type + '.json';
  * @returns resultado
  */
 export async function setInPecas(agenda) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            poolTurnos = await new sql.ConnectionPool(config).connect();
-        } catch (ex) {
-            let fakeRequest = {
-                user: {
-                    usuario: 'msPecas',
-                    app: 'integracion-pecas',
-                    organizacion: 'sss'
-                },
-                ip: 'localhost',
-                connection: {
-                    localAddress: ''
-                }
-            };
-            await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
-            return reject(ex);
-        }
 
-        let a = agenda;
-
-        // Queda pendiente para más adelante.
-
-        // let profesionales = a.profesionales;
-        // let profesionalesEspecialidades = [];
-        // if (profesionales) {
-        //     for (let i = 0; i < profesionales.length; i++) {
-        //         let data = await profesionalEspecialidades(profesionales[i]);
-        //         profesionalesEspecialidades.push(data);
-        //     }
-        // }
-        // Se recorren los turnos
-        for (let i = 0; i < a.bloques.length; i++) {
-            let b = a.bloques[i];
-            for (let j = 0; j < b.turnos.length; j++) {
-                let t = a.bloques[i].turnos[j];
-                await auxiliar(a, b, t);
+    try {
+        poolTurnos = await new sql.ConnectionPool(config).connect();
+    } catch (ex) {
+        let fakeRequest = {
+            user: {
+                usuario: 'msPecas',
+                app: 'integracion-pecas',
+                organizacion: 'sss'
+            },
+            ip: 'localhost',
+            connection: {
+                localAddress: ''
             }
-        }
-        // Se recorren los sobreturnos
-        for (let i = 0; i < a.sobreturnos.length; i++) {
-            let t = a.sobreturnos[i];
-            await auxiliar(a, null, t);
-        }
-        return resolve();
+        };
+        await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
+    }
+
+    let a = agenda;
+    // Se recorren los turnos
+    a.bloques.forEach(b => {
+        b.turnos.forEach(async t => {
+            await auxiliar(a, b, t);
+        });
     });
+
+    // Se recorren los sobreturnos
+    a.sobreturnos.forEach(async t => {
+        // await auxiliar(a, null, t, profesionalesEspecialidades);	
+        await auxiliar(a, null, t);
+    });
+    // Queda pendiente para más adelante.
+
+    // let profesionales = a.profesionales;
+    // let profesionalesEspecialidades = [];
+    // if (profesionales) {
+    //     for (let i = 0; i < profesionales.length; i++) {
+    //         let data = await profesionalEspecialidades(profesionales[i]);
+    //         profesionalesEspecialidades.push(data);
+    //     }
+    // }
 }
 
 // castea cada turno asignado y lo inserta en la tabla Sql
