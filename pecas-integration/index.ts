@@ -9,6 +9,8 @@ const router = ms.router();
 
 router.group('/bi', (group) => {
     // group.use(Middleware.authenticate());
+    // Conexión a la base de datos de logs: andesLogs
+    Connections.initialize(logDatabase.log.host, logDatabase.log.options);
     group.post('/pecas', async (req: any, res) => {
         res.send({ message: 'ok' });
         const id = req.body.id;
@@ -17,12 +19,10 @@ router.group('/bi', (group) => {
         const data = req.body.data;
 
         let agenda = data;
-        if (agenda) {
-            // Conexión a la base de datos de logs: andesLogs
-            await Connections.initialize(logDatabase.log.host, logDatabase.log.options);
-            await setInPecas(agenda);
-            // Cierra la conexión a la bd
-            await Connections.close(database);
+        let condicionPecas = agenda && agenda.estado !== 'planificacion' && agenda.estado !== 'borrada' && agenda.bloques !== null && !agenda.bloques.some(b => b.turnos === null);
+
+        if (condicionPecas) {
+            setInPecas(agenda);
         }
     });
 });
