@@ -133,15 +133,19 @@ export async function verificar(registro, pacienteAndes) {
         notError = false;
         msgError = 'La prestación no existe';
     }
+    if (!registro.fecha) {
+        notError = false;
+        msgError = 'El registro no posee fecha de registro o id';
+    }
 
-    notError = registro.fecha ? true : false;
-    notError = registro.id ? true : false;
+    if (!registro.id) {
+        notError = false;
+        msgError = 'El registro no posee fecha de registro o id';
+    }
 
     if (notError) {
         dto['fecha'] = moment(registro.fecha).toDate();
         dto['id'] = registro.id;
-    } else {
-        msgError = 'El registro no posee fecha de registro o id';
     }
 
     if (notError) {
