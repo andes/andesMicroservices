@@ -27,7 +27,6 @@ const outputFile = type + '.json';
  * @returns resultado
  */
 export async function setInPecas(agenda) {
-
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
@@ -43,6 +42,7 @@ export async function setInPecas(agenda) {
             }
         };
         await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
+        return ex;
     }
 
     let a = agenda;
