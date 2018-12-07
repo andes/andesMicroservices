@@ -47,17 +47,20 @@ export async function setInPecas(agenda) {
 
     let a = agenda;
     // Se recorren los turnos
-    a.bloques.forEach(b => {
-        b.turnos.forEach(async t => {
+    for (let i = 0; i < a.bloques.length; i++) {
+        let b = a.bloques[i];
+        for (let j = 0; j < b.turnos.length; j++) {
+            let t = a.bloques[i].turnos[j];
             await auxiliar(a, b, t);
-        });
-    });
+        }
+    }
 
     // Se recorren los sobreturnos
-    a.sobreturnos.forEach(async t => {
-        // await auxiliar(a, null, t, profesionalesEspecialidades);	
+    for (let i = 0; i < a.sobreturnos.length; i++) {
+        let t = a.sobreturnos[i];
         await auxiliar(a, null, t);
-    });
+    }
+
     // Queda pendiente para más adelante.
 
     // let profesionales = a.profesionales;

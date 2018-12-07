@@ -25,11 +25,13 @@ router.group('/bi', (group) => {
         let condicionPecas = agenda && agenda.estado !== 'planificacion' && agenda.estado !== 'borrada' && agenda.bloques !== null && !agenda.bloques.some(b => b.turnos === null);
 
         if (condicionPecas) {
-            queue.add(async () => {
-                let rta = await setInPecas(agenda);
-            });
+            // queue.add(async () => {
+            //     let rta = await setInPecas(agenda);
+            // });
 
-            // setInPecas(agenda);
+            queue.add(() => setInPecas(agenda).then(() => {
+            }));
+
         }
     });
 });
