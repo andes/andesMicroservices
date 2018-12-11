@@ -27,7 +27,6 @@ const outputFile = type + '.json';
  * @returns resultado
  */
 export async function setInPecas(agenda) {
-
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
@@ -43,10 +42,24 @@ export async function setInPecas(agenda) {
             }
         };
         await log(fakeRequest, 'microservices:integration:pecas', undefined, ex, null);
-        return (ex);
+        return ex;
     }
 
     let a = agenda;
+    // Se recorren los turnos
+    for (let i = 0; i < a.bloques.length; i++) {
+        let b = a.bloques[i];
+        for (let j = 0; j < b.turnos.length; j++) {
+            let t = a.bloques[i].turnos[j];
+            await auxiliar(a, b, t);
+        }
+    }
+
+    // Se recorren los sobreturnos
+    for (let i = 0; i < a.sobreturnos.length; i++) {
+        let t = a.sobreturnos[i];
+        await auxiliar(a, null, t);
+    }
 
     // Queda pendiente para más adelante.
 
@@ -58,18 +71,6 @@ export async function setInPecas(agenda) {
     //         profesionalesEspecialidades.push(data);
     //     }
     // }
-    a.bloques.forEach(b => {
-        b.turnos.forEach(async t => {
-            // await auxiliar(a, b, t, profesionalesEspecialidades);
-            await auxiliar(a, b, t);
-        });
-    });
-    // Se recorren los sobreturnos
-    a.sobreturnos.forEach(async t => {
-        // await auxiliar(a, null, t, profesionalesEspecialidades);
-        await auxiliar(a, null, t);
-
-    });
 }
 
 // castea cada turno asignado y lo inserta en la tabla Sql
@@ -85,13 +86,13 @@ async function auxiliar(a: any, b: any, t: any) {
         let turnoConPaciente = t.estado === 'asignado' && t.paciente;
         let organizacion: any = await getEfector(a.organizacion.id);
         efector = {
-            tipoEfector: organizacion.tipoEstablecimiento.nombre,
-            codigo: organizacion.codigo.sips
+            tipoEfector: organizacion.tipoEstablecimiento ? organizacion.tipoEstablecimiento.nombre : null,
+            codigo: organizacion.codigo.sips ? organizacion.codigo.sips : null
         };
-        let idEfector = efector ? efector.codigo : null;
-        let tipoEfector = efector ? efector.tipoEfector : null;
+        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
+        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
         turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
-        turno.idEfector = parseInt(idEfector, 10);
+        turno.idEfector = idEfector;
         turno.Organizacion = a.organizacion.nombre;
         turno.idAgenda = a._id;
         turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
@@ -296,17 +297,25 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
         turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
         turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.financiador) ? t.paciente.obraSocial.financiador.toString().replace('\'', '\'\'') : null;
-        if (tipoEfector && tipoEfector === 'Centro de Salud') {
-            turno.TipoEfector = '1';
-        }
-        if (tipoEfector && tipoEfector === 'Hospital') {
-            turno.TipoEfector = '2';
-        }
-        if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
-            turno.TipoEfector = '3';
-        }
-        if (tipoEfector && tipoEfector === 'ONG') {
-            turno.TipoEfector = '6';
+        if (tipoEfector) {
+            switch (tipoEfector) {
+                case 'Centro de Salud':
+                    turno.TipoEfector = '1';
+                    break;
+                case 'Hospital':
+                    turno.TipoEfector = '2';
+                    break;
+                case 'Puesto Sanitario':
+                    turno.TipoEfector = '3';
+                    break;
+                case 'ONG':
+                    turno.TipoEfector = '6';
+                    break;
+            }
+
+        } else {
+            tipoEfector = '';
+            turno.TipoEfector = '';
         }
         turno.DescTipoEfector = tipoEfector;
         turno.IdZona = null;
@@ -380,6 +389,7 @@ async function auxiliar(a: any, b: any, t: any) {
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);
+
             if (queryDel.rowsAffected[0] > 0) {
                 await executeQuery(queryInsert);
             }
@@ -467,6 +477,17 @@ async function profesionalEspecialidades(profesional) {
 }
 
 async function executeQuery(query: any) {
+    let fakeRequest = {
+        user: {
+            usuario: 'msPecas',
+            app: 'integracion-pecas',
+            organizacion: 'sss'
+        },
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
+        }
+    };
     try {
         query += ' select SCOPE_IDENTITY() as id';
         const result = await new sql.Request(poolTurnos).query(query);
@@ -474,18 +495,7 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        let fakeRequest = {
-            user: {
-                usuario: 'msPecas',
-                app: 'integracion-pecas',
-                organizacion: 'sss'
-            },
-            ip: 'localhost',
-            connection: {
-                localAddress: ''
-            }
-        };
-        await log(fakeRequest, 'microservices:integration:pecas', undefined, err, null);
+        await log(fakeRequest, 'microservices:integration:pecas', undefined, query, err);
         return err;
     }
 }
