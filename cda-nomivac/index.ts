@@ -2,6 +2,7 @@ import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
 import { logDatabase, database } from './config.private';
 import { getVacunas } from './controller/sisa';
+import * as Fhir from '@andes/fhir';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -18,7 +19,7 @@ router.group('/cda', (group) => {
             const webhookId = req.body.subscription;
             const event = req.body.event;
             const data = req.body.data;
-            let paciente = data;
+            let paciente = Fhir.Patient.decode(data);
             if (paciente) {
                 await getVacunas(paciente);
             }
