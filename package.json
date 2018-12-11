@@ -12,6 +12,8 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "@andes/fhir": "^1.0.0"
+    "@andes/fhir": "^1.0.0",
+    "p-queue": "^3.0.0"
+
   }
 }
