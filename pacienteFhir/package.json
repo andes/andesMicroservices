@@ -11,6 +11,13 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@andes/bootstrap": "file:../bootstrap"
-    }
+        "@andes/bootstrap": "file:../bootstrap",
+        "@andes/fhir": "^1.0.0",
+        "@andes/log": "^1.0.11",
+        "@andes/match": "^1.1.12",
+        "moment": "^2.22.2",
+        "mssql": "^4.2.1",
+        "request": "^2.88.0"
+    },
+    "devDependencies": {}
 }
