@@ -19,6 +19,7 @@ export async function getVacunas(paciente) {
             let r = await getVacunasNomivac(pool, query);
             vacunas = r.recordset;
             for (let i = 0; i < vacunas.length; i++) {
+                let promesas = [];
                 const dto = {
                     id: vacunas[i].ID.toString(), // El id de la vacuna NOMIVAC
                     organizacion: organizacionId,
@@ -35,7 +36,7 @@ export async function getVacunas(paciente) {
                     texto: `Vacuna: ${vacunas[i].Vacuna} Dosis: ${vacunas[i].Dosis} Esquema: ${vacunas[i].Esquema} pertenece al lote: ${vacunas[i].Lote}`
                 };
 
-                await operations.postCDA(dto);
+                promesas.push(operations.postCDA(dto));
 
                 const dtoMongoDB = {
                     idvacuna: vacunas[i].ID.toString(),
@@ -49,7 +50,8 @@ export async function getVacunas(paciente) {
                     fechaAplicacion: vacunas[i].FechaAplicacion,
                     efector: vacunas[i].Establecimiento
                 };
-                await operations.postMongoDB(dtoMongoDB);
+                promesas.push(operations.postMongoDB(dtoMongoDB));
+                await Promise.all(promesas);
             }
         } catch (e) {
             let fakeRequest = {
