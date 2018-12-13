@@ -12,8 +12,8 @@
     "license": "ISC",
     "dependencies": {
         "@andes/bootstrap": "file:../bootstrap",
-        "@andes/fhir": "^1.0.0",
-        "moment": "^2.22.0",
+        "@andes/fhir": "^1.0.1",
+        "moment": "^2.22.2",
         "mssql": "^4.1.0",
         "request": "^2.88.0"
     }
