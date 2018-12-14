@@ -19,7 +19,7 @@ function vPaciente(registro, pacienteAndes) {
             documento: pacMpi.documento ? pacMpi.documento.toString() : '',
             nombre: pacMpi.nombre ? pacMpi.nombre : '',
             apellido: pacMpi.apellido ? pacMpi.apellido : '',
-            fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
+            fechaNacimiento: pacMpi.fechaNacimiento ? moment(pacMpi.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
             sexo: pacMpi.sexo ? pacMpi.sexo : ''
         };
         const pacElastic = {
@@ -42,10 +42,10 @@ function vPaciente(registro, pacienteAndes) {
     };
     if (paciente.nombre && paciente.apellido && paciente.sexo && paciente.fechaNacimiento && paciente.documento) {
         switch (paciente.sexo) {
-            case 'Femenino':
+            case 'femenino':
                 paciente.sexo = 'femenino';
                 break;
-            case 'Masculino':
+            case 'masculino':
                 paciente.sexo = 'masculino';
                 break;
             default:
@@ -141,24 +141,20 @@ export async function verificar(registro, pacienteAndes) {
         dto['tipoPrestacion'] = prestacionVerified;
     } else {
         notError = false;
-        msgError = msgError + '\n' + 'La prestación no existe';
-    }
-    if (!registro.fecha) {
-        notError = false;
-        msgError = 'El registro no posee fecha de registro o id';
+        msgError = msgError + '\n' + 'La prestación no existe' + registro.prestacion;
     }
 
-    if (!registro.id) {
-        notError = false;
-        msgError = 'El registro no posee fecha de registro o id';
-    }
+    notError = notError && registro.fecha ? true : false;
+    notError = notError && registro.id ? true : false;
 
     if (notError) {
         dto['fecha'] = moment(registro.fecha).toDate();
         dto['id'] = registro.id;
+    } else {
+        msgError = msgError + '\n' + 'El registro no posee fecha de registro o id' + registro.fecha + registro.id;
     }
 
-    if (notError) {
+    if (notError && registro.cie10) {
         let cie10Verified = vCie10(registro.cie10);
         if (cie10Verified) {
             if ((registro.cie10.indexOf('.')) === -1) {
@@ -166,10 +162,10 @@ export async function verificar(registro, pacienteAndes) {
             }
             dto['cie10'] = registro.cie10;
         } else {
-            msgError = msgError + '\n' + 'El código CIE10 no es válido';
+            notError = false;
+            msgError = msgError + '\n' + 'El código CIE10 no es válido' + registro.cie10;
         }
     }
-
 
     // No Obligatorio
     if (notError) {
@@ -186,6 +182,7 @@ export async function verificar(registro, pacienteAndes) {
 
     if (!notError) {
         dto = null;
+        console.log('error', msgError);
     }
 
 
