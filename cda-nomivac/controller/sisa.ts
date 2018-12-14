@@ -18,8 +18,8 @@ export async function getVacunas(paciente) {
             let query = `select * from Nomivac where NroDocumento = ${paciente.documento} order by FechaAplicacion desc`;
             let r = await getVacunasNomivac(pool, query);
             vacunas = r.recordset;
+            let promesas = [];
             for (let i = 0; i < vacunas.length; i++) {
-                let promesas = [];
                 const dto = {
                     id: vacunas[i].ID.toString(), // El id de la vacuna NOMIVAC
                     organizacion: organizacionId,
@@ -51,8 +51,8 @@ export async function getVacunas(paciente) {
                     efector: vacunas[i].Establecimiento
                 };
                 promesas.push(operations.postMongoDB(dtoMongoDB));
-                await Promise.all(promesas);
             }
+            await Promise.all(promesas);
         } catch (e) {
             let fakeRequest = {
                 user: {
