@@ -56,6 +56,7 @@ export async function setInPecas(agenda) {
     }
 
     // Se recorren los sobreturnos
+
     for (let i = 0; i < a.sobreturnos.length; i++) {
         let t = a.sobreturnos[i];
         await auxiliar(a, null, t);
