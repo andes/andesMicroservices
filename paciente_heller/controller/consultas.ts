@@ -27,16 +27,17 @@ export async function conexionPaciente(paciente) {
                                         }
                                 });
                         });
-                } else {
-                        transaction.begin(async err => {
-                                await updatePaciente(paciente, pacienteExistente, transaction);
-                                transaction.commit(err2 => {
-                                        if (!err2) {
-                                                return;
-                                        }
-                                });
-                        });
                 }
+                //else {
+                //         transaction.begin(async err => {
+                //                 await updatePaciente(paciente, pacienteExistente, transaction);
+                //                 transaction.commit(err2 => {
+                //                         if (!err2) {
+                //                                 return;
+                //                         }
+                //                 });
+                //         });
+                // }
         } catch (ex) {
                 let fakeRequest = {
                         user: {
@@ -95,13 +96,14 @@ export async function insertPaciente(pacienteHeller: any, conexion) {
         let prov = direcciones[0].provincia;
         let nac = (direcciones[0].pais).substr(0, 3);
         let tel = telefono;
+        let usuario = 'Aandes';
         let queryInsert = 'INSERT INTO Pacientes' +
                 '([Número de Documento],[Tipo de Documento],[Apellido y Nombre],[Ecivil],' +
                 '[Fecha de Nacimiento],[Sexo],[Domicilio],[Localidad],' +
-                '[Provincia],[Nacionalidad],[Teléfono],[APELLIDOS],[NOMBRES]) ' +
+                '[Provincia],[Nacionalidad],[Teléfono],[Usuario],[APELLIDOS],[NOMBRES]) ' +
                 'VALUES  (' + dni + ',\'' + tipoDoc + '\',\'' + apeYnom +
                 '\',\'' + eCivil + '\',\'' + feNac + '\',\'' + sexo + '\',\'' + dom + '\',\'' + loc +
-                '\',\'' + prov + '\',\'' + nac + '\',\'' + tel +
+                '\',\'' + prov + '\',\'' + nac + '\',\'' + tel + '\',\'' + usuario +
                 '\',\'' + apellido + '\',\'' + nombre + '\'\) ';
         let fakeRequest = {
                 user: {
