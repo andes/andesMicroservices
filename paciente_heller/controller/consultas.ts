@@ -1,8 +1,8 @@
 import * as ConfigPrivate from '../config.private';
 import * as sql from 'mssql';
 import { log } from '@andes/log';
-
 import * as moment from 'moment';
+
 export async function conexionPaciente(paciente) {
         let conexion;
         const connectionString = {
@@ -53,7 +53,6 @@ export async function conexionPaciente(paciente) {
                 throw ex;
         }
 }
-
 export async function insertPaciente(pacienteHeller: any, conexion) {
         let Sexo;
         switch (pacienteHeller.sexo) {
@@ -199,7 +198,6 @@ export async function existePaciente(paciente: any, conexion) {
         }
 
 }
-
 export async function updatePaciente(pacienteActual: any, pacienteExistente: any, transaction) {
         // const fechaActualizacion =moment().format('YYYY-MM-DD hh:mm'); // No tiene la bd de heller
         let Sexo;
@@ -247,11 +245,11 @@ export async function updatePaciente(pacienteActual: any, pacienteExistente: any
         const query = 'UPDATE Pacientes SET' +
                 ' [Número de Documento] = ' + dni +
                 ', [Tipo de Documento] = ' + '\'' + tipoDoc + '\'' +
-                ', APELLIDO =  ' + '\'' + apellido + '\'' +
-                ', NOMBRES =  ' + '\'' + nombre + '\'' +
-                ', [Apellido y Nombre]= ' + '\'' + apeYnom +
-                ',Ecivil = ' + '\'' + eCivil + '\'' +
-                ', Sexo = ' + '\'' + sexo + '\'' +
+                ', [APELLIDOS] =  ' + '\'' + apellido + '\'' +
+                ', [NOMBRES] =  ' + '\'' + nombre + '\'' +
+                ', [Apellido y Nombre]= ' + '\'' + apeYnom + '\'' +
+                ',[Ecivil] = ' + '\'' + eCivil + '\'' +
+                ', [Sexo] = ' + '\'' + sexo + '\'' +
                 ', [Fecha de Nacimiento]= ' + '\'' + feNac + '\'' +
                 ', [Domicilio]= ' + '\'' + dom + '\'' +
                 ', [Localidad]= ' + '\'' + loc + '\'' +
