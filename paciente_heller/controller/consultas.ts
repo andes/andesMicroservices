@@ -55,77 +55,89 @@ export async function conexionPaciente(paciente) {
         }
 }
 export async function insertPaciente(pacienteHeller: any, conexion) {
-        let Sexo;
-        switch (pacienteHeller.sexo) {
-                case 'femenino':
-                        Sexo = 'F';
-                        break;
-                case 'masculino':
-                        Sexo = 'M';
-                        break;
-                case 'otro':
-                        Sexo = 'I';
-                        break;
-        }
-        let telefono = pacienteHeller.contacto ? pacienteHeller.contacto.map(unContacto => {
-                let numero;
-                if (unContacto.tipo === 'celular' || unContacto.tipo === 'fijo') {
-                        numero = unContacto.valor;
-                }
-                return numero;
-        }) : null;
-        let direcciones = pacienteHeller.direccion ? pacienteHeller.direccion.map(unaDireccion => {
-                let direc = {
-                        valor: unaDireccion.valor ? unaDireccion.valor : null,
-                        localidad: unaDireccion.ubicacion.localidad ? unaDireccion.ubicacion.localidad : null,
-                        provincia: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia : null,
-                        pais: unaDireccion.ubicacion.pais ? unaDireccion.ubicacion.pais : null,
-                };
-                return direc;
-        }) : null;
-        let dni = parseInt(pacienteHeller.documento, 10);
         let tipoDoc = pacienteHeller.documento ? 'DNI' : 'SN';
-        let apeYnom = pacienteHeller.apellido + ', ' + pacienteHeller.nombre;
-        let feNac = pacienteHeller.fechaNacimiento ? moment(pacienteHeller.fechaNacimiento).format('YYYY/MM/DD') : null;
-        let sexo = Sexo;
-        let apellido = pacienteHeller.apellido;
-        let nombre = pacienteHeller.nombre;
-        let eCivil = pacienteHeller.estadoCivil ? pacienteHeller.estadoCivil : null;
-        let dom = direcciones[0].valor;
-        let loc = direcciones[0].localidad;
-        let prov = direcciones[0].provincia;
-        let nac = (direcciones[0].pais).substr(0, 3);
-        let tel = telefono;
-        let usuario = 'Aandes';
-        let queryInsert = 'INSERT INTO Pacientes' +
-                '([Número de Documento],[Tipo de Documento],[Apellido y Nombre],[Ecivil],' +
-                '[Fecha de Nacimiento],[Sexo],[Domicilio],[Localidad],' +
-                '[Provincia],[Nacionalidad],[Teléfono],[Usuario],[APELLIDOS],[NOMBRES]) ' +
-                'VALUES  (' + dni + ',\'' + tipoDoc + '\',\'' + apeYnom +
-                '\',\'' + eCivil + '\',\'' + feNac + '\',\'' + sexo + '\',\'' + dom + '\',\'' + loc +
-                '\',\'' + prov + '\',\'' + nac + '\',\'' + tel + '\',\'' + usuario +
-                '\',\'' + apellido + '\',\'' + nombre + '\'\) ';
-        let fakeRequest = {
-                user: {
-                        usuario: 'msHeller',
-                        app: 'integracion-heller',
-                        organizacion: 'sss'
-                },
-                ip: 'localhost',
-                connection: {
-                        localAddress: ''
+        if (tipoDoc === 'DNI') {
+                let Sexo;
+                switch (pacienteHeller.sexo) {
+                        case 'femenino':
+                                Sexo = 'F';
+                                break;
+                        case 'masculino':
+                                Sexo = 'M';
+                                break;
+                        case 'otro':
+                                Sexo = 'I';
+                                break;
                 }
-        };
-        try {
-                const result = await new sql.Request(conexion).query(queryInsert);
-                if (result && result.recordset) {
-                        return result.recordset[0];
+                let telefono = pacienteHeller.contacto ? pacienteHeller.contacto.map(unContacto => {
+                        let numero;
+                        if (unContacto.tipo === 'celular' || unContacto.tipo === 'fijo') {
+                                numero = unContacto.valor;
+                        }
+                        return numero;
+                }) : null;
+                let direcciones = pacienteHeller.direccion ? pacienteHeller.direccion.map(unaDireccion => {
+                        let direc = {
+                                valor: unaDireccion.valor ? 'VER ANDES' : null,
+                                localidad: unaDireccion.ubicacion.localidad ? 'VER ANDES' : null,
+                                provincia: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia : null,
+                                pais: unaDireccion.ubicacion.pais ? ((unaDireccion.ubicacion.pais).substr(0, 3)).toUpperCase() : null,
+                        };
+                        if (direc.provincia === 'Neuquén') {
+                                direc.provincia = 'NEUQUEN';
+                        } else {
+                                direc.provincia = 'VER ANDES';
+                        }
+                        if (direc.pais !== 'ARG') {
+                                direc.pais = 'VER ANDES';
+                        }
+                        return direc;
+                }) : null;
+                let dni = parseInt(pacienteHeller.documento, 10);
+                let apeYnom = pacienteHeller.apellido + ', ' + pacienteHeller.nombre;
+                let feNac = pacienteHeller.fechaNacimiento ? moment(pacienteHeller.fechaNacimiento).format('YYYY/MM/DD') : null;
+                let sexo = Sexo;
+                let apellido = pacienteHeller.apellido;
+                let nombre = pacienteHeller.nombre;
+                let eCivil = pacienteHeller.estadoCivil ? pacienteHeller.estadoCivil : null;
+                let dom = direcciones[0].valor;
+                let loc = direcciones[0].localidad;
+                let prov = direcciones[0].provincia;
+                let nac = direcciones[0].pais;
+                let tel = telefono[0];
+                let usuario = 'Aandes';
+                let queryInsert = 'INSERT INTO Pacientes' +
+                        '([Número de Documento],[Tipo de Documento],[Apellido y Nombre],[Ecivil],' +
+                        '[Fecha de Nacimiento],[Sexo],[Domicilio],[Localidad],' +
+                        '[Provincia],[Nacionalidad],[Teléfono],[Usuario],[APELLIDOS],[NOMBRES]) ' +
+                        'VALUES  (' + dni + ',\'' + tipoDoc + '\',\'' + apeYnom +
+                        '\',\'' + eCivil + '\',\'' + feNac + '\',\'' + sexo + '\',\'' + dom + '\',\'' + loc +
+                        '\',\'' + prov + '\',\'' + nac + '\',\'' + tel + '\',\'' + usuario +
+                        '\',\'' + apellido + '\',\'' + nombre + '\'\) ';
+                let fakeRequest = {
+                        user: {
+                                usuario: 'msHeller',
+                                app: 'integracion-heller',
+                                organizacion: 'sss'
+                        },
+                        ip: 'localhost',
+                        connection: {
+                                localAddress: ''
+                        }
+                };
+                try {
+                        const result = await new sql.Request(conexion).query(queryInsert);
+                        if (result && result.recordset) {
+                                return result.recordset[0];
+                        }
+                } catch (err) {
+                        await log(fakeRequest, 'microservices:integration:heller', pacienteHeller, 'Insert patient', err, undefined);
+                        return err;
                 }
-        } catch (err) {
-                await log(fakeRequest, 'microservices:integration:heller', pacienteHeller, 'Insert patient', err, undefined);
-                return err;
-        }
 
+        } else {
+                return null;
+        }
 }
 export async function existePaciente(paciente: any, conexion) {
         const dni = parseInt(paciente.documento, 10);

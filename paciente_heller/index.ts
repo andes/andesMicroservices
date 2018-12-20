@@ -23,17 +23,17 @@ router.group('/paciente', (group) => {
             }));
         }
     });
-    // group.put('/update', async (_req: any, res) => {
-    //     res.send({ message: 'ok' });
-    //     const paciente = _req.body.data;
-    //     if (paciente) {
-    //         let idAndes = paciente.identifier.find((ids) => ids.assigner === 'andes');
-    //         let pac = Fhir.Patient.decode(paciente);
-    //         pac['id'] = idAndes.value;
-    //         queue.add(() => conexionPaciente(pac).then(() => {
-    //         }));
-    //     }
-    // });
+    group.put('/update', async (_req: any, res) => {
+        res.send({ message: 'ok' });
+        const paciente = _req.body.data;
+        if (paciente) {
+            let idAndes = paciente.identifier.find((ids) => ids.assigner === 'andes');
+            let pac = Fhir.Patient.decode(paciente);
+            pac['id'] = idAndes.value;
+            queue.add(() => conexionPaciente(pac).then(() => {
+            }));
+        }
+    });
 
 });
 
