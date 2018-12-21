@@ -1,7 +1,6 @@
 // Por ahora no se usa
 export function decode(patient) {
     let Sexo;
-    // NoCuando el paciente viene por FHIR suponemos el valor del genero tanto para nuestro field genero como sexo
     let pacienteHeller = {};
     let Ecivil = null;
     pacienteHeller['HC_HHH'] = null;

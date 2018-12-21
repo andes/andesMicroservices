@@ -18,26 +18,14 @@ export async function conexionPaciente(paciente) {
                 conexion = await new sql.ConnectionPool(connectionString).connect();
                 const transaction = await new sql.Transaction(conexion);
                 let pacienteExistente = await existePaciente(paciente, conexion);
+                await transaction.begin();
                 if (!pacienteExistente) {
-                        transaction.begin(async err => {
-                                await insertPaciente(paciente, transaction);
-                                transaction.commit(err2 => {
-                                        if (!err2) {
-                                                return;
-                                        }
-                                });
-                        });
+                        await insertPaciente(paciente, transaction);
                 }
-                //else {
-                //         transaction.begin(async err => {
-                //                 await updatePaciente(paciente, pacienteExistente, transaction);
-                //                 transaction.commit(err2 => {
-                //                         if (!err2) {
-                //                                 return;
-                //                         }
-                //                 });
-                //         });
+                // else { // Por ahora heller no actualiza, solo inserta
+                //         await updatePaciente(paciente, pacienteExistente, transaction);
                 // }
+                await transaction.commit();
         } catch (ex) {
                 let fakeRequest = {
                         user: {
@@ -54,7 +42,8 @@ export async function conexionPaciente(paciente) {
                 throw ex;
         }
 }
-export async function insertPaciente(pacienteHeller: any, conexion) {
+
+async function insertPaciente(pacienteHeller: any, conexion) {
         let tipoDoc = pacienteHeller.documento ? 'DNI' : 'SN';
         if (tipoDoc === 'DNI') {
                 let Sexo;
@@ -78,7 +67,7 @@ export async function insertPaciente(pacienteHeller: any, conexion) {
                 }) : null;
                 let direcciones = pacienteHeller.direccion ? pacienteHeller.direccion.map(unaDireccion => {
                         let direc = {
-                                valor: unaDireccion.valor ? 'VER ANDES' : null,
+                                valor: unaDireccion.valor ? unaDireccion.valor : null,
                                 localidad: unaDireccion.ubicacion.localidad ? 'VER ANDES' : null,
                                 provincia: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia : null,
                                 pais: unaDireccion.ubicacion.pais ? ((unaDireccion.ubicacion.pais).substr(0, 3)).toUpperCase() : null,
@@ -139,7 +128,8 @@ export async function insertPaciente(pacienteHeller: any, conexion) {
                 return null;
         }
 }
-export async function existePaciente(paciente: any, conexion) {
+
+async function existePaciente(paciente: any, conexion) {
         const dni = parseInt(paciente.documento, 10);
         const query = `select
          Pacientes.HC_HHH,
@@ -212,8 +202,7 @@ export async function existePaciente(paciente: any, conexion) {
         }
 
 }
-export async function updatePaciente(pacienteActual: any, pacienteExistente: any, transaction) {
-        // const fechaActualizacion =moment().format('YYYY-MM-DD hh:mm'); // No tiene la bd de heller
+async function updatePaciente(pacienteActual: any, pacienteExistente: any, transaction) {
         let Sexo;
         switch (pacienteActual.sexo) {
                 case 'femenino':
