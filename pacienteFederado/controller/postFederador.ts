@@ -39,13 +39,13 @@ export function postFederador(data: any) {
                 bodyResponse = response.body;
             }
 
-            const pac_federado = new pacienteFederado({
-                idPaciente: pacienteFederado.identifier[0].value,
-                respuesta,
-                body: bodyResponse
+            // const pac_federado = new pacienteFederado({
+            //     idPaciente: pacienteFederado.identifier[0].value,
+            //     respuesta,
+            //     body: bodyResponse
 
-            });
-            pac_federado.save();
+            // });
+            // pac_federado.save();
             return resolve(error || body);
         });
     });

@@ -1,5 +1,5 @@
-import { Microservice } from '@andes/bootstrap'
-import { postFederador } from './../controller/postFederador';
+import { Microservice } from '@andes/bootstrap';
+import { postFederador } from './controller/postFederador';
 import * as Fhir from '@andes/fhir';
 
 let pkg = require('./package.json');
@@ -11,19 +11,15 @@ router.group('/paciente', (group) => {
     group.post('/create', async (req, res) => {
         res.send({ message: 'ok' });
         const pacienteFhir = req.body.data;
-        console.log('llega create', pacienteFhir);
-        const pacienteFederado = Fhir.federar(pacienteFhir);
-        console.log('federado', pacienteFederado);
+        const pacienteFederado = Fhir.Patient.federar(pacienteFhir);
         if (pacienteFederado) {
             await postFederador(pacienteFederado);
         }
     });
     group.put('/update', async (req, res) => {
         res.send({ message: 'ok' });
-        const pacienteFhir = req.body.data;
-        console.log('llega update', pacienteFhir);
-        const pacienteFederado = Fhir.federador(pacienteFhir);
-        console.log('federado', pacienteFederado);
+        const patientFhir = req.body.data;
+        const pacienteFederado = Fhir.Patient.federar(patientFhir);
         if (pacienteFederado) {
             await postFederador(pacienteFederado);
         }
