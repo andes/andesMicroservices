@@ -111,7 +111,7 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.DNI = turnoConPaciente ? Number(t.paciente.documento) : null;
         turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
         turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
-        turno.Nombres = turnoConPaciente ? t.paciente.nombre : null;
+        turno.Nombres = turnoConPaciente ? t.paciente.nombre.toString().replace('\'', '\'\'') : null;
         const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
         if (Array(carpetas).length > 0) {
             turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
@@ -387,6 +387,7 @@ async function auxiliar(a: any, b: any, t: any) {
                 localAddress: ''
             }
         };
+
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);
