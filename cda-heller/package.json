@@ -1,0 +1,22 @@
+{
+    "name": "patient-validator",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "lint": "tslint --project ..",
+        "tsc": "../node_modules/typescript/bin/tsc",
+        "tsc:w": "../node_modules/typescript/bin/tsc -w"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@andes/bootstrap": "file:../bootstrap",
+        "@andes/match": "^1.1.12",
+        "html-entities": "^1.2.1",
+        "moment": "^2.22.0",
+        "mssql": "^4.1.0",
+        "request": "^2.88.0",
+        "promise-mysql": "^3.3.1"
+    }
+}
