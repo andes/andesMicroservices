@@ -16,10 +16,12 @@ export async function getVacunas(paciente) {
         try {
             let pool = await new sql.ConnectionPool(SIPS_SQL).connect();
             let query = `select * from Nomivac where NroDocumento = ${paciente.documento} order by FechaAplicacion desc`;
+
             let r = await getVacunasNomivac(pool, query);
             vacunas = r.recordset;
             let promesas = [];
             for (let i = 0; i < vacunas.length; i++) {
+                let texto = vacunas[i].Establecimiento ? `Organización:  ${vacunas[i].Establecimiento} / ` : '';
                 const dto = {
                     id: vacunas[i].ID.toString(), // El id de la vacuna NOMIVAC
                     organizacion: organizacionId,
@@ -28,14 +30,13 @@ export async function getVacunas(paciente) {
                     paciente,
                     confidencialidad: 'N',
                     profesional: {
-                        nombre: vacunas[i].Vacunador,
+                        nombre: vacunas[i].Vacunador ? vacunas[i].Vacunador : '-',
                         apellido: '-'
                     },
                     cie10: 'Z26.9', // CIE10: Vacunación profilactica
                     file: null,
-                    texto: `Vacuna: ${vacunas[i].Vacuna} Dosis: ${vacunas[i].Dosis} Esquema: ${vacunas[i].Esquema} pertenece al lote: ${vacunas[i].Lote}`
+                    texto: texto + `Vacuna: ${vacunas[i].Vacuna} Dosis: ${vacunas[i].Dosis} Esquema: ${vacunas[i].Esquema} pertenece al lote: ${vacunas[i].Lote}`
                 };
-
                 promesas.push(operations.postCDA(dto));
 
                 const dtoMongoDB = {
@@ -52,7 +53,7 @@ export async function getVacunas(paciente) {
                 };
                 promesas.push(operations.postMongoDB(dtoMongoDB));
             }
-            await Promise.all(promesas);
+            let data = await Promise.all(promesas);
         } catch (e) {
             let fakeRequest = {
                 user: {
@@ -71,6 +72,4 @@ export async function getVacunas(paciente) {
     } else {
         return null;
     }
-
-
 }
