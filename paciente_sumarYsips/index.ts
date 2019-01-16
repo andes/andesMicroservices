@@ -26,6 +26,7 @@ router.group('/paciente', (group) => {
             pac['fechaMuerte'] = paciente.deceasedDateTime;
             pac['localidad'] = paciente.localidad;
             pac['doc'] = paciente.doc;
+            pac['docTutor'] = paciente.docTutor;
             await conexionPaciente(pac);
         }
     });
@@ -47,6 +48,7 @@ router.group('/paciente', (group) => {
             pac['doc'] = paciente.doc;
             pac['docTutor'] = paciente.docTutor;
             await conexionPaciente(pac);
+
 
         }
     });

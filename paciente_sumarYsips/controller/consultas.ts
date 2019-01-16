@@ -1,7 +1,6 @@
 import * as configPrivate from '../config.private';
 import { log } from '@andes/log';
 import * as moment from 'moment';
-
 import * as sql from 'mssql';
 export async function conexionPaciente(paciente) {
         let conexion;
@@ -21,7 +20,12 @@ export async function conexionPaciente(paciente) {
                 let pacienteExistenteSUMAR = await existePacienteSUMAR(paciente, conexion);
                 await transaction.begin();
                 if (!pacienteExistenteSIPS) {
-                        await insertarPacienteSIPS(paciente, transaction);
+                        let pacienteSips = await insertarPacienteSIPS(paciente, transaction);
+                        let pacienteExistenteParentezco = await existeParentezco(pacienteSips, conexion);
+                        if (!pacienteExistenteParentezco && paciente.docTutor) {
+                                await insertarParentezco(paciente, pacienteSips, transaction);
+                        }
+
                 }
                 else {
                         //ActualizaSIPS
@@ -101,82 +105,84 @@ async function getDepartamento(nombreDpto, conexion) {
 
 }
 async function existePacienteSIPS(paciente: any, conexion) {
-        const dni = parseInt(paciente.documento, 10);
-        const query = `SELECT [idPaciente]
-      ,[idEfector]
-      ,[apellido]
-      ,[nombre]
-      ,[numeroDocumento]
-      ,[idSexo]
-      ,[fechaNacimiento]
-      ,[idEstado]
-      ,[idMotivoNI]
-      ,[idPais]
-      ,[idProvincia]
-      ,[idNivelInstruccion]
-      ,[idSituacionLaboral]
-      ,[idProfesion]
-      ,[idOcupacion]
-      ,[calle]
-      ,[numero]
-      ,[piso]
-      ,[departamento]
-      ,[manzana]
-      ,[idBarrio]
-      ,[idLocalidad]
-      ,[idDepartamento]
-      ,[idProvinciaDomicilio]
-      ,[referencia]
-      ,[informacionContacto]
-      ,[cronico]
-      ,[idObraSocial]
-      ,[idUsuario]
-      ,[fechaAlta]
-      ,[fechaDefuncion]
-      ,[fechaUltimaActualizacion]
-      ,[idEstadoCivil]
-      ,[idEtnia]
-      ,[idPoblacion]
-      ,[idIdioma]
-      ,[otroBarrio]
-      ,[camino]
-      ,[campo]
-      ,[esUrbano]
-      ,[lote]
-      ,[parcela]
-      ,[edificio]
-      ,[activo]
-      ,[fechaAltaObraSocial]
-      ,[numeroAfiliado]
-      ,[numeroExtranjero]
-      ,[telefonoFijo]
-      ,[telefonoCelular]
-      ,[email]
-      ,[latitud]
-      ,[longitud]
-      ,[objectId]
-  FROM [dbo].[Sys_Paciente] where [numeroDocumento] = '${dni}'`;
-        let fakeRequest = {
-                user: {
-                        usuario: 'sipsYsumar',
-                        app: 'integracion-sipsYsumar',
-                        organizacion: 'sss'
-                },
-                ip: 'localhost',
-                connection: {
-                        localAddress: ''
+        const dni = parseInt(paciente.doc, 10);
+        if (paciente.doc) {
+                const query = `SELECT [idPaciente]
+                ,[idEfector]
+                ,[apellido]
+                ,[nombre]
+                ,[numeroDocumento]
+                ,[idSexo]
+                ,[fechaNacimiento]
+                ,[idEstado]
+                ,[idMotivoNI]
+                ,[idPais]
+                ,[idProvincia]
+                ,[idNivelInstruccion]
+                ,[idSituacionLaboral]
+                ,[idProfesion]
+                ,[idOcupacion]
+                ,[calle]
+                ,[numero]
+                ,[piso]
+                ,[departamento]
+                ,[manzana]
+                ,[idBarrio]
+                ,[idLocalidad]
+                ,[idDepartamento]
+                ,[idProvinciaDomicilio]
+                ,[referencia]
+                ,[informacionContacto]
+                ,[cronico]
+                ,[idObraSocial]
+                ,[idUsuario]
+                ,[fechaAlta]
+                ,[fechaDefuncion]
+                ,[fechaUltimaActualizacion]
+                ,[idEstadoCivil]
+                ,[idEtnia]
+                ,[idPoblacion]
+                ,[idIdioma]
+                ,[otroBarrio]
+                ,[camino]
+                ,[campo]
+                ,[esUrbano]
+                ,[lote]
+                ,[parcela]
+                ,[edificio]
+                ,[activo]
+                ,[fechaAltaObraSocial]
+                ,[numeroAfiliado]
+                ,[numeroExtranjero]
+                ,[telefonoFijo]
+                ,[telefonoCelular]
+                ,[email]
+                ,[latitud]
+                ,[longitud]
+                ,[objectId]
+            FROM [dbo].[Sys_Paciente] where [numeroDocumento] = '${dni}'`;
+                let fakeRequest = {
+                        user: {
+                                usuario: 'sipsYsumar',
+                                app: 'integracion-sipsYsumar',
+                                organizacion: 'sss'
+                        },
+                        ip: 'localhost',
+                        connection: {
+                                localAddress: ''
+                        }
+                };
+                try {
+                        const result = await conexion.request().query(query);
+                        if (result && result.recordset) {
+                                return result.recordset[0];
+                        } else {
+                                return null;
+                        }
+                } catch (err) {
+                        await log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Existe paciente Sips', err, undefined);
+                        return err;
                 }
-        };
-        try {
-                const result = await conexion.request().query(query);
-                if (result && result.recordset) {
-                        return result.recordset[0];
-                } else {
-                        return null;
-                }
-        } catch (err) {
-                await log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Existe paciente Sips', err, undefined);
-                return err;
         }
 
 }
@@ -284,12 +290,57 @@ async function existePacienteSUMAR(paciente: any, conexion) {
         }
 
 }
+async function existeParentezco(pacienteSips: any, conexion) {
+        const idPacienteSips = parseInt(pacienteSips, 10);
+        const query = `
+        SELECT [idParentesco]
+              ,[nombre]
+              ,[apellido]
+              ,[idTipoDocumento]
+              ,[numeroDocumento]
+              ,[fechaNacimiento]
+              ,[idProvincia]
+              ,[idPais]
+              ,[idSituacionLaboral]
+              ,[idNivelInstruccion]
+              ,[idProfesion]
+              ,[idPaciente]
+              ,[tipoParentesco]
+              ,[idUsuario]
+              ,[fechaModificacion]
+              ,[idAntecedente]
+          FROM [dbo].[Sys_Parentesco] where [idPaciente] = '${idPacienteSips}'`;
+        let fakeRequest = {
+                user: {
+                        usuario: 'sipsYsumar',
+                        app: 'integracion-sipsYsumar',
+                        organizacion: 'sss'
+                },
+                ip: 'localhost',
+                connection: {
+                        localAddress: ''
+                }
+        };
+        try {
+                const result = await conexion.request().query(query);
+                if (result && result.recordset) {
+                        return result.recordset[0];
+
+                } else {
+                        return null;
+                }
+        } catch (err) {
+                await log(fakeRequest, 'microservices:integration:sipsYsumar', pacienteSips, 'Existe paciente Parentezco', err, undefined);
+                return err;
+        }
+
+}
 async function insertarPacienteSIPS(paciente: any, conexion) {
         let codigoCuie = paciente.efectorCodigo ? paciente.efectorCodigo.cuie : null;
         let idEfector: any = await getEfector(codigoCuie, conexion);
         let apellido = paciente.apellido;
         let nombre = paciente.nombre;
-        let numeroDocumento = paciente.documento ? paciente.documento : 0;
+        let numeroDocumento = paciente.doc ? paciente.documento : 0;
         let idSexo = (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1);
         let fechaNacimiento = paciente.fechaNacimiento ? paciente.fechaNacimiento : '19000101';
         let idEstado = (paciente.estado === 'validado' ? 3 : 2);
@@ -358,25 +409,8 @@ async function insertarPacienteSIPS(paciente: any, conexion) {
                 queryInsert += ' select SCOPE_IDENTITY() as id';
                 const result = await new sql.Request(conexion).query(queryInsert);
                 if (result && result.recordset) {
-                        id = result.recordset[0].id;
+                        return result.recordset[0].id;
                 }
-                if ((paciente.relaciones).length > 0) {
-                        let tipoParentesco = paciente.docTutor.relacion.nombre;
-                        let idAntecedente = 0;
-                        let queryParentezco = 'INSERT INTO [dbo].[Sys_Parentesco] ([apellido], [nombre],[numeroDocumento]' +
-                                ',[fechaNacimiento],[idPais],[idProvincia],[idNivelInstruccion],[idSituacionLaboral],[idProfesion]' +
-                                ',[idPaciente],[tipoParentesco],[idUsuario]' +
-                                ',[fechaModificacion],[idAntecedente]) ' +
-                                'VALUES  (' + apellido + '\',\'' + nombre + ',' +
-                                '\',' + numeroDocumento + ',\'' + fechaNacimiento + ',' + idPais +
-                                ',' + idProvincia + ',' + idNivelInstruccion + ',' + idSituacionLaboral + ',' + idProfesion +
-                                ',' + id + ',' + tipoParentesco + ',' + idUsuario +
-                                ',\'' + fechaUltimaActualizacion + '\',' + idAntecedente + '\'\) ';
-
-                        const resultParentezco = await new sql.Request(conexion).query(queryParentezco);
-
-                }
-
         } catch (err) {
                 await log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Insertar paciente sips', err, undefined);
                 return err;
@@ -478,6 +512,65 @@ async function insertarPacienteSUMAR(paciente: any, conexion) {
 
         } catch (err) {
                 await log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Insertar paciente SUMAR', err, undefined);
+                return err;
+        }
+
+}
+async function insertarParentezco(paciente: any, pacienteSips: any, conexion) {
+        let apellido = paciente.apellido;
+        let nombre = paciente.nombre;
+        let idTipoDocumento = paciente.doc ? 1 : 5;
+        let numeroDocumento = paciente.doc ? paciente.doc : paciente.docTutor.documento;
+        let fechaNacimiento = paciente.fechaNacimiento ? paciente.fechaNacimiento : '19000101';
+        let idPais = 0;
+        let idProvincia = 0;
+        let idNivelInstruccion = 0;
+        let idSituacionLaboral = 0;
+        let idProfesion = 0;
+        let idPaciente = pacienteSips;
+        let parentezco = paciente.docTutor.relacion.nombre;
+        let tipoParentesco = '';
+        switch (parentezco) {
+                case 'progenitor/a':
+                        tipoParentesco = paciente.sexo === 2 ? 'MADRE' : 'PADRE';
+                        break;
+                case 'tutor':
+                        tipoParentesco = 'TUTOR';
+                        break;
+
+        }
+        let idUsuario = '1486739';
+        let fechaModificacion = paciente.fechaCreacion;
+        let idAntecedente = 0;
+        let queryInsert = 'INSERT INTO [dbo].[Sys_Parentesco] ([apellido], [nombre],[idTipoDocumento],[numeroDocumento]' +
+                ',[fechaNacimiento],[idPais],[idProvincia],[idNivelInstruccion],[idSituacionLaboral],[idProfesion]' +
+                ',[idPaciente],[tipoParentesco],[idUsuario]' +
+                ',[fechaModificacion],[idAntecedente]) ' +
+                'VALUES (\'' + apellido + '\',\'' + nombre + '\',' + idTipoDocumento + ','
+                + numeroDocumento + ',\'' + fechaNacimiento + '\',' + idPais +
+                ',' + idProvincia + ',' + idNivelInstruccion + ',' + idSituacionLaboral + ',' + idProfesion +
+                ',' + idPaciente + ',\'' + tipoParentesco + '\',' + idUsuario +
+                ',\'' + fechaModificacion + '\',' + idAntecedente + '\) ';
+
+        let fakeRequest = {
+                user: {
+                        usuario: 'sipsYsumar',
+                        app: 'integracion-sipsYsumar',
+                        organizacion: 'sss'
+                },
+                ip: 'localhost',
+                connection: {
+                        localAddress: ''
+                }
+        };
+        try {
+                const result = await new sql.Request(conexion).query(queryInsert);
+                if (result && result.recordset) {
+                        return result.recordset[0];
+                }
+
+        } catch (err) {
+                await log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Insertar paciente parentezco', err, undefined);
                 return err;
         }
 
