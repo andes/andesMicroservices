@@ -73,6 +73,10 @@ function downloadFile(url) {
             } else {
                 return reject({error: 'sips-pdf', status: response.statusCode});
             }
+        }).on('error', (e) => {
+            // tslint:disable-next-line:no-console
+            console.error(`No se pudo descarga el pdf: ${e.message}`);
+            return reject(e);
         });
     });
 }
@@ -93,6 +97,10 @@ function donwloadFileHeller(idProtocolo, year) {
                     return reject({error: 'heller-error'});
                 }
             });
+        }).on('error', (e) => {
+            // tslint:disable-next-line:no-console
+            console.error(`No se pudo descarga el pdf HELLER: ${e.message}`);
+            return reject(e);
         });
     });
 }
