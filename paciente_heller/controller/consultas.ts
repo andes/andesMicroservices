@@ -33,12 +33,12 @@ export async function conexionPaciente(paciente) {
                                 app: 'integracion-heller',
                                 organizacion: 'sss'
                         },
-                        ip: 'localhost',
+                        ip: ConfigPrivate.staticConfiguration.heller.ip,
                         connection: {
                                 localAddress: ''
                         }
                 };
-                log(fakeRequest, 'microservices:integration:heller', undefined, conexion, ex, null);
+                log(fakeRequest, 'microservices:integration:heller', paciente.id, conexion, ex, null);
                 throw ex;
         }
 }
@@ -94,14 +94,15 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                 let prov = direcciones[0].provincia;
                 let nac = direcciones[0].pais;
                 let tel = telefono[0];
+                let observaciones = 'PACIENTE INGRESADO POR ANDES';
                 let usuario = 'Aandes';
                 let queryInsert = 'INSERT INTO Pacientes' +
                         '([Número de Documento],[Tipo de Documento],[Apellido y Nombre],[Ecivil],' +
                         '[Fecha de Nacimiento],[Sexo],[Domicilio],[Localidad],' +
-                        '[Provincia],[Nacionalidad],[Teléfono],[Usuario],[APELLIDOS],[NOMBRES]) ' +
+                        '[Provincia],[Nacionalidad],[Teléfono],[Observaciones],[Usuario],[APELLIDOS],[NOMBRES]) ' +
                         'VALUES  (' + dni + ',\'' + tipoDoc + '\',\'' + apeYnom +
                         '\',\'' + eCivil + '\',\'' + feNac + '\',\'' + sexo + '\',\'' + dom + '\',\'' + loc +
-                        '\',\'' + prov + '\',\'' + nac + '\',\'' + tel + '\',\'' + usuario +
+                        '\',\'' + prov + '\',\'' + nac + '\',\'' + tel + '\',\'' + observaciones + '\',\'' + usuario +
                         '\',\'' + apellido + '\',\'' + nombre + '\'\) ';
                 let fakeRequest = {
                         user: {
@@ -109,7 +110,7 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                                 app: 'integracion-heller',
                                 organizacion: 'sss'
                         },
-                        ip: 'localhost',
+                        ip: ConfigPrivate.staticConfiguration.heller.ip,
                         connection: {
                                 localAddress: ''
                         }
@@ -120,8 +121,8 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                                 return result.recordset[0];
                         }
                 } catch (err) {
-                        await log(fakeRequest, 'microservices:integration:heller', pacienteHeller, 'Insert patient', err, undefined);
-                        return err;
+                        log(fakeRequest, 'microservices:integration:heller', pacienteHeller.id, 'Error al insertar paciente', err);
+                        throw err;
                 }
 
         } else {
@@ -184,7 +185,7 @@ async function existePaciente(paciente: any, conexion) {
                         app: 'integracion-heller',
                         organizacion: 'sss'
                 },
-                ip: 'localhost',
+                ip: ConfigPrivate.staticConfiguration.heller.ip,
                 connection: {
                         localAddress: ''
                 }
@@ -197,7 +198,7 @@ async function existePaciente(paciente: any, conexion) {
                         return null;
                 }
         } catch (err) {
-                await log(fakeRequest, 'microservices:integration:heller', paciente, 'Existe patient', err, undefined);
+                await log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en buscar paciente', err, undefined);
                 return err;
         }
 
@@ -268,13 +269,13 @@ async function updatePaciente(pacienteActual: any, pacienteExistente: any, trans
                                         app: 'integracion-heller',
                                         organizacion: 'sss'
                                 },
-                                ip: 'localhost',
+                                ip: ConfigPrivate.staticConfiguration.heller.ip,
                                 connection: {
                                         localAddress: ''
                                 }
                         };
                         transaction.rollback(err2 => {
-                                return log(fakeRequest, 'microservices:integration:heller', pacienteActual, 'update paciente', err2, undefined);
+                                return log(fakeRequest, 'microservices:integration:heller', pacienteActual.id, 'update paciente', err2, undefined);
                         });
                         throw err;
                 });
