@@ -182,7 +182,6 @@ export async function verificar(registro, pacienteAndes) {
 
     if (!notError) {
         dto = null;
-        console.log('error', msgError);
     }
 
 
