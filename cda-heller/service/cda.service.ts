@@ -33,7 +33,7 @@ export function postCDA(data: any) {
                     localAddress: ''
                 }
             };
-            log(fakeRequestSql, 'microservices:integration:heller', undefined, 'postCDA:heller', body);
+            log(fakeRequestSql, 'microservices:integration:heller', undefined, 'postCDA:heller', body, error);
             return resolve(error || body);
         });
     });

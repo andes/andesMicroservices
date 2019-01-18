@@ -1,7 +1,7 @@
 import { getInforme } from './../service/inform.service';
 import { getOrganizacion } from './../service/organizaciones.service';
 import { Matching } from '@andes/match';
-import * as ConfigPrivate from './config.private';
+import * as ConfigPrivate from './../config.private';
 import { log } from '@andes/log';
 
 let moment = require('moment');
