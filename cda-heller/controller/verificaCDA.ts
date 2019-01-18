@@ -1,6 +1,8 @@
 import { getInforme } from './../service/inform.service';
 import { getOrganizacion } from './../service/organizaciones.service';
 import { Matching } from '@andes/match';
+import * as ConfigPrivate from './config.private';
+import { log } from '@andes/log';
 
 let moment = require('moment');
 
@@ -96,6 +98,17 @@ function vCie10(cie10) {
 }
 
 export async function verificar(registro, pacienteAndes) {
+    let fakeRequest = {
+        user: {
+            usuario: 'msHeller',
+            app: 'integracion-heller',
+            organizacion: 'sss'
+        },
+        ip: ConfigPrivate.staticConfiguration.heller.ip,
+        connection: {
+            localAddress: ''
+        }
+    };
     let dto = {
         organizacion: null,
         paciente: null,
@@ -116,6 +129,7 @@ export async function verificar(registro, pacienteAndes) {
     } else {
         notError = false;
         msgError = msgError + '\n' + 'El paciente no ha sido verificado correctamente';
+
     }
 
     if (registro.sisa) {
@@ -157,13 +171,11 @@ export async function verificar(registro, pacienteAndes) {
     if (notError && registro.cie10) {
         let cie10Verified = vCie10(registro.cie10);
         if (cie10Verified) {
-            if ((registro.cie10.indexOf('.')) === -1) {
-                registro.cie10 = registro.cie10 + '.9';
-            }
             dto['cie10'] = registro.cie10;
         } else {
             notError = false;
             msgError = msgError + '\n' + 'El código CIE10 no es válido' + registro.cie10;
+
         }
     }
 
@@ -182,6 +194,7 @@ export async function verificar(registro, pacienteAndes) {
 
     if (!notError) {
         dto = null;
+        log(fakeRequest, 'microservices:integration:heller', pacienteAndes.id, msgError, null);
     }
 
 

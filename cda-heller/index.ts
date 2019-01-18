@@ -39,7 +39,6 @@ router.group('/cda', (group) => {
         const webhookId = req.body.subscription;
         const event = req.body.event;
         const data = req.body.data;
-
         let paciente;
         switch (event) {
             case 'mobile:patient:login':
