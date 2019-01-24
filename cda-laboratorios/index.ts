@@ -1,10 +1,12 @@
 import { Microservice, Middleware } from '@andes/bootstrap';
 import { importarDatos } from './controller/import-labs';
+const PQueue = require('p-queue');
 let pkg = require('./package.json');
 
 let ms = new Microservice(pkg);
 
 const router = ms.router();
+const queue = new PQueue({ concurrency: 5 });
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
@@ -28,7 +30,9 @@ router.group('/cda', (group) => {
 
         // Esperamos el paciente desde una prestación.
         if (paciente) {
-            importarDatos(paciente);
+            queue.add(() => {
+                return importarDatos(paciente);
+            });
         }
     });
 
