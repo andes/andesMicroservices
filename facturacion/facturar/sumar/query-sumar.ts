@@ -134,7 +134,7 @@ export class QuerySumar {
                     let resultado = await new sql.Request(pool)
                         .input('documento', sql.VarChar(50), documento)
                         .input('activo', sql.VarChar(1), 'S')
-                        .query(query)
+                        .query(query);
 
                     resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
 
@@ -156,7 +156,6 @@ export class QuerySumar {
 
                     let res = null;
                     if (resultado.recordset[0]) {
-                        console.log("Precio: ", resultado.recordset[0]);
                         res = {
                             precio: resultado.recordset[0].precio
                         }

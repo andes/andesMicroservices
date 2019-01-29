@@ -5,7 +5,6 @@ import * as facturaRecupero from './../facturar/recupero-financiero/factura-recu
 import { QuerySumar } from './../facturar/sumar/query-sumar';
 
 export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutomatica) {
-    console.log("Entra a Json Factura: ", datosConfiguracionAutomatica);
     let querySumar = new QuerySumar();
 
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, prestacion.paciente.dni);
@@ -24,11 +23,17 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                     datoReportable: ''
                 };
 
+                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null);
+
+                arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
+                console.log("Capo: ", arrayConfiguracion);
+                let x = 0;
+
                 arrayPrestacion.forEach((element, index) => {
-                    let oido = arrayConfiguracion[0].find(obj => obj.conceptId == element.conceptId);
+                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.conceptId);
 
                     if (oido) {
-                        let valor = arrayConfiguracion[0].find(obj => obj.conceptId == element.valor.conceptId);
+                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.valor.conceptId);
                         dr.datoReportable += oido.valor + valor.valor + '/';
                     }
                 });
@@ -37,7 +42,6 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 dr.datoReportable = dr.datoReportable.slice(0, -1);
 
                 datoReportable.push(dr);
-
                 return datoReportable;
             }
         },
@@ -50,8 +54,13 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 console.log("Entra a niño sano");
                 let x = 0;
 
+                console.log("Array Prestacion", arrayPrestacion);
+
+                arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
+                console.log("Array Configuracion: ", arrayConfiguracion);
                 arrayPrestacion.forEach((element: any) => {
-                    let data = arrayConfiguracion.find((obj: any) => obj.conceptId == element.conceptId);
+                    let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
+                    console.log("Data: ", data);
 
                     let dr = {
                         idDatoReportable: '',
@@ -78,26 +87,22 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
 
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
-                console.log("Tipo de facturacion es SUMAR");
                 const arrayPrestacion = prestacion.prestacion.datosReportables.map((dr: any) => dr);
-                console.log("Array Prestacion: ", arrayPrestacion);
-                
-                const arrayConfiguracion = datosConfiguracionAutomatica.nomencladorSUMAR.datosReportables.map((config: any) => config.valores);
-                console.log("Array Configuracion: ", arrayConfiguracion);
+
+                const arrayConfiguracion = datosConfiguracionAutomatica.sumar.datosReportables.map((config: any) => config.valores);
 
                 let dto: any = {
                     factura: 'sumar',
                     diagnostico: datosConfiguracionAutomatica.sumar.diagnostico[0].diagnostico,
                     datosReportables: await facturacion[datosConfiguracionAutomatica.expresionSnomed].sumar(arrayPrestacion, arrayConfiguracion) //this.sumar()
                 };
-                console.log("Y aca imprimo el DTO de SUmar: ", dto);
+
                 return dto;
             }
         },
         'sumar': {
             preCondicionSumar: function (prestacion) {
                 let valido = false;
-
                 let esAfiliado = (afiliadoSumar) ? true : false;
                 let datosReportables = (prestacion.prestacion.datosReportables) ? true : false;
 
@@ -109,7 +114,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 if (conditionsArray.indexOf(false) === -1) {
                     valido = true;
                 }
-                console.log("Entra a precondicion: ", valido);
+
                 return valido;
             }
         }
@@ -136,10 +141,9 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
         /* Paciente NO TIENE OS se factura por Sumar */
 
         if (facturacion['sumar'].preCondicionSumar(prestacion)) {
-            console.log("Precondicion valida: ");
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(prestacion, tipoFacturacion);
-            console.log("Imprimo el mainnnn: ", main);
+
             dtoSumar = {
                 objectId: prestacion.turno._id,
                 cuie: prestacion.organizacion.cuie,

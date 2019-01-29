@@ -15,8 +15,7 @@ const router = ms.router();
 router.group('/facturacion', (group) => {
     group.post('/facturar', (req, res) => {
         // mongoose.connect('mongodb://localhost:27017/andes', { useNewUrlParser: true });
-        // mongoose.connect('mongodb://admin:golitoMon04@10.1.62.19:27017/andes?authSource=admin', { useNewUrlParser: true });
-        mongoose.connect(mongoDB.mongoDB_main.host, mongoDB.mongoDB_main.options, { useNewUrlParser: true });
+        mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
 
         let pool = new ConnectionPool(SipsDBConfiguration);
         pool.connect(err => {
