@@ -3,27 +3,21 @@ import { Factura } from './factura';
 
 import { Microservice, Middleware } from '@andes/bootstrap';
 let pkg = require('./package.json');
-
 let ms = new Microservice(pkg);
-
-import { ConnectionPool } from 'mssql';
+// import { ConnectionPool } from 'mssql';
+import * as sql from 'mssql';
 
 const mongoose = require('mongoose');
 
 const router = ms.router();
 
 router.group('/facturacion', (group) => {
-    group.post('/facturar', (req, res) => {
+    group.post('/facturar', async (req, res) => {
         // mongoose.connect('mongodb://localhost:27017/andes', { useNewUrlParser: true });
         mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
 
-        let pool = new ConnectionPool(SipsDBConfiguration);
-        pool.connect(err => {
-            if (err) {
-                return err;
-            }
-
-        });
+        sql.close();
+        let pool = await sql.connect(SipsDBConfiguration);
 
         let factura = new Factura();
 
