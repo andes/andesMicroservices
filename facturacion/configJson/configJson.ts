@@ -59,20 +59,24 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
                 console.log("Array Configuracion: ", arrayConfiguracion);
                 arrayPrestacion.forEach((element: any) => {
-                    let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
-                    console.log("Data: ", data);
+                    console.log("Element: ", element);
 
-                    let dr = {
-                        idDatoReportable: '',
-                        datoReportable: ''
-                    };
+                    if (element) {
+                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
+                        console.log("Data: ", data);
 
-                    if (data) {
-                        dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
-                        dr.datoReportable = element.valor;
+                        let dr = {
+                            idDatoReportable: '',
+                            datoReportable: ''
+                        };
 
-                        datoReportable.push(dr);
-                        x++;
+                        if (data) {
+                            dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
+                            dr.datoReportable = element.valor;
+
+                            datoReportable.push(dr);
+                            x++;
+                        }
                     }
                 });
 
@@ -94,7 +98,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 let dto: any = {
                     factura: 'sumar',
                     diagnostico: datosConfiguracionAutomatica.sumar.diagnostico[0].diagnostico,
-                    datosReportables: await facturacion[datosConfiguracionAutomatica.expresionSnomed].sumar(arrayPrestacion, arrayConfiguracion) //this.sumar()
+                    datosReportables: await facturacion[datosConfiguracionAutomatica.expresionSnomed].sumar(arrayPrestacion, arrayConfiguracion)
                 };
 
                 return dto;
@@ -105,6 +109,9 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
                 let datosReportables = (prestacion.prestacion.datosReportables) ? true : false;
+
+                /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
+                prestación no se debería poder facturar */
 
                 let conditionsArray = [
                     esAfiliado,
@@ -163,40 +170,4 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
             facturaSumar.facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
         }
     }
-    // let main = await facturacion.main(prestacion);
-
-    // if (main.factura === 'sumar') {
-    //     if (facturacion[main.factura].preCondicionSumar(prestacion)) {
-    //         dtoSumar = {
-    //             objectId: prestacion.turno._id,
-    //             cuie: prestacion.organizacion.cuie,
-    //             diagnostico: main.diagnostico,
-    //             dniPaciente: prestacion.paciente.dni,
-    //             claveBeneficiario: afiliadoSumar.clavebeneficiario,
-    //             idAfiliado: afiliadoSumar.id_smiafiliados,
-    //             edad: moment(new Date()).diff(prestacion.paciente.fechaNacimiento, 'years'),
-    //             sexo: (prestacion.paciente.sexo === 'masculino') ? 'M' : 'F',
-    //             fechaNacimiento: prestacion.paciente.fechaNacimiento,
-    //             anio: moment(prestacion.paciente.fechaNacimiento).format('YYYY'),
-    //             mes: moment(prestacion.paciente.fechaNacimiento).format('MM'),
-    //             dia: moment(prestacion.paciente.fechaNacimiento).format('DD'),
-    //             datosReportables: main.datosReportables
-    //         }
-
-    //         facturaSumar.facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
-    //     } else if (afiliadoSumar) {
-
-    //     }
-    // } else if (main.factura === 'recupero') {
-
-    //     dtoRecupero = {
-    //         objectId: prestacion.turno._id,
-    //         dniPaciente: prestacion.paciente.dni,
-    //         dniProfesional: prestacion.profesional.dni,
-    //         codigoFinanciador: prestacion.obraSocial.codigoFinanciador,
-    //         idEfector: prestacion.organizacion.idSips,
-    //     }
-
-    //     facturaRecupero.facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
-    // }
 }

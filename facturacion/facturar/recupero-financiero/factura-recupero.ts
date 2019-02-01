@@ -31,6 +31,7 @@ export async function facturaRecupero(pool, dtoRecupero, datosConfiguracionAutom
     }
 
     let idOrden = await queryRecupero.saveOrdenRecupero(pool, dtoOrden);
+    console.log("Id Orden: ", idOrden);
 
     let dtoOrdendetalle = {
         idOrden: idOrden,

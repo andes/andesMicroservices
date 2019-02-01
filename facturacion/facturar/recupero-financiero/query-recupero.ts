@@ -1,4 +1,5 @@
 import * as sql from 'mssql';
+import { runInNewContext } from 'vm';
 
 export class QueryRecupero {
 
@@ -135,9 +136,10 @@ export class QueryRecupero {
                             .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
                             .query(query, (err: any, result: any) => {
                                 transaction.commit((err: any) => {
-                                    if (err)
+                                    if (err) {
                                         reject(err);
-                                    console.log("Result: ", result);
+                                    }
+
                                     resolve(result.recordset[0] ? result.recordset[0].ID : null);
                                 });
                             });
@@ -184,8 +186,9 @@ export class QueryRecupero {
                             .input('ajuste', sql.Decimal(18, 2), ordenDetalle.ajuste)
                             .query(query, (err: any, result: any) => {
                                 transaction.commit((err: any) => {
-                                    if (err)
+                                    if (err) {
                                         reject(err);
+                                    }
 
                                     resolve(result.recordset[0]);
                                 });
