@@ -4,7 +4,6 @@ import * as configJson from './configJson/configJson';
 export class Factura {
 
     async facturar(pool, prestacion) {
-        console.log("LLega prestacion a Facturar Nuevoooo: ", JSON.stringify(prestacion));
         /* Traigo colección de configFacturacionAutomatica */
         let datosConfiguracionAutomatica = await this.getConfigFacturacionAutomatica(prestacion);
 

@@ -14,26 +14,44 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
     let facturacion = {
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
-        '2091000013100': {
-            term: "otoemisiones",
-            sumar: function (arrayPrestacion, arrayConfiguracion) {
-                console.log("Entra a otoemisiones");
+        '34043003': {
+            term: "consulta de odontologia",
+            sumar: (arrayPrestacion, arrayConfiguracion) => {
+                console.log("Entra a odontologia");
                 let dr = {
                     idDatoReportable: '',
                     datoReportable: ''
                 };
 
                 arrayPrestacion = arrayPrestacion.filter(obj => obj !== null);
-
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                console.log("Capo: ", arrayConfiguracion);
-                let x = 0;
+                console.log("Array Prestacion: ", arrayPrestacion);
+                console.log("Array Configuracion: ", arrayConfiguracion);
+                let caries = arrayPrestacion.find(obj => console.log("Primero: ", obj.conceptId) === console.log("Segundo: ", arrayConfiguracion[0].conceptId));
+                console.log("Cariessss: ", caries);
+                let caries2 = arrayConfiguracion.find(obj => obj.conceptId === arrayPrestacion.conceptId);
+                console.log("Cariessss: ", caries2);
+            }
+        },
+
+        /* Prestación Otoemisiones */
+        /* TODO: poner la expresión que corresponda */
+        '2091000013100': {
+            term: "otoemisiones",
+            sumar: (arrayPrestacion, arrayConfiguracion) => {
+                let dr = {
+                    idDatoReportable: '',
+                    datoReportable: ''
+                };
+
+                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null).map(obj => obj[0]);
+                arrayConfiguracion = arrayConfiguracion.map(dr => dr[0]);
 
                 arrayPrestacion.forEach((element, index) => {
-                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.conceptId);
+                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.registro.concepto.conceptId);
 
                     if (oido) {
-                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.valor.conceptId);
+                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.registro.valor.concepto.conceptId);
                         dr.datoReportable += oido.valor + valor.valor + '/';
                     }
                 });
@@ -50,20 +68,15 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
         /* TODO: poner la expresión que corresponda */
         '410620009': {
             term: "consulta de niño sano, recién nacido",
-            sumar: async function (arrayPrestacion, arrayConfiguracion) {
-                console.log("Entra a niño sano");
+            sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 let x = 0;
 
-                console.log("Array Prestacion", arrayPrestacion);
-
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                console.log("Array Configuracion: ", arrayConfiguracion);
-                arrayPrestacion.forEach((element: any) => {
-                    console.log("Element: ", element);
+                arrayPrestacion = arrayPrestacion.map(obj => obj[0]);
 
+                arrayPrestacion.forEach((element: any) => {
                     if (element) {
-                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
-                        console.log("Data: ", data);
+                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.registro.concepto.conceptId);
 
                         let dr = {
                             idDatoReportable: '',
@@ -72,7 +85,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
 
                         if (data) {
                             dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
-                            dr.datoReportable = element.valor;
+                            dr.datoReportable = element.registro.valor;
 
                             datoReportable.push(dr);
                             x++;
@@ -83,7 +96,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 return datoReportable;
             },
         },
-        main: async function (prestacion: any, tipoFacturacion: any) {
+        main: async (prestacion: any, tipoFacturacion: any) => {
             if (tipoFacturacion === 'recupero') {
                 let dto: any = {
                     factura: 'recupero'
@@ -105,7 +118,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
             }
         },
         'sumar': {
-            preCondicionSumar: function (prestacion) {
+            preCondicionSumar: (prestacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
                 let datosReportables = (prestacion.prestacion.datosReportables) ? true : false;
