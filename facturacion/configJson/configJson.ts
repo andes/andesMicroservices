@@ -1,6 +1,6 @@
 import * as moment from 'moment';
-import * as facturaSumar from './../facturar/sumar/factura-sumar';
-import * as facturaRecupero from './../facturar/recupero-financiero/factura-recupero';
+import { facturaSumar, validaDatosReportables } from './../facturar/sumar/factura-sumar';
+import { facturaRecupero } from './../facturar/recupero-financiero/factura-recupero';
 
 import { QuerySumar } from './../facturar/sumar/query-sumar';
 
@@ -14,9 +14,9 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
     let facturacion = {
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
-        /* %%%%%%%%%5 Está en desarrollo todavía  %%%%%%%%%%%%%%%%%%%%%*/
+        /* %%%%%%%%% Está en desarrollo todavía  %%%%%%%%%%%%%%%%%%%%% */
         '34043003': {
-            term: "consulta de odontologia",
+            term: 'consulta de odontologia',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
                 console.log("Entra a odontologia");
                 let dr = {
@@ -38,7 +38,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
         '2091000013100': {
-            term: "otoemisiones",
+            term: 'otoemisiones',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
                 let dr = {
                     idDatoReportable: '',
@@ -68,7 +68,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
         /* Prestación Niño Sano 410621008*/
         /* TODO: poner la expresión que corresponda */
         '410620009': {
-            term: "consulta de niño sano, recién nacido",
+            term: 'consulta de niño sano, recién nacido',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 let x = 0;
 
@@ -122,7 +122,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
             preCondicionSumar: (prestacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
-                let datosReportables = facturaSumar.validaDatosReportables(prestacion, datosConfiguracionAutomatica);//(prestacion.prestacion.datosReportables) ? true : false;
+                let datosReportables = validaDatosReportables(prestacion, datosConfiguracionAutomatica);//(prestacion.prestacion.datosReportables) ? true : false;
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
@@ -157,7 +157,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
             idEfector: prestacion.organizacion.idSips,
         }
 
-        facturaRecupero.facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
+        facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
 
@@ -179,9 +179,9 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
                 mes: moment(prestacion.paciente.fechaNacimiento).format('MM'),
                 dia: moment(prestacion.paciente.fechaNacimiento).format('DD'),
                 datosReportables: main.datosReportables
-            }
+            };
 
-            facturaSumar.facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
+            facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
         }
     }
 }

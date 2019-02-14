@@ -11,7 +11,7 @@ let datoReportableSchema = new mongoose.Schema({
     ]
 });
 
-let configFacturacionAutomaticaSchema = new mongoose.Schema({
+export let configFacturacionAutomaticaSchema = new mongoose.Schema({
     expresionSnomed: { type: String },
     prestacionSnomed: [{ term: String, conceptId: String }],
     recuperoFinanciero: {
@@ -29,6 +29,6 @@ let configFacturacionAutomaticaSchema = new mongoose.Schema({
     }
 });
 
-let configFacturacionAutomatica = mongoose.model('configFacturacionAutomatica', configFacturacionAutomaticaSchema, 'configFacturacionAutomatica');
+export let configFacturacionAutomaticaModel = mongoose.model('configFacturacionAutomatica', configFacturacionAutomaticaSchema, 'configFacturacionAutomatica');
 
-export = configFacturacionAutomatica;
+// export = configFacturacionAutomatica;

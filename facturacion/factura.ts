@@ -1,5 +1,5 @@
-import * as configFacturacionAutomatica from './schemas/config-prestaciones';
-import * as configJson from './configJson/configJson';
+import { configFacturacionAutomaticaModel } from './schemas/config-prestaciones';
+import { jsonFacturacion } from './configJson/configJson';
 
 export class Factura {
 
@@ -7,14 +7,14 @@ export class Factura {
         /* Traigo colección de configFacturacionAutomatica */
         let datosConfiguracionAutomatica = await this.getConfigFacturacionAutomatica(prestacion);
 
-        let process = await configJson.jsonFacturacion(pool, prestacion, datosConfiguracionAutomatica);
+        await jsonFacturacion(pool, prestacion, datosConfiguracionAutomatica);
     }
 
     async getConfigFacturacionAutomatica(prestacion: any) {
         let conceptId = prestacion.prestacion.conceptId;
 
-        let datosConfigAutomatica = await configFacturacionAutomatica.find({ 'prestacionSnomed.conceptId': conceptId });
+        let datosConfigAutomatica = await configFacturacionAutomaticaModel.findOne({ 'prestacionSnomed.conceptId': conceptId });
 
-        return datosConfigAutomatica[0];
+        return datosConfigAutomatica;
     }
 }

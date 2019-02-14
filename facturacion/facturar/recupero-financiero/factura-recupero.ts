@@ -4,7 +4,6 @@ import { QueryRecupero } from './query-recupero';
 let queryRecupero = new QueryRecupero()
 
 export async function facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica) {
-
     let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero.idNomenclador);
 
     let dtoOrden = {
@@ -42,5 +41,5 @@ export async function facturaRecupero(pool, dtoRecupero, datosConfiguracionAutom
         totoal: nomencladorRecupero.valorUnidad
     }
 
-    let idOrdenDetalle = await queryRecupero.saveOrdenDetalle(pool, dtoOrdendetalle);
+    queryRecupero.saveOrdenDetalle(pool, dtoOrdendetalle);
 }
