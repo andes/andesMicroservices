@@ -57,3 +57,25 @@ export async function facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica)
 export async function saveBeneficiario() {
 
 }
+
+/* Valida quelos datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
+/* Falta Terminar */
+export function validaDatosReportables(prestacion: any, datosConfigAutomatica) {
+    /* TODO: configurar en configFacturacion si el dato reportable puede venir null o no */
+    console.log("Datoo: ", prestacion.prestacion.datosReportables);
+    let drPrestacion = prestacion.prestacion.datosReportables.map(obj => obj[0]);
+    let drConfigAutomatica = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
+
+    let found = false;
+    for (let i = 0; i < drPrestacion.length; i++) {
+        console.log("Config DR: ", JSON.stringify(drConfigAutomatica[i].valores[0].conceptId));
+        console.log("Prestacion DR: ", JSON.stringify(drPrestacion[i].registro.concepto.conceptId));
+        if (drConfigAutomatica[i].valores[0].conceptId.indexOf(drPrestacion[i].registro.concepto.conceptId) > -1) {
+            found = true;
+        } else {
+            found = false;
+            break
+        }
+    }
+    console.log("Resultado: ", found);
+}

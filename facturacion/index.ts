@@ -13,7 +13,6 @@ const router = ms.router();
 
 router.group('/facturacion', (group) => {
     group.post('/facturar', async (req, res) => {
-        // mongoose.connect('mongodb://localhost:27017/andes', { useNewUrlParser: true });
         mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
 
         sql.close();

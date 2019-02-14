@@ -14,6 +14,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
     let facturacion = {
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
+        /* %%%%%%%%%5 Está en desarrollo todavía  %%%%%%%%%%%%%%%%%%%%%*/
         '34043003': {
             term: "consulta de odontologia",
             sumar: (arrayPrestacion, arrayConfiguracion) => {
@@ -121,7 +122,7 @@ export async function jsonFacturacion(pool, prestacion, datosConfiguracionAutoma
             preCondicionSumar: (prestacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
-                let datosReportables = (prestacion.prestacion.datosReportables) ? true : false;
+                let datosReportables = facturaSumar.validaDatosReportables(prestacion, datosConfiguracionAutomatica);//(prestacion.prestacion.datosReportables) ? true : false;
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
