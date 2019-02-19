@@ -1,9 +1,12 @@
 import * as moment from 'moment';
 import { QuerySumar } from './query-sumar';
 
+import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
+import { IDtoSumar } from './../../interfaces/IDtoSumar';
+
 let querySumar = new QuerySumar()
 
-export async function facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica) {
+export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
 
     let dtoComprobante = {
         cuie: dtoSumar.cuie,
@@ -60,10 +63,10 @@ export async function saveBeneficiario() {
 
 /* Valida quelos datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
 /* Falta Terminar */
-export function validaDatosReportables(prestacion: any, datosConfigAutomatica) {
+export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosConfigAutomatica) {
     /* TODO: configurar en configFacturacion si el dato reportable puede venir null o no */
-    console.log("Datoo: ", prestacion.prestacion.datosReportables);
-    let drPrestacion = prestacion.prestacion.datosReportables.map(obj => obj[0]);
+    console.log("Datoo: ", dtoFacturacion.prestacion.datosReportables);
+    let drPrestacion = dtoFacturacion.prestacion.datosReportables.map(obj => obj[0]);
     let drConfigAutomatica = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
 
     let found = false;

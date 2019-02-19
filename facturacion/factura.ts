@@ -1,17 +1,19 @@
 import { configFacturacionAutomaticaModel } from './schemas/config-prestaciones';
 import { jsonFacturacion } from './configJson/configJson';
 
+import { IDtoFacturacion } from './interfaces/IDtoFacturacion';
+
 export class Factura {
 
-    async facturar(pool, prestacion) {
+    async facturar(pool: any, dtoFacturacion: IDtoFacturacion) {
         /* Traigo colección de configFacturacionAutomatica */
-        let datosConfiguracionAutomatica = await this.getConfigFacturacionAutomatica(prestacion);
+        let datosConfiguracionAutomatica = await this.getConfigFacturacionAutomatica(dtoFacturacion);
 
-        await jsonFacturacion(pool, prestacion, datosConfiguracionAutomatica);
+        await jsonFacturacion(pool, dtoFacturacion, datosConfiguracionAutomatica);
     }
 
-    async getConfigFacturacionAutomatica(prestacion: any) {
-        let conceptId = prestacion.prestacion.conceptId;
+    async getConfigFacturacionAutomatica(dtoFacturacion: IDtoFacturacion) {
+        let conceptId = dtoFacturacion.prestacion.conceptId;
 
         let datosConfigAutomatica = await configFacturacionAutomaticaModel.findOne({ 'prestacionSnomed.conceptId': conceptId });
 

@@ -152,7 +152,7 @@ export class QuerySumar {
                     let query = 'SELECT * FROM [dbo].[PN_nomenclador] where id_nomenclador = @idNomenclador';
                     let resultado = await new sql.Request(pool)
                         .input('idNomenclador', sql.VarChar(50), idNomeclador)
-                        .query(query)
+                        .query(query);
 
                     let res = null;
                     if (resultado.recordset[0]) {

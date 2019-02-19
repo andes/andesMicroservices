@@ -1,10 +1,12 @@
 import * as moment from 'moment';
 import { QueryRecupero } from './query-recupero';
 
+import { IDtoRecupero } from './../../interfaces/IDtoRecupero';
+
 let queryRecupero = new QueryRecupero()
 
-export async function facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica) {
-    let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero.idNomenclador);
+export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConfiguracionAutomatica) {
+    let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero);
 
     let dtoOrden = {
         idEfector: dtoRecupero.idEfector,
@@ -33,13 +35,13 @@ export async function facturaRecupero(pool, dtoRecupero, datosConfiguracionAutom
     let dtoOrdendetalle = {
         idOrden: idOrden,
         idEfector: dtoRecupero.idEfector,
-        idNomenclador: datosConfiguracionAutomatica.recuperoFinanciero.idNomenclador,
+        idNomenclador: nomencladorRecupero.idNomenclador,
         descripcion: nomencladorRecupero.descripcion,
         cantidad: 1,
         valorUnidad: nomencladorRecupero.valorUnidad,
         ajuste: 0,
         totoal: nomencladorRecupero.valorUnidad
     }
-
+    console.log("Order detalle: ", dtoOrdendetalle);
     queryRecupero.saveOrdenDetalle(pool, dtoOrdendetalle);
 }

@@ -40,14 +40,16 @@ export class QueryRecupero {
     }
 
 
-    async getNomencladorRecupero(pool: any, idNomenclador: any) {
+    async getNomencladorRecupero(pool: any, nomencladorRF: any) {
         return new Promise((resolve: any, reject: any) => {
             (async function () {
                 try {
-                    let query = 'SELECT idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE idNomenclador = @idNomenclador';
+                    // let query = 'SELECT idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE idNomenclador = @idNomenclador';
+                    let query = 'SELECT idNomenclador, idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador';
                     let resultado = await new sql.Request(pool)
-                        .input('idNomenclador', sql.VarChar(50), idNomenclador)
-                        .query(query)
+                        .input('codigo', sql.VarChar(50), nomencladorRF.codigo)
+                        .input('idTipoNomenclador', sql.Int, nomencladorRF.idTipoNomenclador)
+                        .query(query);
 
                     resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
 

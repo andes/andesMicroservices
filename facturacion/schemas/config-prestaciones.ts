@@ -16,7 +16,7 @@ export let configFacturacionAutomaticaSchema = new mongoose.Schema({
     prestacionSnomed: [{ term: String, conceptId: String }],
     recuperoFinanciero: {
         descripcion: { type: String },
-        idNomenclador: { type: String },
+        idTipoNomenclador: { type: String },
         codigo: { type: String },
         idServicio: { type: String }
     },
