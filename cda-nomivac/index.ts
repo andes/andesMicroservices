@@ -15,14 +15,37 @@ router.group('/cda', (group) => {
     group.post('/nomivac', async (req: any, res) => {
         res.send({ message: 'ok' });
         try {
+
             const id = req.body.id;
             const webhookId = req.body.subscription;
             const event = req.body.event;
             const data = req.body.data;
-            let paciente = Fhir.Patient.decode(data);
-            if (paciente) {
-                await getVacunas(paciente);
+
+            let paciente;
+            switch (event) {
+                case 'mobile:patient:login':
+                    paciente = data.pacientes[0];
+                    break;
+                default:
+                    paciente = data.paciente;
+                    // let paciente = Fhir.Patient.decode(data);
+                    // if (paciente) {
+                    //     await getVacunas(paciente);
+                    // }
+                    break;
             }
+
+            // Esperamos el paciente desde una prestación.
+            if (paciente) {
+                getVacunas(paciente);
+            }
+
+
+            // console.log('data paciente', data);
+            // let paciente = Fhir.Patient.decode(data);
+            // if (paciente) {
+            //     await getVacunas(paciente);
+            // }
         } catch (e) {
             throw e;
         }
