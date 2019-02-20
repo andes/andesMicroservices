@@ -37,8 +37,8 @@ function vPaciente(registro, pacienteAndes) {
 
     let paciente = {
         documento: registro.pacienteDocumento ? registro.pacienteDocumento.toString() : null,
-        nombre: registro.pacienteNombre ? registro.pacienteNombre : null,
-        apellido: registro.pacienteApellido ? registro.pacienteApellido : null,
+        nombre: registro.pacienteNombre ? registro.pacienteNombre.trim() : null,
+        apellido: registro.pacienteApellido ? registro.pacienteApellido.trim() : null,
         sexo: registro.pacienteSexo ? registro.pacienteSexo : null,
         fechaNacimiento: registro.pacienteFechaNacimiento ? registro.pacienteFechaNacimiento : null
     };

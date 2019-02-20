@@ -86,9 +86,8 @@ export function makeMysql(paciente: any) {
         SUBSTRING_INDEX(apenomPac, ',', 1) as pacienteApellido,
         SUBSTRING_INDEX(SUBSTRING_INDEX(apenomPac, ',', 2), ',', -1)as pacienteNombre,
         enf_cns_prestaciones_monitor.fechaNac as pacienteFechaNacimiento,
-		/*		CASE WHEN enf_cns_prestaciones_monitor.sexoPac = 'M' THEN 'masculino' WHEN
-             enf_cns_prestaciones_monitor.sexoPac = 'F' THEN 'femenino' ELSE 'otro' END AS pacienteSexo,*/
-        'femenino' as pacienteSexo,
+			CASE WHEN enf_cns_prestaciones_monitor.sexoPac = 'M' THEN 'masculino' WHEN
+             enf_cns_prestaciones_monitor.sexoPac = 'F' THEN 'femenino' ELSE 'otro' END AS pacienteSexo,
         personaldb.per_persona.NroDoc as profesionalDocumento,
         personaldb.per_persona.Nombre as profesionalNombre,
         personaldb.per_persona.Apellido as profesionalApellido,
