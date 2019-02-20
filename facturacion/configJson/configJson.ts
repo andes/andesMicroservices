@@ -22,7 +22,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         34043003: {
             term: 'consulta de odontologia',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                console.log("Entra a odontologia");
+                
                 let dr = {
                     idDatoReportable: '',
                     datoReportable: ''
@@ -30,12 +30,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                 arrayPrestacion = arrayPrestacion.filter(obj => obj !== null);
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                console.log("Array Prestacion: ", arrayPrestacion);
-                console.log("Array Configuracion: ", arrayConfiguracion);
-                let caries = arrayPrestacion.find(obj => console.log("Primero: ", obj.conceptId) === console.log("Segundo: ", arrayConfiguracion[0].conceptId));
-                console.log("Cariessss: ", caries);
+                
+                // let caries = arrayPrestacion.find(obj => console.log("Primero: ", obj.conceptId) === console.log("Segundo: ", arrayConfiguracion[0].conceptId));
+                
                 let caries2 = arrayConfiguracion.find(obj => obj.conceptId === arrayPrestacion.conceptId);
-                console.log("Cariessss: ", caries2);
+                
             }
         },
 

@@ -65,14 +65,12 @@ export async function saveBeneficiario() {
 /* Falta Terminar */
 export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosConfigAutomatica) {
     /* TODO: configurar en configFacturacion si el dato reportable puede venir null o no */
-    console.log("Datoo: ", dtoFacturacion.prestacion.datosReportables);
+
     let drPrestacion = dtoFacturacion.prestacion.datosReportables.map(obj => obj[0]);
     let drConfigAutomatica = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
 
     let found = false;
     for (let i = 0; i < drPrestacion.length; i++) {
-        console.log("Config DR: ", JSON.stringify(drConfigAutomatica[i].valores[0].conceptId));
-        console.log("Prestacion DR: ", JSON.stringify(drPrestacion[i].registro.concepto.conceptId));
         if (drConfigAutomatica[i].valores[0].conceptId.indexOf(drPrestacion[i].registro.concepto.conceptId) > -1) {
             found = true;
         } else {
@@ -80,5 +78,4 @@ export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosCon
             break
         }
     }
-    console.log("Resultado: ", found);
 }
