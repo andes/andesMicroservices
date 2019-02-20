@@ -1,5 +1,6 @@
 import * as sql from 'mssql';
 import { runInNewContext } from 'vm';
+import { IDtoRecupero } from '../../interfaces/IDtoRecupero';
 
 export class QueryRecupero {
 
@@ -68,8 +69,15 @@ export class QueryRecupero {
         return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
     }
 
+    async getOrdenDePrestacion(pool: any, dtoRecupero: IDtoRecupero) {
+        let query = 'SELECT TOP 1 * FROM dbo.FAC_Orden WHERE objectId = @objectId';
+        let result = await new sql.Request(pool)
+            .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
+            .query(query);
+        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+    }
+
     async saveOrdenRecupero(pool: any, dtoOrden: any) {
-        console.log("Dto Orden: ", dtoOrden);
         return new Promise(async (resolve, reject) => {
             (async function () {
                 try {

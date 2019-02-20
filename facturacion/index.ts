@@ -20,6 +20,7 @@ router.group('/facturacion', (group) => {
 
         let dtoFacturacion: IDtoFacturacion = req.body.data;
         let factura = new Factura();
+
         factura.facturar(pool, dtoFacturacion);
     });
 });

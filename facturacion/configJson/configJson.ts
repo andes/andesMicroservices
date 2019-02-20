@@ -72,7 +72,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         /* Prestación Niño Sano 410621008*/
         /* TODO: poner la expresión que corresponda */
         410620009: {
-            term: 'consulta de niño sano, recién nacido',
+            term: 'consulta de niño sano',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 let x = 0;
 
