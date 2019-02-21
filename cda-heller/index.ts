@@ -2,33 +2,10 @@ import { Microservice } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import { Connections } from '@andes/log';
 import { logDatabase } from './config.private';
-import * as ConfigPrivate from './config.private';
-import { log } from '@andes/log';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
-let fakeRequestSql = {
-    user: {
-        usuario: 'msHeller',
-        app: 'integracion-heller',
-        organizacion: 'sss'
-    },
-    ip: ConfigPrivate.staticConfiguration.heller.ip,
-    connection: {
-        localAddress: ''
-    }
-};
-let fakeRequestMysql = {
-    user: {
-        usuario: 'msHeller',
-        app: 'integracion-heller',
-        organizacion: 'sss'
-    },
-    ip: ConfigPrivate.staticConfiguration.hellerMysql.ip,
-    connection: {
-        localAddress: ''
-    }
-};
+
 router.group('/cda', (group) => {
     Connections.initialize(logDatabase.log.host, logDatabase.log.options);
     // group.use(Middleware.authenticate());
@@ -50,10 +27,7 @@ router.group('/cda', (group) => {
         }
         if (paciente) {
             await ejecutaCDA.ejecutar(paciente);
-            log(fakeRequestSql, 'microservices:integration:heller', paciente.id, '/ejecuta CDA exito', null);
             await ejecutaCDA.ejecutarMysql(paciente);
-            log(fakeRequestMysql, 'microservices:integration:heller', paciente.id, '/ejecutaMysql CDA exito', null);
-
         }
     });
 });

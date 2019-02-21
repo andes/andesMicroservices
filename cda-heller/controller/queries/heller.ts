@@ -57,7 +57,6 @@ export function make(paciente: any) {
                         and CNS_Informes_MDC.Ppal=1
                         and CNS_Informes_MDC.CodigoCIE10 <>''
                         and Pacientes.[Número de Documento] = '${dni}'
-                        and CNS_TipoConsultorio.Descripcion like '%Hospital%'
                 ORDER BY CNS_Recepcion.Fecha`;
 
     return {
