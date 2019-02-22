@@ -33,7 +33,8 @@ export function postCDA(data: any) {
                     localAddress: ''
                 }
             };
-            log(fakeRequestSql, 'microservices:integration:heller', undefined, 'postCDA:heller', body, error);
+            let pac = data.paciente ? data.paciente.id : undefined;
+            log(fakeRequestSql, 'microservices:integration:heller', pac, 'postCDA:heller', body, error);
             return resolve(error || body);
         });
     });
