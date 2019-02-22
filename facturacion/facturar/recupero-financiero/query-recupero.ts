@@ -6,15 +6,16 @@ export class QueryRecupero {
 
     async getIdPacienteSips(pool: any, dni: any) {
         return new Promise((resolve: any, reject: any) => {
-            (async function () {
+            (async () => {
                 try {
                     let query = 'SELECT TOP 1 idPaciente FROM dbo.Sys_Paciente where activo = 1 and numeroDocumento = @dni order by objectId DESC;';
                     let resultado = await new sql.Request(pool)
                         .input('dni', sql.VarChar(50), dni)
                         .query(query)
 
-                    resolve(resultado.recordset[0] ? resultado.recordset[0].idPaciente : null);
-
+                    if (resultado && resultado.recordset[0]) {
+                        resolve(resultado.recordset[0] ? resultado.recordset[0].idPaciente : null);
+                    }
                 } catch (err) {
                     reject(err);
                 }
@@ -24,14 +25,16 @@ export class QueryRecupero {
 
     async getIdProfesionalSips(pool: any, dni: any) {
         return new Promise((resolve: any, reject: any) => {
-            (async function () {
+            (async () => {
                 try {
                     let query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE activo = 1 and numeroDocumento = @dni';
                     let resultado = await new sql.Request(pool)
                         .input('dni', sql.VarChar(50), dni)
                         .query(query)
 
-                    resolve(resultado.recordset[0] ? resultado.recordset[0].idProfesional : null);
+                    if (resultado && resultado.recordset[0]) {
+                        resolve(resultado.recordset[0] ? resultado.recordset[0].idProfesional : null);
+                    }
 
                 } catch (err) {
                     reject(err);
@@ -43,7 +46,7 @@ export class QueryRecupero {
 
     async getNomencladorRecupero(pool: any, nomencladorRF: any) {
         return new Promise((resolve: any, reject: any) => {
-            (async function () {
+            (async () => {
                 try {
                     // let query = 'SELECT idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE idNomenclador = @idNomenclador';
                     let query = 'SELECT idNomenclador, idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador';
@@ -52,8 +55,9 @@ export class QueryRecupero {
                         .input('idTipoNomenclador', sql.Int, nomencladorRF.idTipoNomenclador)
                         .query(query);
 
-                    resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
-
+                    if (resultado && resultado.recordset[0]) {
+                        resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
+                    }
                 } catch (err) {
                     reject(err);
                 }
@@ -62,24 +66,46 @@ export class QueryRecupero {
     }
 
     async getIdObraSocialSips(pool: any, codigoObraSocial: any) {
-        let query = 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;';
-        let result = await new sql.Request(pool)
-            .input('codigo', sql.Int, codigoObraSocial)
-            .query(query);
-        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+        return new Promise((resolve: any, reject: any) => {
+            (async () => {
+                try {
+                    let query = 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;';
+                    let result = await new sql.Request(pool)
+                        .input('codigo', sql.Int, codigoObraSocial)
+                        .query(query);
+
+                    if (result && result.recordset[0]) {
+                        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            })();
+        });
     }
 
     async getOrdenDePrestacion(pool: any, dtoRecupero: IDtoRecupero) {
-        let query = 'SELECT TOP 1 * FROM dbo.FAC_Orden WHERE objectId = @objectId';
-        let result = await new sql.Request(pool)
-            .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
-            .query(query);
-        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+        return new Promise((resolve: any, reject: any) => {
+            (async () => {
+                try {
+                    let query = 'SELECT TOP 1 * FROM dbo.FAC_Orden WHERE objectId = @objectId';
+                    let result = await new sql.Request(pool)
+                        .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
+                        .query(query);
+                    if (result && result.recordset[0]) {
+                        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            })();
+        });
+
     }
 
     async saveOrdenRecupero(pool: any, dtoOrden: any) {
         return new Promise(async (resolve, reject) => {
-            (async function () {
+            (async () => {
                 try {
                     let query = 'INSERT INTO [dbo].[FAC_Orden]' +
                         ' ([idEfector]' +
@@ -124,7 +150,7 @@ export class QueryRecupero {
 
                     let transaction = new sql.Transaction(pool);
 
-                    transaction.begin().then(async function () {
+                    transaction.begin().then(async () => {
                         await new sql.Request(transaction)
                             .input('idEfector', sql.Int, dtoOrden.idEfector)
                             .input('numero', sql.Int, dtoOrden.numero)
@@ -163,7 +189,7 @@ export class QueryRecupero {
 
     async saveOrdenDetalle(pool: any, ordenDetalle: any) {
         return new Promise(async (resolve, reject) => {
-            (async function () {
+            (async () => {
                 try {
                     let query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
                         ' ([idOrden]' +
@@ -185,7 +211,7 @@ export class QueryRecupero {
 
                     let transaction = new sql.Transaction(pool);
 
-                    transaction.begin().then(async function () {
+                    transaction.begin().then(async () => {
                         await new sql.Request(transaction)
                             .input('idOrden', sql.Int, ordenDetalle.idOrden)
                             .input('idEfector', sql.Int, ordenDetalle.idEfector)
@@ -203,11 +229,11 @@ export class QueryRecupero {
                                     resolve(result.recordset[0]);
                                 });
                             });
-                    })//.then(() => pool.close());
+                    });
                 } catch (err) {
                     reject(err);
                 }
-            })()
+            })();
         });
     }
 }
