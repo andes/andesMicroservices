@@ -4,7 +4,9 @@
   "description": "Sistema de Facturación Automático de Sips y Sumar",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "tslint --project ..",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w"
   },
   "author": "Luis Parada",
   "license": "ISC",
