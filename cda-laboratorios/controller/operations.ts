@@ -28,20 +28,20 @@ export async function organizacionBySisaCode(sisa) {
 }
 
 
-export async function getEncabezados(documento) {
+export async function getEncabezados(pool, documento) {
     const query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
         'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
         'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
         'where encabezado.numeroDocumento = ' + documento;
-    return await new sql.Request().query(query);
+    return await new sql.Request(pool).query(query);
 
 }
 
 
-export async function getDetalles(idProtocolo, idEfector) {
+export async function getDetalles(pool, idProtocolo, idEfector) {
     const query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
         ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
-    return await new sql.Request().query(query);
+    return await new sql.Request(pool).query(query);
 
 }
 

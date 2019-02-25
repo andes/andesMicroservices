@@ -17,9 +17,6 @@ const connection = {
     }
 };
 
-sql.connect(connection, (err) => {
-    // logger('MSSSQL connection error');
-});
 
 function matchPaciente(pacMpi, pacLab) {
     const weights = {
@@ -77,6 +74,8 @@ function downloadFile(url) {
                 }
             })
             .on('error', (error) => {
+                // tslint:disable-next-line:no-console
+                console.error(`No se pudo descarga el pdf: ${error.message} ${url}`);
                 return reject(error);
             });
     });
@@ -101,7 +100,8 @@ function donwloadFileHeller(idProtocolo, year) {
                 });
             })
             .on('error', (error) => {
-                console.error(`No se pudo descarga el pdf HELLER: ${error.message}`);
+                // tslint:disable-next-line:no-console
+                console.error(`No se pudo descarga el pdf HELLER: ${error.message} ${url}`);
                 return reject(error);
             });
     });
@@ -110,10 +110,11 @@ function donwloadFileHeller(idProtocolo, year) {
 
 export async function importarDatos(paciente) {
     try {
-        let laboratorios: any = await operations.getEncabezados(paciente.documento);
+        const pool = await new sql.ConnectionPool(connection).connect();
+        let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
         for (const lab of laboratorios.recordset) {
             try {
-                const details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
+                const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
                 const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
 
                 let validado = true;
@@ -172,10 +173,11 @@ export async function importarDatos(paciente) {
 
                 }
             } catch (e) {
-                console.log('Error download file: ', e);
-                return false;
+                // No va return porque sigue con el proximo laboratorio dentro del for
+                // return false;
             }
         }
+        pool.close();
         return true;
     } catch (e) {
         // logger('Error', e);
