@@ -12,7 +12,7 @@ router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', (req, res) => {
         res.send({ message: 'ok' });
-
+        console.log('entro al ws');
         const id = req.body.id;
         const webhookId = req.body.subscription;
         const event = req.body.event;
@@ -28,9 +28,12 @@ router.group('/cda', (group) => {
                 break;
         }
 
+        console.log('acaaa: ', paciente);
         // Esperamos el paciente desde una prestación.
         if (paciente) {
+            console.log('tengo paciente: ', paciente);
             queue.add(() => {
+                console.log('encolando....');
                 return importarDatos(paciente);
             });
         }
