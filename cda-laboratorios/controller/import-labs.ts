@@ -173,6 +173,7 @@ export async function importarDatos(paciente) {
 
                 }
             } catch (e) {
+                console.error(`Erro en download files: ${e.message}`);
                 // No va return porque sigue con el proximo laboratorio dentro del for
                 // return false;
             }
