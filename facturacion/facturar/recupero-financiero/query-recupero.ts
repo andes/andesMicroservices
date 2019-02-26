@@ -11,7 +11,7 @@ export class QueryRecupero {
                     let query = 'SELECT TOP 1 idPaciente FROM dbo.Sys_Paciente where activo = 1 and numeroDocumento = @dni order by objectId DESC;';
                     let resultado = await new sql.Request(pool)
                         .input('dni', sql.VarChar(50), dni)
-                        .query(query)
+                        .query(query);
 
                     if (resultado && resultado.recordset[0]) {
                         resolve(resultado.recordset[0] ? resultado.recordset[0].idPaciente : null);
@@ -30,7 +30,7 @@ export class QueryRecupero {
                     let query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE activo = 1 and numeroDocumento = @dni';
                     let resultado = await new sql.Request(pool)
                         .input('dni', sql.VarChar(50), dni)
-                        .query(query)
+                        .query(query);
 
                     if (resultado && resultado.recordset[0]) {
                         resolve(resultado.recordset[0] ? resultado.recordset[0].idProfesional : null);
@@ -75,7 +75,7 @@ export class QueryRecupero {
                         .query(query);
 
                     if (result && result.recordset[0]) {
-                        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+                        resolve(result.recordset[0] ? result.recordset[0].idObraSocial : 0);
                     }
                 } catch (err) {
                     reject(err);
@@ -93,7 +93,9 @@ export class QueryRecupero {
                         .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
                         .query(query);
                     if (result && result.recordset[0]) {
-                        return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+                        resolve(1);
+                    } else {
+                        resolve(0);
                     }
                 } catch (err) {
                     reject(err);

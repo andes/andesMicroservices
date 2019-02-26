@@ -6,6 +6,7 @@ import { IDtoRecupero } from './../../interfaces/IDtoRecupero';
 let queryRecupero = new QueryRecupero()
 
 export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConfiguracionAutomatica) {
+    console.log("Entra a factura");
     let existeOrden = await validaOrden(pool, dtoRecupero);
 
     if (!existeOrden) {
@@ -55,6 +56,7 @@ async function validaOrden(pool: any, dtoRecupero: IDtoRecupero): Promise<boolea
     let existe = false;
 
     let orden = await queryRecupero.getOrdenDePrestacion(pool, dtoRecupero);
+
     if (orden > 0) {
         existe = true;
     }
