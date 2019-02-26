@@ -12,7 +12,6 @@ router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', (req, res) => {
         res.send({ message: 'ok' });
-
         const id = req.body.id;
         const webhookId = req.body.subscription;
         const event = req.body.event;

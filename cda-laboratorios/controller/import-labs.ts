@@ -17,11 +17,6 @@ const connection = {
         encrypt: true
     }
 };
-
-sql.connect(connection, (err) => {
-    // logger('MSSSQL connection error');
-});
-
 function matchPaciente(pacMpi, pacLab) {
     const weights = {
         identity: 0.55,
@@ -71,7 +66,7 @@ function downloadFile(url) {
             if (response.statusCode === 200) {
                 return resolve(response);
             } else {
-                return reject({error: 'sips-pdf', status: response.statusCode});
+                return reject({ error: 'sips-pdf', status: response.statusCode });
             }
         }).on('error', (e) => {
             // tslint:disable-next-line:no-console
@@ -83,7 +78,7 @@ function downloadFile(url) {
 
 function donwloadFileHeller(idProtocolo, year) {
     return new Promise((resolve, reject) => {
-        http.get(wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year='  + year, (response) => {
+        http.get(wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year=' + year, (response) => {
             return response.on('data', (buffer) => {
                 const resp = buffer.toString();
 
@@ -94,7 +89,7 @@ function donwloadFileHeller(idProtocolo, year) {
                         return resolve(_resp);
                     }).catch(reject);
                 } else {
-                    return reject({error: 'heller-error'});
+                    return reject({ error: 'heller-error' });
                 }
             });
         }).on('error', (e) => {
@@ -107,10 +102,12 @@ function donwloadFileHeller(idProtocolo, year) {
 
 export async function importarDatos(paciente) {
     try {
-        let laboratorios: any = await operations.getEncabezados(paciente.documento);
+        const pool = await new sql.ConnectionPool(connection).connect();
+
+        let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
         for (const lab of laboratorios.recordset) {
             try {
-                const details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
+                const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
                 const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
 
                 let validado = true;
@@ -171,6 +168,7 @@ export async function importarDatos(paciente) {
                 //
             }
         }
+        pool.close();
         return true;
     } catch (e) {
         // logger('Error', e);
