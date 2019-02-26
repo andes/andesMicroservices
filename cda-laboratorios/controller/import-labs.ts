@@ -3,7 +3,6 @@ import * as moment from 'moment';
 import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as operations from './operations';
-
 import * as http from 'http';
 
 const cota = 0.95;
@@ -17,6 +16,7 @@ const connection = {
         encrypt: true
     }
 };
+
 function matchPaciente(pacMpi, pacLab) {
     const weights = {
         identity: 0.55,
@@ -43,6 +43,7 @@ function matchPaciente(pacMpi, pacLab) {
     return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
 }
 
+
 async function toBase64(response) {
     return new Promise((resolve, reject) => {
         let chunks: any = [];
@@ -57,11 +58,13 @@ async function toBase64(response) {
         response.on('error', (err) => {
             return reject(err);
         });
+
     });
 }
 
 function downloadFile(url) {
     return new Promise((resolve, reject) => {
+
         http.get(url, (response) => {
             if (response.statusCode === 200) {
                 return resolve(response);
@@ -73,11 +76,13 @@ function downloadFile(url) {
             console.error(`No se pudo descarga el pdf: ${e.message}`);
             return reject(e);
         });
+
     });
 }
 
 function donwloadFileHeller(idProtocolo, year) {
     return new Promise((resolve, reject) => {
+
         http.get(wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year=' + year, (response) => {
             return response.on('data', (buffer) => {
                 const resp = buffer.toString();
@@ -91,19 +96,16 @@ function donwloadFileHeller(idProtocolo, year) {
                 } else {
                     return reject({ error: 'heller-error' });
                 }
+
             });
-        }).on('error', (e) => {
-            // tslint:disable-next-line:no-console
-            console.error(`No se pudo descarga el pdf HELLER: ${e.message}`);
-            return reject(e);
         });
     });
 }
 
+
 export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
-
         let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
         for (const lab of laboratorios.recordset) {
             try {
@@ -129,14 +131,15 @@ export async function importarDatos(paciente) {
 
                     let pdfUrl;
                     let response;
+
                     if (String(lab.idEfector) === '221') {
                         response = await donwloadFileHeller(lab.idProtocolo, fecha.format('YYYY'));
                     } else {
                         pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
                         response = await downloadFile(pdfUrl);
                     }
-                    let adjunto64 = await toBase64(response);
 
+                    let adjunto64 = await toBase64(response);
                     const dto = {
                         id: lab.idProtocolo,
                         organizacion: organizacion._id,
@@ -153,7 +156,7 @@ export async function importarDatos(paciente) {
                     await operations.postCDA(dto);
 
                 } else {
-                    // Ver que hacer si no matchea
+                    // Ver que hacer si no matchea TODO
                     if (value < cota) {
                         // logger('-----------------------------------');
                         // logger(paciente.nombre, lab.nombre);
@@ -165,7 +168,9 @@ export async function importarDatos(paciente) {
 
                 }
             } catch (e) {
-                //
+                console.error(`Erro en download files: ${e.message}`);
+                // No va return porque sigue con el proximo laboratorio dentro del for
+                // return false;
             }
         }
         pool.close();
