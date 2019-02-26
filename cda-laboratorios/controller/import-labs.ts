@@ -87,7 +87,7 @@ function donwloadFileHeller(idProtocolo, year) {
             return response.on('data', (buffer) => {
                 const resp = buffer.toString();
 
-                const regexp = /10.1.104.37\/resultados_omg\/([0-9\-\_]*).pdf/;
+                const regexp = /10.1.104.37\/resultados_omg\/([0-9\s\-\_]*).pdf/;
                 const match = resp.match(regexp);
                 if (match && match[1]) {
                     return downloadFile(wsSalud.hellerFS + match[1] + '.pdf').then((_resp) => {
