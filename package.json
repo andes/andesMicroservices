@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@andes/fhir": "^1.0.0",
+    "@andes/match": "^1.1.12",
+    "mssql": "^4.3.2",
     "p-queue": "^3.0.0"
   }
 }

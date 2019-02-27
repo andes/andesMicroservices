@@ -1,4 +1,4 @@
-import { conSql, wsSalud } from '../config.private';
+// import { conSql, wsSalud } from '../config.private';
 import * as moment from 'moment';
 import * as sql from 'mssql';
 import { Matching } from '@andes/match';
