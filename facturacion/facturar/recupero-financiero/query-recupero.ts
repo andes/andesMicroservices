@@ -1,5 +1,4 @@
 import * as sql from 'mssql';
-import { runInNewContext } from 'vm';
 import { IDtoRecupero } from '../../interfaces/IDtoRecupero';
 
 export class QueryRecupero {
@@ -48,7 +47,6 @@ export class QueryRecupero {
         return new Promise((resolve: any, reject: any) => {
             (async () => {
                 try {
-                    // let query = 'SELECT idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE idNomenclador = @idNomenclador';
                     let query = 'SELECT idNomenclador, idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador';
                     let resultado = await new sql.Request(pool)
                         .input('codigo', sql.VarChar(50), nomencladorRF.codigo)

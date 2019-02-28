@@ -14,7 +14,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
 
     let datoReportable = [];
-    console.log("LLega dtoFacturacion: ", dtoFacturacion);
+
     let facturacion = {
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
@@ -74,11 +74,9 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             term: 'consulta de niño sano',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 let x = 0;
-                console.log("Entra a niño sano");
+
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                console.log("Array Configuracion: ", arrayConfiguracion);
                 arrayPrestacion = arrayPrestacion.map(obj => obj);
-                console.log("Array Prestacion: ", arrayPrestacion);
 
                 arrayPrestacion.forEach((element: any) => {
                     if (element) {

@@ -9,11 +9,6 @@ export async function getConfigAutomatica(conceptId) {
                 const confAuto: any[] = JSON.parse(body);
                 if (confAuto && confAuto.length) {
                     resolve(confAuto);
-                    // return resolve({
-                    //     nombre: orgs[0].nombre,
-                    //     cuie: orgs[0].codigo.cuie,
-                    //     idSips: orgs[0].codigo.sips
-                    // });
                 }
             }
             return reject(error || body);

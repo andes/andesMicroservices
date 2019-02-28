@@ -9,7 +9,6 @@ export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
     let idProfesional = (prestacion.solicitud) ? prestacion.solicitud.profesional.id : prestacion.profesionales[0]._id;
 
-    /* Funciona */
     let _datosOrganizacion: any = getOrganizacion(idOrganizacion);
     let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
     let _datosProfesional: any = getProfesional(idProfesional);
@@ -35,7 +34,7 @@ export async function facturacionAutomatica(prestacion: any) {
             datosReportables: getDR,
         },
         organizacion: {
-            nombre: datosOrganizacion.nombre,//(prestacion.ejecucion) ? prestacion.ejecucion.organizacion.nombre : prestacion.organizacion.nombre,
+            nombre: datosOrganizacion.nombre,
             cuie: datosOrganizacion.cuie,
             idSips: datosOrganizacion.idSips
         },
@@ -44,19 +43,17 @@ export async function facturacionAutomatica(prestacion: any) {
             financiador: obraSocialPaciente.financiador
         } : null,
         profesional: {
-            nombre: datosProfesional.nombre,//(prestacion.solicitud) ? prestacion.solicitud.profesional.nombre : prestacion.profesionales[0].nombre,
-            apellido: datosProfesional.apellido,//(prestacion.solicitud) ? prestacion.solicitud.profesional.apellido : prestacion.profesionales[0].apellido,
-            dni: datosProfesional.dni//(prestacion.solicitud) ? prestacion.solicitud.profesional.documento : await getProfesional(prestacion.profesionales[0]._id) // prestacion.profesionales[0].documento,
+            nombre: datosProfesional.nombre,
+            apellido: datosProfesional.apellido,
+            dni: datosProfesional.dni
         }
     };
-    console.log("Factura: ", JSON.stringify(factura));
-    return factura;
 
+    return factura;
 }
 
 function getConfiguracionAutomatica(conceptId: any) {
     return getConfigAutomatica(conceptId);
-    // return configAutomatica.find({}).where('prestacionSnomed.conceptId').equals(conceptId);
 }
 
 async function getDatosReportables(prestacion: any) {
@@ -70,14 +67,9 @@ async function getDatosReportables(prestacion: any) {
 
 
             let promises = expresionesDR.map(async (exp, index) => {
-                // let querySnomed = await makeMongoQuery(exp[0].expresion);
-                // console.log("Query Snomed.: ", querySnomed);
-                let docs: any = await getSnomed(exp[0].expresion); // await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+                let docs: any = await getSnomed(exp[0].expresion);
 
                 conceptos = docs.map((item: any) => {
-
-                    //let termSnomed = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-
                     return {
                         fsn: item.fsn,
                         term: item.term,
@@ -90,8 +82,6 @@ async function getDatosReportables(prestacion: any) {
                 let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
 
                 if (data.length > 0) {
-                    //let datoReportable = data;
-
                     let datoReportable = {
                         conceptId: data[0].registro.concepto.conceptId,
                         term: data[0].registro.concepto.term,
@@ -105,12 +95,12 @@ async function getDatosReportables(prestacion: any) {
                 }
             });
 
-            return await Promise.all(promises).then(function (results) {
+            return await Promise.all(promises).then((results) => {
                 return results;
             });
         }
     }
-    // return '';
+    return '';
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {
@@ -154,25 +144,3 @@ export function matchConceptsFacturacion(registro, conceptos) {
     }
     return match;
 }
-
-// function getObraSocial(dni: any) {
-//     return new Promise(async (resolve, reject) => {
-//         let osPuco: any = await Puco.find({ dni: Number.parseInt(dni, 10) }).exec();
-
-//         if (osPuco.length > 0) {
-//             let obraSocial = await ObraSocial.find({ codigoPuco: osPuco[0].codigoOS }).exec();
-
-//             resolve(obraSocial);
-//         } else {
-//             resolve(null);
-//         }
-//     });
-// }
-
-// function getProfesional(idProfesional: any) {
-//     return new Promise(async (resolve, reject) => {
-//         let prof: any = await profesional.findById(idProfesional).exec();
-
-//         resolve(prof.documento);
-//     });
-// }

@@ -28,8 +28,9 @@ export class QuerySumar {
                             .input('factAutomatico', sql.VarChar(50), 'prestacion')
                             .query(query, (err, result: any) => {
                                 transaction.commit(err => {
-                                    if (err)
+                                    if (err) {
                                         reject(err);
+                                    }
 
                                     idComprobante = result.recordset[0].id;
 
@@ -76,8 +77,9 @@ export class QuerySumar {
                             .input('dia', sql.Int, dtoPrestacion.dia)
                             .query(query, (err, result: any) => {
                                 transaction.commit(err => {
-                                    if (err)
+                                    if (err) {
                                         reject(err);
+                                    }
 
                                     idPrestacion = result.recordset[0].id;
 
@@ -113,9 +115,8 @@ export class QuerySumar {
                                     if (err) {
                                         reject(err);
                                     }
-                                    console.log("Dator Reportable: ", result.recordset);
+
                                     idDatoReportable = result.recordset[0].id;
-                                    console.log("Dator Reportable II: ", idDatoReportable);
                                     resolve(idDatoReportable);
                                 });
                             });
