@@ -8,10 +8,10 @@ let queryRecupero = new QueryRecupero()
 export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConfiguracionAutomatica) {
     console.log("Entra a factura");
     let existeOrden = await validaOrden(pool, dtoRecupero);
-
+    console.log("Existe order:", existeOrden);
     if (!existeOrden) {
         let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero);
-
+        console.log("Nomnecnlador: ", nomencladorRecupero);
         let dtoOrden = {
             idEfector: dtoRecupero.idEfector,
             /* Existe un trigger en Fac_Orden [Trigger_NumeroOrden] que actualiza 'numero' cuando el param es -1 */
@@ -35,7 +35,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
         };
 
         let idOrden = await queryRecupero.saveOrdenRecupero(pool, dtoOrden);
-
+        console.log("IdOrden: ", idOrden);
         let dtoOrdendetalle = {
             idOrden: idOrden,
             idEfector: dtoRecupero.idEfector,

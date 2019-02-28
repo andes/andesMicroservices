@@ -1,5 +1,6 @@
 import { SipsDBConfiguration, mongoDB } from './config.private';
 import { Factura } from './factura';
+import { facturacionAutomatica } from './facturar/dto-facturacion';
 
 import { Microservice } from '@andes/bootstrap';
 let pkg = require('./package.json');
@@ -18,7 +19,7 @@ router.group('/facturacion', (group) => {
         try {
             sql.close();
             let pool = await sql.connect(SipsDBConfiguration);
-            let dtoFacturacion: IDtoFacturacion = req.body.data;
+            let dtoFacturacion: any = await facturacionAutomatica(req.body.data);
             let factura = new Factura();
             factura.facturar(pool, dtoFacturacion);
         } catch (e) {

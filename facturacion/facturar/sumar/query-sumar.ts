@@ -113,9 +113,9 @@ export class QuerySumar {
                                     if (err) {
                                         reject(err);
                                     }
-
+                                    console.log("Dator Reportable: ", result.recordset);
                                     idDatoReportable = result.recordset[0].id;
-
+                                    console.log("Dator Reportable II: ", idDatoReportable);
                                     resolve(idDatoReportable);
                                 });
                             });

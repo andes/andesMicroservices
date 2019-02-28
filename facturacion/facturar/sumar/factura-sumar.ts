@@ -7,7 +7,7 @@ import { IDtoSumar } from './../../interfaces/IDtoSumar';
 let querySumar = new QuerySumar()
 
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
-
+    console.log("Entra a sumar");
     let dtoComprobante = {
         cuie: dtoSumar.cuie,
         fechaComprobante: new Date(),

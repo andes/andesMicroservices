@@ -8,7 +8,6 @@ export class Factura {
     async facturar(pool: any, dtoFacturacion: IDtoFacturacion) {
         /* Traigo colección de configFacturacionAutomatica */
         let datosConfiguracionAutomatica = await this.getConfigFacturacionAutomatica(dtoFacturacion);
-
         await jsonFacturacion(pool, dtoFacturacion, datosConfiguracionAutomatica);
     }
 

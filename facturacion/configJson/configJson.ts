@@ -14,7 +14,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
 
     let datoReportable = [];
-
+    console.log("LLega dtoFacturacion: ", dtoFacturacion);
     let facturacion = {
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
@@ -22,7 +22,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         34043003: {
             term: 'consulta de odontologia',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                
+
                 let dr = {
                     idDatoReportable: '',
                     datoReportable: ''
@@ -30,11 +30,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                 arrayPrestacion = arrayPrestacion.filter(obj => obj !== null);
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                
+
                 // let caries = arrayPrestacion.find(obj => console.log("Primero: ", obj.conceptId) === console.log("Segundo: ", arrayConfiguracion[0].conceptId));
-                
+
                 let caries2 = arrayConfiguracion.find(obj => obj.conceptId === arrayPrestacion.conceptId);
-                
+
             }
         },
 
@@ -48,14 +48,14 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                     datoReportable: ''
                 };
 
-                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null).map(obj => obj[0]);
+                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null).map(obj => obj);
                 arrayConfiguracion = arrayConfiguracion.map(dr => dr[0]);
 
                 arrayPrestacion.forEach((element, index) => {
-                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.registro.concepto.conceptId);
+                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.conceptId);
 
                     if (oido) {
-                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.registro.valor.concepto.conceptId);
+                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.valor.conceptId);
                         dr.datoReportable += oido.valor + valor.valor + '/';
                     }
                 });
@@ -74,13 +74,15 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             term: 'consulta de niño sano',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 let x = 0;
-
+                console.log("Entra a niño sano");
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                arrayPrestacion = arrayPrestacion.map(obj => obj[0]);
+                console.log("Array Configuracion: ", arrayConfiguracion);
+                arrayPrestacion = arrayPrestacion.map(obj => obj);
+                console.log("Array Prestacion: ", arrayPrestacion);
 
                 arrayPrestacion.forEach((element: any) => {
                     if (element) {
-                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.registro.concepto.conceptId);
+                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
                         let dr = {
                             idDatoReportable: '',
@@ -89,7 +91,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                         if (data) {
                             dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
-                            dr.datoReportable = element.registro.valor;
+                            dr.datoReportable = element.valor;
 
                             datoReportable.push(dr);
                             x++;
@@ -108,8 +110,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
-                const arrayPrestacion = prestacion.prestacion.datosReportables.map((dr: any) => dr);
-
+                const arrayPrestacion = prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined);
                 const arrayConfiguracion = datosConfiguracionAutomatica.sumar.datosReportables.map((config: any) => config.valores);
 
                 let dto: any = {
@@ -163,7 +164,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
-
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
