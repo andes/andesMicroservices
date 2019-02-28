@@ -8,7 +8,7 @@ export async function getConfigAutomatica(conceptId) {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const confAuto: any[] = JSON.parse(body);
                 if (confAuto && confAuto.length) {
-                    resolve(confAuto);
+                    resolve(confAuto[0]);
                 }
             }
             return reject(error || body);

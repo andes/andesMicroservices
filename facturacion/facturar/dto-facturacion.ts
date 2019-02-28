@@ -61,10 +61,9 @@ async function getDatosReportables(prestacion: any) {
         let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
         let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
 
-        if ((configAuto) && (configAuto[0].sumar.datosReportables.length > 0)) {
+        if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
             let conceptos: any = [];
-            const expresionesDR = configAuto[0].sumar.datosReportables.map((config: any) => config.valores);
-
+            const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
 
             let promises = expresionesDR.map(async (exp, index) => {
                 let docs: any = await getSnomed(exp[0].expresion);
