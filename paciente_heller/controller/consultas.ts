@@ -14,30 +14,35 @@ export async function conexionPaciente(paciente) {
                         tdsVersion: '7_1'
                 }
         };
+        let fakeRequest = {
+                user: {
+                        usuario: 'msHeller',
+                        app: 'integracion-heller',
+                        organizacion: 'sss'
+                },
+                ip: ConfigPrivate.staticConfiguration.heller.ip,
+                connection: {
+                        localAddress: ''
+                }
+        };
         try {
                 conexion = await new sql.ConnectionPool(connectionString).connect();
                 const transaction = await new sql.Transaction(conexion);
-                let pacienteExistente = await existePaciente(paciente, conexion);
-                await transaction.begin();
-                if (!pacienteExistente) {
-                        await insertPaciente(paciente, transaction);
-                }
-                // else { // Por ahora heller no actualiza, solo inserta
-                //         await updatePaciente(paciente, pacienteExistente, transaction);
-                // }
-                await transaction.commit();
-        } catch (ex) {
-                let fakeRequest = {
-                        user: {
-                                usuario: 'msHeller',
-                                app: 'integracion-heller',
-                                organizacion: 'sss'
-                        },
-                        ip: ConfigPrivate.staticConfiguration.heller.ip,
-                        connection: {
-                                localAddress: ''
+                if ((paciente.documento !== '0')) {
+                        let pacienteExistente = await existePaciente(paciente, conexion);
+                        await transaction.begin();
+                        if (!pacienteExistente) {
+                                await insertPaciente(paciente, transaction);
                         }
-                };
+                        // else { // Por ahora heller no actualiza, solo inserta
+                        //         await updatePaciente(paciente, pacienteExistente, transaction);
+                        // }
+                        await transaction.commit();
+                } else {
+                    log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Paciente con dni 0', null);
+
+                }
+        } catch (ex) {
                 log(fakeRequest, 'microservices:integration:heller', paciente.id, conexion, ex, null);
                 throw ex;
         }
@@ -55,10 +60,10 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                                 Sexo = 'M';
                                 break;
                         case 'otro':
-                                Sexo = 'I';
+                        Sexo = 'I';
                                 break;
                 }
-                let telefono = pacienteHeller.contacto ? pacienteHeller.contacto.map(unContacto => {
+            let telefono = pacienteHeller.contacto ? pacienteHeller.contacto.map(unContacto => {
                         let numero;
                         if (unContacto.tipo === 'celular' || unContacto.tipo === 'fijo') {
                                 numero = unContacto.valor;
@@ -68,7 +73,7 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                 let direcciones = pacienteHeller.direccion ? pacienteHeller.direccion.map(unaDireccion => {
                         let direc = {
                                 valor: unaDireccion.valor ? unaDireccion.valor : null,
-                                localidad: unaDireccion.ubicacion.localidad ? 'VER ANDES' : null,
+                            localidad: unaDireccion.ubicacion.localidad ? 'VER ANDES' : null,
                                 provincia: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia : null,
                                 pais: unaDireccion.ubicacion.pais ? ((unaDireccion.ubicacion.pais).substr(0, 3)).toUpperCase() : null,
                         };
@@ -83,8 +88,8 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                         return direc;
                 }) : null;
                 let dni = parseInt(pacienteHeller.documento, 10);
-                let apeYnom = pacienteHeller.apellido + ', ' + pacienteHeller.nombre;
-                let feNac = pacienteHeller.fechaNacimiento ? moment(pacienteHeller.fechaNacimiento).format('YYYY/MM/DD') : null;
+            let apeYnom = pacienteHeller.apellido + ', ' + pacienteHeller.nombre;
+            let feNac = pacienteHeller.fechaNacimiento ? moment(pacienteHeller.fechaNacimiento).format('YYYY/MM/DD') : null;
                 let sexo = Sexo;
                 let apellido = pacienteHeller.apellido;
                 let nombre = pacienteHeller.nombre;
@@ -116,23 +121,23 @@ async function insertPaciente(pacienteHeller: any, conexion) {
                         }
                 };
                 try {
-                        const result = await new sql.Request(conexion).query(queryInsert);
-                        if (result && result.recordset) {
-                                return result.recordset[0];
+                const result = await new sql.Request(conexion).query(queryInsert);
+                if (result && result.recordset) {
+                            return result.recordset[0];
                         }
-                } catch (err) {
-                        log(fakeRequest, 'microservices:integration:heller', pacienteHeller.id, 'Error al insertar paciente', err);
-                        throw err;
-                }
+            } catch (err) {
+                log(fakeRequest, 'microservices:integration:heller', pacienteHeller.id, 'Error al insertar paciente', err);
+                throw err;
+            }
 
         } else {
-                return null;
+            return null;
         }
 }
 
 async function existePaciente(paciente: any, conexion) {
-        const dni = parseInt(paciente.documento, 10);
-        const query = `select
+    const dni = parseInt(paciente.documento, 10);
+    const query = `select
          Pacientes.HC_HHH,
          Pacientes.[Número de Documento] AS documento,
          Pacientes.[Tipo de Documento],
@@ -179,74 +184,74 @@ async function existePaciente(paciente: any, conexion) {
          Pacientes.TelCel,
          Pacientes.id_OperadorCel
          from Pacientes where [Número de Documento] =  '${dni}'`;
-        let fakeRequest = {
-                user: {
-                        usuario: 'msHeller',
-                        app: 'integracion-heller',
-                        organizacion: 'sss'
-                },
-                ip: ConfigPrivate.staticConfiguration.heller.ip,
-                connection: {
-                        localAddress: ''
-                }
-        };
-        try {
-                const result = await conexion.request().query(query);
-                if (result.recordset.length > 0) {
-                        return result.recordset[0];
-                } else {
-                        return null;
-                }
-        } catch (err) {
-                await log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en buscar paciente', err, undefined);
-                return err;
+    let fakeRequest = {
+        user: {
+            usuario: 'msHeller',
+            app: 'integracion-heller',
+            organizacion: 'sss'
+        },
+        ip: ConfigPrivate.staticConfiguration.heller.ip,
+        connection: {
+            localAddress: ''
         }
+    };
+    try {
+        const result = await conexion.request().query(query);
+        if (result.recordset.length > 0) {
+            return result.recordset[0];
+        } else {
+            return null;
+        }
+    } catch (err) {
+        await log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en buscar paciente', err, undefined);
+        return err;
+    }
 
 }
 async function updatePaciente(pacienteActual: any, pacienteExistente: any, transaction) {
-        let Sexo;
-        switch (pacienteActual.sexo) {
-                case 'femenino':
-                        Sexo = 'F';
-                        break;
-                case 'masculino':
-                        Sexo = 'M';
-                        break;
-                case 'otro':
-                        Sexo = 'I';
-                        break;
+    let Sexo;
+    switch (pacienteActual.sexo) {
+        case 'femenino':
+            Sexo = 'F';
+            break;
+        case 'masculino':
+            Sexo = 'M';
+            break;
+        case 'otro':
+            Sexo = 'I';
+            break;
+    }
+    let telefono = pacienteActual.contacto ? pacienteActual.contacto.map(unContacto => {
+        let numero;
+        if (unContacto.tipo === 'celular' || unContacto.tipo === 'fijo') {
+            numero = unContacto.valor;
         }
-        let telefono = pacienteActual.contacto ? pacienteActual.contacto.map(unContacto => {
-                let numero;
-                if (unContacto.tipo === 'celular' || unContacto.tipo === 'fijo') {
-                        numero = unContacto.valor;
-                }
-                return numero;
-        }) : null;
-        let direcciones = pacienteActual.direccion ? pacienteActual.direccion.map(unaDireccion => {
-                let direc = {
-                        valor: unaDireccion.valor ? unaDireccion.valor : null,
-                        localidad: unaDireccion.ubicacion.localidad ? unaDireccion.ubicacion.localidad : null,
-                        provincia: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia : null,
-                        pais: unaDireccion.ubicacion.pais ? unaDireccion.ubicacion.pais : null,
-                };
-                return direc;
-        }) : null;
-        let dni = parseInt(pacienteActual.documento, 10);
-        let dniExistente = parseInt(pacienteExistente.documento, 10);
-        let tipoDoc = pacienteActual.documento ? 'DNI' : 'SN';
-        let apeYnom = pacienteActual.apellido + ', ' + pacienteActual.nombre;
-        let feNac = pacienteActual.fechaNacimiento ? moment(pacienteActual.fechaNacimiento).format('YYYY/MM/DD') : null;
-        let sexo = Sexo;
-        let apellido = pacienteActual.apellido;
-        let nombre = pacienteActual.nombre;
-        let eCivil = pacienteActual.estadoCivil ? pacienteActual.estadoCivil : null;
-        let dom = direcciones[0].valor;
-        let loc = direcciones[0].localidad;
-        let prov = direcciones[0].provincia;
-        let nac = (direcciones[0].pais).substr(0, 3);
-        let tel = telefono;
-        const query = 'UPDATE Pacientes SET' +
+        return numero;
+    }) : null;
+    let direcciones = pacienteActual.direccion ? pacienteActual.direccion.map(unaDireccion => {
+        let direc = {
+            valor: unaDireccion.valor ? unaDireccion.valor : null,
+            localidad: unaDireccion.ubicacion.localidad ? unaDireccion.ubicacion.localidad : null,
+            provincia: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia : null,
+            pais: unaDireccion.ubicacion.pais ? unaDireccion.ubicacion.pais : null,
+        };
+        return direc;
+    }) : null;
+    let dni = parseInt(pacienteActual.documento, 10);
+    let dniExistente = parseInt(pacienteExistente.documento, 10);
+    let tipoDoc = pacienteActual.documento ? 'DNI' : 'SN';
+    let apeYnom = pacienteActual.apellido + ', ' + pacienteActual.nombre;
+    let feNac = pacienteActual.fechaNacimiento ? moment(pacienteActual.fechaNacimiento).format('YYYY/MM/DD') : null;
+    let sexo = Sexo;
+    let apellido = pacienteActual.apellido;
+    let nombre = pacienteActual.nombre;
+    let eCivil = pacienteActual.estadoCivil ? pacienteActual.estadoCivil : null;
+    let dom = direcciones[0].valor;
+    let loc = direcciones[0].localidad;
+    let prov = direcciones[0].provincia;
+    let nac = (direcciones[0].pais).substr(0, 3);
+    let tel = telefono;
+    const query = 'UPDATE Pacientes SET' +
                 ' [Número de Documento] = ' + dni +
                 ', [Tipo de Documento] = ' + '\'' + tipoDoc + '\'' +
                 ', [APELLIDOS] =  ' + '\'' + apellido + '\'' +
@@ -261,23 +266,23 @@ async function updatePaciente(pacienteActual: any, pacienteExistente: any, trans
                 ',[Nacionalidad]= ' + '\'' + nac + '\'' +
                 ',[Teléfono]= ' + '\'' + tel + '\'' +
                 ' where [Número de Documento] =  ' + dniExistente;
-        return new sql.Request(transaction)
+    return new sql.Request(transaction)
                 .query(query).then().catch(err => {
-                        let fakeRequest = {
-                                user: {
-                                        usuario: 'msHeller',
-                                        app: 'integracion-heller',
-                                        organizacion: 'sss'
-                                },
-                                ip: ConfigPrivate.staticConfiguration.heller.ip,
-                                connection: {
-                                        localAddress: ''
-                                }
-                        };
-                        transaction.rollback(err2 => {
-                                return log(fakeRequest, 'microservices:integration:heller', pacienteActual.id, 'update paciente', err2, undefined);
-                        });
-                        throw err;
+                    let fakeRequest = {
+                        user: {
+                            usuario: 'msHeller',
+                            app: 'integracion-heller',
+                            organizacion: 'sss'
+                        },
+                        ip: ConfigPrivate.staticConfiguration.heller.ip,
+                        connection: {
+                            localAddress: ''
+                        }
+                    };
+                    transaction.rollback(err2 => {
+                        return log(fakeRequest, 'microservices:integration:heller', pacienteActual.id, 'update paciente', err2, undefined);
+                    });
+                    throw err;
                 });
 }
 
