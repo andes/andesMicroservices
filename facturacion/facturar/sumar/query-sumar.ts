@@ -140,6 +140,8 @@ export class QuerySumar {
 
                     if (resultado && resultado.recordset[0]) {
                         resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
+                    } else {
+                        resolve(null);
                     }
 
                 } catch (err) {

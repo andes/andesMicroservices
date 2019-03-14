@@ -157,7 +157,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             dniProfesional: dtoFacturacion.profesional.dni,
             codigoFinanciador: dtoFacturacion.obraSocial.codigoFinanciador,
             idEfector: dtoFacturacion.organizacion.idSips,
-        }
+        };
 
         facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
