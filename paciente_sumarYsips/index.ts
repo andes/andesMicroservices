@@ -2,6 +2,8 @@ import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
 import { logDatabase } from './config.private';
 import { conexionPaciente } from './controller/ejecutaConsulta';
+
+import * as operaciones from './service/operaciones.service';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
@@ -13,14 +15,19 @@ router.group('/pacienteSumar', (group) => {
         res.send({ message: 'ok' });
         const paciente = _req.body.data;
         if (paciente) {
-            await conexionPaciente(paciente);
+            let idAndes = paciente.identifier.find((ids) => ids.assigner === 'andes');
+            let pac = await operaciones.getPaciente(idAndes.value);
+            await conexionPaciente(pac);
         }
+
     });
     group.put('/update', async (_req: any, res) => {
         res.send({ message: 'ok' });
         const paciente = _req.body.data;
         if (paciente) {
-            await conexionPaciente(paciente);
+            let idAndes = paciente.identifier.find((ids) => ids.assigner === 'andes');
+            let pac = await operaciones.getPaciente(idAndes.value);
+            await conexionPaciente(pac);
         }
     });
 
