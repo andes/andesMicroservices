@@ -29,9 +29,10 @@ export async function conexionPaciente(paciente) {
     try {
         conexion = await new sql.ConnectionPool(connectionString).connect();
         const transaction = await new sql.Transaction(conexion);
-        let pacienteExistenteSIPS = await consulta.existePacienteSIPS(paciente, conexion);
-        let pacienteExistenteSUMAR = await consulta.existePacienteSUMAR(paciente, conexion);
-        let pacienteExistentePUCO = await consulta.existePacientePUCO(paciente, conexion);
+        let _pacienteExistenteSIPS = consulta.existePacienteSIPS(paciente, conexion);
+        let _pacienteExistenteSUMAR = consulta.existePacienteSUMAR(paciente, conexion);
+        let _pacienteExistentePUCO = consulta.existePacientePUCO(paciente, conexion);
+        let [pacienteExistenteSIPS, pacienteExistenteSUMAR, pacienteExistentePUCO] = await Promise.all([_pacienteExistenteSIPS, _pacienteExistenteSUMAR, _pacienteExistentePUCO]);
         await transaction.begin();
         if (!pacienteExistenteSIPS) {
             let pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);
