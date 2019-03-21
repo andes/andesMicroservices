@@ -1,6 +1,10 @@
+import { Matching } from '@andes/match';
 import * as config from '../config.private';
 import * as sql from 'mssql';
 import { InsertLABProtocoloQuery, InsertLABProtocoloDetalleQuery, InsertLABDerivacionQuery } from '../controller/consultas';
+
+let moment = require('moment');
+
 
 /**
  *
@@ -9,7 +13,8 @@ import { InsertLABProtocoloQuery, InsertLABProtocoloDetalleQuery, InsertLABDeriv
  * @param {*} _idEfector
  * @returns
  */
-function getProtocoloData(derivacion, _idEfector) {
+async function getProtocoloData(derivacion, _idEfector, transaccion) {
+    const idPacienteSips = await getIdPaciente(derivacion.paciente, transaccion);
     let data = {
         // idEfector: _idEfector,
         idEfector: _idEfector,
@@ -24,8 +29,7 @@ function getProtocoloData(derivacion, _idEfector) {
         fecha: new Date(derivacion.fechaSolicitud),
         fechaOrden: new Date(derivacion.fechaSolicitud),
         fechaRetiro: new Date(derivacion.fechaSolicitud),
-        // idPaciente: getIdPaciente(),
-        idPaciente: 76453,
+        idPaciente: idPacienteSips,
         idEfectorSolicitante: _idEfector,
         idEspecialistaSolicitante: 0,
         idObraSocial: 0,
@@ -118,7 +122,7 @@ async function getProtocoloDetalleData(_idEfector, _idProtocolo, codigoPractica,
  * @returns
  */
 export async function insertProtocolo(transaction, numero, derivacion, idEfector, idEfectorDerivacion) {
-    let data: any = getProtocoloData(derivacion, idEfector);
+    let data: any = await getProtocoloData(derivacion, idEfector, transaction);
     return await new sql.Request(transaction)
         .input('idEfector', sql.Int, idEfector)
         .input('numero', sql.Int, numero)
@@ -292,4 +296,81 @@ async function getIdAnalisis(codigo, transaction) {
         .query('SELECT TOP 1 idItem From LAB_Item WHERE codigo = @codigo');
 
     return res.recordsets[0][0].idItem;
+}
+
+/**
+ *
+ *
+ * @param {*} registro
+ * @param {*} pacienteAndes
+ * @returns
+ */
+function verificarPaciente(registro, pacienteAndes) {
+    const cota = 0.95;
+    let matchPaciente = (pacMpi, pac) => {
+        const weights = {
+            identity: 0.55,
+            name: 0.10,
+            gender: 0.3,
+            birthDate: 0.05
+        };
+
+        const pacDto = {
+            documento: pacMpi.documento ? pacMpi.documento.toString() : '',
+            nombre: pacMpi.nombre ? pacMpi.nombre : '',
+            apellido: pacMpi.apellido ? pacMpi.apellido : '',
+            fechaNacimiento: pacMpi.fechaNacimiento ? moment(pacMpi.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+            sexo: pacMpi.sexo ? pacMpi.sexo : ''
+        };
+        const pacElastic = {
+            documento: pac.documento ? pac.documento.toString() : '',
+            nombre: pac.nombre ? pac.nombre : '',
+            apellido: pac.apellido ? pac.apellido : '',
+            fechaNacimiento: pac.fechaNacimiento ? moment(pac.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+            sexo: pac.sexo
+        };
+
+        return new Matching().matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
+    };
+    let paciente = {
+        documento: registro.numeroDocumento ? registro.numeroDocumento.toString() : null,
+        nombre: registro.nombre ? registro.nombre.trim() : null,
+        apellido: registro.apellido ? registro.apellido.trim() : null,
+        sexo: registro.idSexo ? (registro.idSexo === 2 ? 'femenino' : (registro.idSexo === 3  ? 'masculino' : 'otro') ) : null,
+        fechaNacimiento: registro.fechaNacimiento ? registro.fechaNacimiento : null
+    };
+    if (paciente.nombre && paciente.apellido && paciente.sexo && paciente.fechaNacimiento && paciente.documento) {
+
+
+        return matchPaciente(pacienteAndes, paciente) >= cota ?  pacienteAndes : null;
+    } else {
+        return null;
+    }
+}
+
+/**
+ *
+ *
+ * @param {*} documento
+ */
+async function getIdPaciente(paciente, transaction) {
+    let pacienteSips: any = await getPacienteSips(paciente.documento, transaction);
+    if (verificarPaciente(pacienteSips, paciente)) {
+        return pacienteSips.idPaciente;
+    }
+    return null;
+}
+
+/**
+ *
+ *
+ * @param {*} transaction
+ * @param {*} documento
+ * @returns
+ */
+async function getPacienteSips(documento, transaction) {
+    let res = await new sql.Request(transaction)
+        .input('documento', sql.Int, documento)
+        .query('SELECT * FROM SYS_Paciente where numeroDocumento = @documento');
+    return res.recordsets[0][0];
 }
