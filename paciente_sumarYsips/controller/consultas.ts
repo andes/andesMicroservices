@@ -71,7 +71,7 @@ export async function existePacienteSIPS(paciente: any, conexion) {
         const dni = parseInt(paciente.documento, 10);
         if (dni) {
                 const query = `SELECT TOP 1 *
-            FROM [dbo].[Sys_Paciente] where [numeroDocumento] = '${dni}'`;
+            FROM [dbo].[Sys_Paciente] where [activo]=1 and [numeroDocumento] = '${dni}'`;
                 try {
                         const result = await conexion.request().query(query);
                         if (result && result.recordset) {
