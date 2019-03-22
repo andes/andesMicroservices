@@ -171,18 +171,26 @@ export async function verificar(registro, pacienteAndes) {
     }
 
 
-    // No Obligatorio
-    if (notError) {
-        // Por ahora este ws sólo lo devuelve HPN
-        if (registro.url) {
-            dto['file'] = await getInforme(registro.url);
-        }
-    }
-
     // NO Obligatorios
     if (notError) {
         dto['texto'] = registro.texto ? registro.texto : null;
     }
+
+    // No Obligatorio
+    if (notError) {
+        // Por ahora este ws sólo lo devuelve HPN
+        if (registro.url) {
+            // Si viene informeHtml es una prestacion de medicina clinica o pediatria
+            if (registro.informeHtml) {
+                dto['texto'] = registro.informeHtml;
+            } else if (registro.PrestacionTipo === 705 || registro.PrestacionTipo === 901) { // si no esta el informe esta mal la prestacion
+                notError = false;
+            } else { // Caso contrario se busca el PDF
+                dto['file'] = await getInforme(registro.url);
+            }
+        }
+    }
+
 
     if (!notError) {
         dto = null;

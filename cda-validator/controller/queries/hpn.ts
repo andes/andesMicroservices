@@ -35,7 +35,9 @@ function make(paciente: any) {
     Medicos.nombre as profesionalNombre,
     Medicos.apellido as profesionalApellido,
     Medicos.matriculaProvincial as profesionalMatricula,
-    url = 'http://${connectionString.webservice_host}/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id)
+    url = 'http://${connectionString.webservice_host}/dotnet/ws/services/webservice.asmx/Informe?idEstudio=P-' + CONVERT(varchar(max), Prestaciones.id),
+    (case when idTipo = 705 or idTipo = 901 then (SELECT dbo.hsp_Prestaciones_RegistroConsultorio_CDA(Prestaciones.id)) else null end) as informeHtml,
+    idTipo as PrestacionTipo
     -- Tablas
     FROM Prestaciones
     INNER JOIN Prestaciones_Tipos ON idTipo = Prestaciones_Tipos.id
