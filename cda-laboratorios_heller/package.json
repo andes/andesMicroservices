@@ -1,0 +1,23 @@
+{
+  "name": "cda-laboratorio_heller",
+  "version": "1.0.0",
+  "description": "Generación de cdas de laboratorio de Heller",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --project ..",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "@andes/match": "^1.1.12",
+    "@andes/log": "^1.0.11",
+    "moment": "^2.22.2",
+    "mssql": "^4.2.1",
+    "p-queue": "^3.0.0",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {}
+}
