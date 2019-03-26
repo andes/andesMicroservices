@@ -4,7 +4,6 @@ import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as operations from './operations';
 import * as http from 'http';
-import * as ConfigPrivate from '../config.private';
 import { log } from '@andes/log';
 
 const cota = 0.95;
@@ -15,7 +14,7 @@ const fakeRequestSql = {
         app: 'integracion-heller',
         organizacion: 'sss'
     },
-    ip: ConfigPrivate.wsSalud.ipHeller,
+    ip: wsSalud.ipHeller,
     connection: {
         localAddress: ''
     }
@@ -33,8 +32,8 @@ const connection = {
 
 function matchPaciente(pacMpi, pacLab) {
     const weights = {
-        identity: 0.55,
-        name: 0.10,
+        identity: 0.60,
+        name: 0.05,
         gender: 0.3,
         birthDate: 0.05
     };
@@ -83,28 +82,22 @@ function donwloadFileHeller(idProtocolo, year) {
             return response.on('data', (buffer) => {
                 const resp = buffer.toString();
 
-                const regexp = /10.1.104.37\/resultados_omg\/([0-9\-\_]*).pdf/;
+                const regexp = /10.1.104.37\/resultados_omg\/([0-9\s\-\_]*).pdf/;
                 const match = resp.match(regexp);
-                log(fakeRequestSql, 'microservices:laboratorio:heller', null, 'protocolo encontrado en heller', { idProtocolo });
-
                 if (match && match[1]) {
-
                     http.get(wsSalud.hellerFS + match[1] + '.pdf', (responseH) => {
                         if (response.statusCode === 200) {
-                            log(fakeRequestSql, 'microservices:laboratorio:heller', null, 'pdf encontrado en heller', { idProtocolo });
                             return resolve(responseH);
                         } else {
-                            log(fakeRequestSql, 'error:microservices:laboratorio:heller', null, 'pdf no encontrado en heller', { idProtocolo });
+                            log(fakeRequestSql, 'microservices:laboratorio:heller', null, 'pdf no encontrado en heller', idProtocolo);
                             return reject({ error: 'sips-pdf', status: responseH.statusCode });
                         }
                     }).on('error', (e) => {
-                        log(fakeRequestSql, 'error:microservices:laboratorio:heller', null, `No se pudo descarga el pdf: ${e.message}`, { idProtocolo });
-                        console.error(`No se pudo descarga el pdf: ${e.message}`);
                         return reject(e);
                     });
                 } else {
-                    log(fakeRequestSql, 'error:microservices:laboratorio:heller', null, 'Protocolo no encontrado en heller', { idProtocolo });
-                    return reject({ error: 'heller-error' });
+                    log(fakeRequestSql, 'microservices:laboratorio:heller', null, 'Protocolo no encontrado en heller', idProtocolo);
+                    return reject({ error: 'Download file . heller-error' });
                 }
 
             });
@@ -161,7 +154,7 @@ export async function importarDatos(paciente) {
                             await operations.postCDA(dto);
                             log(fakeRequestSql, 'microservices:laboratorio:heller', paciente.id, 'envio de cda laboratorios con exito', dto);
                         } catch (error) {
-                            log(fakeRequestSql, 'error:microservices:laboratorio:heller', paciente.id, 'error en el macheo de paciente', { paciente, idProtocolo: lab.idProtocolo });
+                            log(fakeRequestSql, 'microservices:laboratorio:heller', paciente.id, 'Macheo el paciente pero hubo error en la descarga del archivo o en pasar a base64', { paciente, idProtocolo: lab.idProtocolo, error });
                         }
                     }
                 } else {
@@ -178,19 +171,18 @@ export async function importarDatos(paciente) {
                             },
                             idProtocolo: lab.idProtocolo
                         };
-                        log(fakeRequestSql, 'error:microservices:laboratorio:heller', paciente.id, 'error en el macheo de paciente', dataLog);
+                        log(fakeRequestSql, 'microservices:laboratorio:heller', paciente.id, 'Error en el macheo de paciente', dataLog, null);
                     }
 
                 }
             } catch (e) {
-                console.error(`Erro en download files: ${e.message}`);
-                log(fakeRequestSql, 'error:microservices:laboratorio:heller', paciente.id, `Erro en download files: ${e.message}`, null);
+                log(fakeRequestSql, 'microservices:laboratorio:heller', paciente.id, 'Error en obtener detalles o sisa', { error: e });
             }
         }
         pool.close();
         return true;
     } catch (e) {
-        log(fakeRequestSql, 'error:microservices:laboratorio:heller', paciente.id, `Erro en download files: ${e.message}`, null);
+        log(fakeRequestSql, 'microservices:laboratorio:heller', paciente.id, 'Error en importar datos', { error: e });
         if (e && e.error === 'sips-pdf') {
             return false;
         }
