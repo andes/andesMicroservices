@@ -79,12 +79,12 @@ function downloadFile(url) {
             if (response.statusCode === 200) {
                 return resolve(response);
             } else {
-                log(fakeRequestSql, 'microservices:laboratorio:general', null, 'pdf no encontrado', { error: 'sips-pdf', status: response.statusCode });
+                log(fakeRequestSql, 'microservices:laboratorio:general', null, 'Error:pdf no encontrado', { error: 'sips-pdf', status: response.statusCode });
                 return reject({ error: 'sips-pdf', status: response.statusCode });
             }
         }).on('error', (e) => {
             // tslint:disable-next-line:no-console
-            console.error(`No se pudo descarga el pdf: ${e.message}`);
+            log(fakeRequestSql, 'microservices:laboratorio:general', null, 'Error:No se pudo descarga el pdf', { error: e.message });
             return reject(e);
         });
 
@@ -142,7 +142,7 @@ export async function importarDatos(paciente) {
                             log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'envio de cda laboratorios con exito', dto);
 
                         } catch (error) {
-                            log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Macheo el paciente pero hubo error en la descarga del archivo o en pasar a base64', { paciente, idProtocolo: lab.idProtocolo, error });
+                            log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error:Macheo el paciente pero hubo error en la descarga del archivo o en pasar a base64', { paciente, idProtocolo: lab.idProtocolo, error });
                         }
                     }
                 } else {
@@ -158,12 +158,12 @@ export async function importarDatos(paciente) {
                             },
                             idProtocolo: lab.idProtocolo
                         };
-                        log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error en el macheo de paciente', dataLog, null);
+                        log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error:macheo de paciente', dataLog, null);
                     }
                 }
 
             } catch (e) {
-                log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error en obtener detalles o sisa', { error: e });
+                log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error: Obtener detalles o sisa', { error: e });
                 // No va return porque sigue con el proximo laboratorio dentro del for
                 // return false;
             }
@@ -171,8 +171,7 @@ export async function importarDatos(paciente) {
         pool.close();
         return true;
     } catch (e) {
-        log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error en importar datos', { error: e });
-        // logger('Error', e);
+        log(fakeRequestSql, 'microservices:laboratorio:general', paciente.id, 'Error:importar datos', { error: e });
         if (e && e.error === 'sips-pdf') {
             return false;
         }
