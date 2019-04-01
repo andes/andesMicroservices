@@ -2,6 +2,7 @@
 import { log } from '@andes/log';
 import * as moment from 'moment';
 import * as sql from 'mssql';
+
 import * as operaciones from '../service/operaciones.service';
 
 let fakeRequest = {
@@ -71,7 +72,7 @@ export async function existePacienteSIPS(paciente: any, conexion) {
         const dni = parseInt(paciente.documento, 10);
         if (dni) {
                 const query = `SELECT TOP 1 *
-            FROM [dbo].[Sys_Paciente] where [numeroDocumento] = '${dni}'`;
+            FROM [dbo].[Sys_Paciente] where [activo]=1 and [numeroDocumento] = '${dni}'`;
                 try {
                         const result = await conexion.request().query(query);
                         if (result && result.recordset) {
@@ -80,7 +81,7 @@ export async function existePacienteSIPS(paciente: any, conexion) {
                                 return null;
                         }
                 } catch (err) {
-                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Existe paciente Sips', err, undefined);
+                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'existe paciente Sips: error', err, undefined);
                         return err;
                 }
         }
@@ -99,7 +100,7 @@ export async function existePacienteSUMAR(paciente: any, conexion) {
                                 return null;
                         }
                 } catch (err) {
-                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Existe paciente Sumar', err, undefined);
+                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'existe paciente Sumar: error', err, undefined);
                         return err;
                 }
         }
@@ -118,7 +119,7 @@ export async function existeParentezco(pacienteSips: any, conexion) {
                         return null;
                 }
         } catch (err) {
-                log(fakeRequest, 'microservices:integration:sipsYsumar', pacienteSips, 'Existe paciente Parentezco', err, undefined);
+                log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'existe paciente Parentezco:error', err, undefined);
                 return err;
         }
 
@@ -138,7 +139,7 @@ export async function existePacientePUCO(paciente: any, conexion) {
                                 return null;
                         }
                 } catch (err) {
-                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Existe paciente puco', err, undefined);
+                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'existe paciente puco: error', err, undefined);
                         return err;
                 }
         }
@@ -173,7 +174,7 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
         let idLocalidad = 0;
         let idDepartamento: any = 0;
         if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-                let localidad: any = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.nombre, paciente.direccion[0].ubicacion.provincia.id);
+            let localidad: any = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.nombre, paciente.direccion[0].ubicacion.provincia.id);
                 let nombreDpto = localidad ? localidad[0].departamento : null;
                 idDepartamento = nombreDpto ? await getDepartamento(nombreDpto, conexion) : 0;
 
@@ -184,7 +185,7 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
         let idUsuario = 1486739;
         let fechaAlta = paciente.createdAt;
         let fechaDefuncion = paciente.fechaFallecimiento ? paciente.fechaFallecimiento : '1900-01-01 00:00:00.000';
-        let fechaUltimaActualizacion = paciente.updatedAt;
+        let fechaUltimaActualizacion = paciente.updatedAt ? paciente.updatedAt : new Date();
         let idEstadoCivil = 0;
         let idEtnia = 0;
         let idPoblacion = 0;
@@ -192,14 +193,14 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
         let telefono = paciente.contacto ? paciente.contacto.map(unContacto => {
                 let numero = {
                         telefonoCelular: unContacto.tipo === 'celular' ? unContacto.valor : 0,
-                    telefonoFijo: unContacto.tipo === 'fijo' ? unContacto.valor : 0
+                        telefonoFijo: unContacto.tipo === 'fijo' ? unContacto.valor : 0
                 };
-            return numero;
+                return numero;
         }) : null;
-    let telefonoFijo = telefono[0].telefonoFijo;
-    let telefonoCelular = telefono[0].telefonoCelular;
-    let objectId = paciente.id;
-    let queryInsert = 'INSERT INTO [dbo].[Sys_Paciente] ([idEfector],[apellido],[nombre],[numeroDocumento],[idSexo]' +
+        let telefonoFijo = telefono[0].telefonoFijo;
+        let telefonoCelular = telefono[0].telefonoCelular;
+        let objectId = paciente.id;
+        let queryInsert = 'INSERT INTO [dbo].[Sys_Paciente] ([idEfector],[apellido],[nombre],[numeroDocumento],[idSexo]' +
                 ',[fechaNacimiento],[idEstado],[idPais],[idProvincia],[idNivelInstruccion],[idSituacionLaboral],[idProfesion]' +
                 ',[idOcupacion],[idBarrio],[idLocalidad],[idDepartamento],[idProvinciaDomicilio],[idObraSocial],[idUsuario]' +
                 ',[fechaAlta],[fechaDefuncion],[fechaUltimaActualizacion],[idEstadoCivil],[idEtnia],[idPoblacion],[idIdioma],[telefonoFijo],[telefonoCelular],[objectId]) ' +
@@ -210,15 +211,15 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
                 ',' + idProvinciaDomicilio + ',' + idObraSocial + ',' + idUsuario +
                 ',\'' + fechaAlta + '\',\'' + fechaDefuncion + '\',\'' + fechaUltimaActualizacion + '\',' + idEstadoCivil + ',' + idEtnia +
                 ',' + idPoblacion + ',' + idIdioma + ',\'' + telefonoFijo + '\',\'' + telefonoCelular + '\',\'' + objectId + '\'\) ';
-    try {
-                let id;
-                queryInsert += ' select SCOPE_IDENTITY() as id';
+        try {
+            let id;
+            queryInsert += ' select SCOPE_IDENTITY() as id';
                 const result = await new sql.Request(conexion).query(queryInsert);
-                if (result && result.recordset) {
+            if (result && result.recordset) {
                         return result.recordset[0].id;
                 }
         } catch (err) {
-                log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Insertar paciente sips', err, undefined);
+                log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:error', err, queryInsert);
                 return err;
         }
 
@@ -319,23 +320,24 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
                 '\',\'' + nombre_benef + '\',\'' + clase_documento_benef + '\',\'' + tipo_documento + '\',\'' + numero_doc +
                 '\',' + id_categoria + ',\'' + sexo + '\',\'' + fecha_nacimiento_benef + '\',\'' + provincia_nac + '\',\'' + localidad_nac +
                 '\',\'' + pais_nac + '\',\'' + indigena + '\',\'' + id_tribu + '\',\'' + id_lengua + '\',\'' + tipo_doc_madre + '\',\'' + nro_doc_madre + '\',\'' + apellido_madre + '\',\'' + nombre_madre + '\',\'' + tipo_doc_padre + '\',\'' + nro_doc_padre + '\',\'' + apellido_padre + '\',\'' + nombre_padre + '\',\'' + cuie_ea + '\',\'' + cuie_ah + '\',\'' + departamento + '\',\'' + fecha_inscripcion + '\',\'' + fecha_carga + '\',\'' + usuario_carga + '\',\'' + activo + '\'\) ';
-    try {
-            let id;
-            queryInsert += ' select SCOPE_IDENTITY() as id';
-            const result = await new sql.Request(conexion).query(queryInsert);
-            if (result && result.recordset) {
+        let queryUpdate;
+        try {
+        let id;
+        queryInsert += ' select SCOPE_IDENTITY() as id';
+        const result = await new sql.Request(conexion).query(queryInsert);
+        if (result && result.recordset) {
                         id = result.recordset[0].id;
                 }
-            let queryUpdate = 'UPDATE  [dbo].[PN_beneficiarios] SET clave_beneficiario = ' + (2100000000000000 + parseInt(id)) + ' where id_beneficiarios = ' + id + '  ';
-            const resultUpdate = await new sql.Request(conexion).query(queryUpdate);
-            if (resultUpdate && resultUpdate.recordset) {
+        queryUpdate = 'UPDATE  [dbo].[PN_beneficiarios] SET clave_beneficiario = ' + (2100000000000000 + parseInt(id)) + ' where id_beneficiarios = ' + id + '  ';
+        const resultUpdate = await new sql.Request(conexion).query(queryUpdate);
+        if (resultUpdate && resultUpdate.recordset) {
                     return resultUpdate.recordset[0].clave_beneficiario;
                 }
 
-        } catch (err) {
-            log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Insertar paciente SUMAR', err, undefined);
-            return err;
-        }
+    } catch (err) {
+        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente SUMAR:error', err, { insert: queryInsert, update: queryUpdate });
+        return err;
+    }
 
 }
 export async function insertarParentezco(pacienteSips: any, tutor, conexion) {
@@ -381,7 +383,7 @@ export async function insertarParentezco(pacienteSips: any, tutor, conexion) {
             }
 
         } catch (err) {
-            log(fakeRequest, 'microservices:integration:sipsYsumar', progenitor, 'Insertar paciente parentezco', err, undefined);
+            log(fakeRequest, 'microservices:integration:sipsYsumar', progenitor.id, 'Insertar paciente parentezco:error', err, queryInsert);
             return err;
         }
     }
@@ -400,7 +402,7 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
         let codigoindec = prov ? prov[0].codINDEC : null;
         idProvincia = codigoindec ? await getProvincia(codigoindec, conexion) : 0;
     }
-    let fechaUltimaActualizacion = paciente.updatedAt;
+    let fechaUltimaActualizacion = paciente.updatedAt ? paciente.updatedAt : new Date();
     let telefono = paciente.contacto ? paciente.contacto.map(unContacto => {
         let numero = {
             telefonoCelular: unContacto.tipo === 'celular' ? unContacto.valor : 0,
@@ -428,7 +430,7 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
             return result.recordset[0];
         }
     } catch (err) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Actualizar paciente sips', err, undefined);
+        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Actualizar paciente sips:error', err, query);
         return err;
     }
 
@@ -458,14 +460,14 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
                     numero_doc = progenitor.documento; //  Le pone el documento del tutor porque no tiene documento propio.
                     clase_documento_benef = 'A'; // Ajeno
                     if (progenitor.sexo === 'masculino') {
-                                                nro_doc_padre = progenitor.documento;
-                                                apellido_padre = progenitor.apellido;
-                                                nombre_padre = progenitor.nombre;
-                                        } else {
-                                                nro_doc_madre = progenitor.documento;
-                                                apellido_madre = progenitor.apellido;
-                                                nombre_madre = progenitor.nombre;
-                                        }
+                        nro_doc_padre = progenitor.documento;
+                        apellido_padre = progenitor.apellido;
+                        nombre_padre = progenitor.nombre;
+                    } else {
+                        nro_doc_madre = progenitor.documento;
+                        apellido_madre = progenitor.apellido;
+                        nombre_madre = progenitor.nombre;
+                    }
                 }
             }
         }
@@ -479,14 +481,14 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
     } else if ((edad > 19) && (edad <= 64)) {
         switch (paciente.sexo) {
             case 'femenino':
-                                tipoCategoria = 6;
-                                break;
+                tipoCategoria = 6;
+                break;
             case 'masculino':
-                                tipoCategoria = 7;
-                                break;
+                tipoCategoria = 7;
+                break;
             case 'otro':
-                        tipoCategoria = -1;
-                        break;
+                tipoCategoria = -1;
+                break;
         }
     }
 
@@ -517,7 +519,7 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
             return result.recordset[0];
         }
     } catch (err) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente, 'Actualizar paciente sumar', err, undefined);
+        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Actualizar paciente sumar:error', err, query);
         return err;
     }
 
