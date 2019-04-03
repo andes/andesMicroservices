@@ -37,7 +37,8 @@ export async function conexionPaciente(paciente) {
         if (!pacienteExistenteSIPS) {
             let pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);
             let pacienteExistenteParentezco = await consulta.existeParentezco(pacienteSips, conexion);
-            let tutor = (paciente.relaciones.length > 0) ? paciente.relaciones[0] : null;
+            let relaciones = paciente.relaciones ? paciente.relaciones : [];
+            let tutor = (relaciones.length > 0) ? relaciones[0] : null;
             if (!pacienteExistenteParentezco && tutor) {
                 await consulta.insertarParentezco(pacienteSips, tutor, transaction);
             }
