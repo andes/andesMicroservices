@@ -16,7 +16,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     let datoReportable = [];
 
     let facturacion = {
-        /* Prestación Otoemisiones */
+        /* Prestación Odontología */
         /* TODO: poner la expresión que corresponda */
         /* %%%%%%%%% Está en desarrollo todavía  %%%%%%%%%%%%%%%%%%%%% */
         34043003: {
@@ -48,14 +48,14 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                     datoReportable: ''
                 };
 
-                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null).map(obj => obj);
-                arrayConfiguracion = arrayConfiguracion.map(dr => dr[0]);
+                arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
+                arrayConfiguracion = arrayConfiguracion.map((ac: any) => ac[0]);
 
                 arrayPrestacion.forEach((element, index) => {
-                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.conceptId);
+                    let oido = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
                     if (oido) {
-                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.valor.conceptId);
+                        let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
                         dr.datoReportable += oido.valor + valor.valor + '/';
                     }
                 });
@@ -76,7 +76,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 let x = 0;
 
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                arrayPrestacion = arrayPrestacion.map(obj => obj);
+                arrayPrestacion = arrayPrestacion.map((obj: any) => obj);
 
                 arrayPrestacion.forEach((element: any) => {
                     if (element) {
@@ -122,6 +122,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         },
         sumar: {
             preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
+                console.log("Entra a precondicion");
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
                 let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
@@ -137,7 +138,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 if (conditionsArray.indexOf(false) === -1) {
                     valido = true;
                 }
-
+                console.log("Valido: ", valido);
                 return valido;
             }
         }
@@ -163,6 +164,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
+            console.log("Entra a sumar");
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 

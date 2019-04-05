@@ -1,17 +1,21 @@
 import { getOrganizacion } from './../services/organizacion.service';
 import { getPuco } from './../services/obra-social.service';
 import { getProfesional } from './../services/profesional.service';
-import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 import { getSnomed } from './../services/snomed.service';
-import { resolve } from 'url';
+import { getPrestaciones } from './../services/prestaciones.service';
+import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
 export async function facturacionAutomatica(prestacion: any) {
-    let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
-    let idProfesional = (prestacion.solicitud) ? prestacion.solicitud.profesional.id : prestacion.profesionales[0]._id;
+    if (!prestacion.tipoTurno) {
+        prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
+    }
+
+    let idOrganizacion = (prestacion.organizacion) ? prestacion.organizacion._id : prestacion.solicitud.organizacion.id;
+    let idProfesional = (prestacion.profesionales) ? prestacion.profesionales[0]._id : prestacion.solicitud.profesional.id;
 
     let _datosOrganizacion: any = getOrganizacion(idOrganizacion);
-    let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
     let _datosProfesional: any = getProfesional(idProfesional);
+    let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
     let _getDR = getDatosReportables(prestacion);
 
     let [datosOrganizacion, obraSocialPaciente, datosProfesional, getDR] = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
@@ -49,6 +53,7 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     };
 
+    console.log("Factura: ", factura);
     return factura;
 }
 
@@ -122,7 +127,7 @@ function buscarEnHudsFacturacion(prestacion, conceptos) {
     });
 }
 
-export function matchConceptsFacturacion(registro, conceptos) {
+function matchConceptsFacturacion(registro, conceptos) {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;
 
