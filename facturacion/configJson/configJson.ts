@@ -122,7 +122,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         },
         sumar: {
             preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
-                console.log("Entra a precondicion");
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
                 let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
@@ -133,12 +132,12 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 let conditionsArray = [
                     esAfiliado,
                     datosReportables
-                ]
+                ];
 
                 if (conditionsArray.indexOf(false) === -1) {
                     valido = true;
                 }
-                console.log("Valido: ", valido);
+
                 return valido;
             }
         }
@@ -164,7 +163,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
-            console.log("Entra a sumar");
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 

@@ -6,11 +6,11 @@ import { getPrestaciones } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
 export async function facturacionAutomatica(prestacion: any) {
-    if (!prestacion.tipoTurno) {
+    if (prestacion.idPrestacion !== null) {
         prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
     }
 
-    let idOrganizacion = (prestacion.organizacion) ? prestacion.organizacion._id : prestacion.solicitud.organizacion.id;
+    let idOrganizacion = (prestacion.idOrganizacion) ? prestacion.organizacion._id : prestacion.solicitud.organizacion.id;
     let idProfesional = (prestacion.profesionales) ? prestacion.profesionales[0]._id : prestacion.solicitud.profesional.id;
 
     let _datosOrganizacion: any = getOrganizacion(idOrganizacion);
@@ -53,7 +53,6 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     };
 
-    console.log("Factura: ", factura);
     return factura;
 }
 
