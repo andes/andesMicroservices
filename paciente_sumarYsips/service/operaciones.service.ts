@@ -1,5 +1,19 @@
 import { ANDES_HOST, ANDES_KEY } from '../config.private';
 const request = require('request');
+
+import { log } from '@andes/log';
+let fakeRequest = {
+    user: {
+        usuario: 'sipsYsumar',
+        app: 'integracion-sipsYsumar',
+        organizacion: 'sss'
+    },
+    ip: 'localhost',
+    connection: {
+        localAddress: ''
+    }
+};
+
 export function getPaciente(idPaciente) {
     return new Promise((resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/core/mpi/pacientes/${idPaciente}`;
@@ -14,6 +28,7 @@ export function getPaciente(idPaciente) {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(JSON.parse(body));
             }
+            log(fakeRequest, 'microservices:integration:sipsYsumar', idPaciente, 'getPaciente:error', { error, body });
             return resolve(error || body);
         });
     });
@@ -33,6 +48,7 @@ export function getOrganizacion(idOrg) {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(JSON.parse(body));
             }
+            log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getOrganizacion:error', { error, body });
             return resolve(error || body);
         });
     });
@@ -52,6 +68,7 @@ export function getProv(nombreProvincia) {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(JSON.parse(body));
             }
+            log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getProv:error', { error, body });
             return resolve(error || body);
         });
     });
@@ -71,6 +88,7 @@ export function getLocalidad(nombreLocalidad, idProv) {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(JSON.parse(body));
             }
+            log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getLocalidad:error', { error, body });
             return resolve(error || body);
         });
     });
