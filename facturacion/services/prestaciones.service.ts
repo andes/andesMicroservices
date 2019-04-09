@@ -11,7 +11,7 @@ export async function getPrestaciones(idPrestacion) {
                     return resolve(prestacion);
                 }
             }
-            return reject(error);
+            return reject('No se encuentra organización: ' + error);
         });
     });
 }

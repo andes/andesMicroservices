@@ -15,7 +15,7 @@ export async function getProfesional(idProfesional) {
                     });
                 }
             }
-            return reject(error || body);
+            return reject('No se encuentra profesional: ' + body);
         });
     });
 }

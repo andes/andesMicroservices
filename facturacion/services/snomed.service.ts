@@ -10,7 +10,7 @@ export async function getSnomed(expression) {
                 const exp: any[] = JSON.parse(body);
                 resolve(exp);
             }
-            return reject(error || body);
+            return reject('No se encuentra expresión snomed: ' + body);
         });
     });
 }
