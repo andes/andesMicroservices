@@ -34,23 +34,24 @@ export async function conexionPaciente(paciente) {
         let _pacienteExistentePUCO = consulta.existePacientePUCO(paciente, conexion);
         let [pacienteExistenteSIPS, pacienteExistenteSUMAR, pacienteExistentePUCO] = await Promise.all([_pacienteExistenteSIPS, _pacienteExistenteSUMAR, _pacienteExistentePUCO]);
         await transaction.begin();
-        if (!pacienteExistenteSIPS) {
-            let pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);
+        if (!pacienteExistentePUCO) {
+            let pacienteSips;
+            if (!pacienteExistenteSIPS) {
+                pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);
+
+            } else {
+                await consulta.actualizarPacienteSIPS(paciente, pacienteExistenteSIPS, transaction);
+                pacienteSips = pacienteExistenteSIPS.idPaciente;
+            }
             let pacienteExistenteParentezco = await consulta.existeParentezco(pacienteSips, conexion);
             let relaciones = paciente.relaciones ? paciente.relaciones : [];
             let tutor = (relaciones.length > 0) ? relaciones[0] : null;
             if (!pacienteExistenteParentezco && tutor) {
                 await consulta.insertarParentezco(pacienteSips, tutor, transaction);
             }
-        } else {
-            await consulta.actualizarPacienteSIPS(paciente, pacienteExistenteSIPS, transaction);
-        }
-
-
-        if (!pacienteExistenteSUMAR && !pacienteExistentePUCO) {
-            await consulta.insertarPacienteSUMAR(paciente, transaction);
-        } else {
-            if (pacienteExistenteSUMAR) {
+            if (!pacienteExistenteSUMAR) {
+                await consulta.insertarPacienteSUMAR(paciente, transaction);
+            } else {
                 await consulta.actualizarPacienteSUMAR(paciente, pacienteExistenteSUMAR, transaction);
             }
         }

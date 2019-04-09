@@ -25,7 +25,7 @@ router.group('/pacienteSumar', (group) => {
         res.send({ message: 'ok' });
         const paciente = _req.body.data;
         if (paciente) {
-            let idAndes = paciente.identifier.find((ids) => ids.assigner === 'andes');
+            let idAndes = paciente.identifier.find((ids) => ids.assigner === 'andes'); // PROX VERSION VA A CAMBIAR
             let pac = await operaciones.getPaciente(idAndes.value);
             await conexionPaciente(pac);
         }
