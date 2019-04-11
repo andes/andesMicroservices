@@ -216,12 +216,20 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
                 ',\'' + fechaAlta + '\',\'' + fechaDefuncion + '\',\'' + calle + '\',\'' + fechaUltimaActualizacion + '\',' + idEstadoCivil + ',' + idEtnia +
                 ',' + idPoblacion + ',' + idIdioma + ',\'' + telefonoFijo + '\',\'' + telefonoCelular + '\',\'' + objectId + '\'\) ';
         try {
-                let id;
-                queryInsert += ' select SCOPE_IDENTITY() as id';
+                let doc;
+                queryInsert += ' select SCOPE_IDENTITY() as doc';
             const result = await new sql.Request(conexion).query(queryInsert);
-                if (result && result.recordset) {
-                        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:exito', null, queryInsert);
-                        return result.recordset[0].id;
+                if (!paciente.documento) {
+                        if (result && result.recordset) {
+                                doc = result.recordset[0].doc;
+                        }
+                        let queryUpdate = 'UPDATE  [dbo].[Sys_Paciente] SET numeroDocumento = ' + parseInt(doc) + ' where idPaciente = ' + doc + '  ';
+                        return await new sql.Request(conexion).query(queryUpdate);
+                } else {
+                        if (result && result.recordset) {
+                                log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:exito', null, queryInsert);
+                                return result.recordset[0].doc;
+                        }
                 }
         } catch (err) {
                 log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:error', err, queryInsert);
@@ -249,7 +257,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
                 numero_doc = paciente.documento;
                 clase_documento_benef = 'P'; // Propio
         } else {
-                if (paciente.relaciones.length > 0) {
+                if (paciente.relaciones && paciente.relaciones.length > 0) {
                         if (paciente.relaciones[0].relacion.nombre === 'progenitor/a') {
                                 let progenitor: any = await operaciones.getPaciente(paciente.relaciones[0].referencia);
                                 if (progenitor) {
@@ -316,7 +324,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
         let fecha_inscripcion = paciente.createdAt;
         let fecha_carga = fecha_inscripcion;
         let usuario_carga = '1486739';
-        let activo = 1;
+    let activo = 1;
         let queryInsert = 'INSERT INTO [dbo].[PN_beneficiarios] ([clave_beneficiario],[tipo_transaccion],[apellido_benef],[nombre_benef]' +
                 ',[clase_documento_benef],[tipo_documento],[numero_doc],[id_categoria],[sexo],[calle],[fecha_nacimiento_benef]' +
                 ',[provincia_nac],[localidad_nac],[pais_nac],[indigena],[id_tribu],[id_lengua]' +
@@ -471,7 +479,7 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
         numero_doc = paciente.documento;
         clase_documento_benef = 'P'; // Propio
     } else {
-        if (paciente.relaciones.length > 0) {
+        if (paciente.relaciones && paciente.relaciones.length > 0) {
             if (paciente.relaciones[0].relacion.nombre === 'progenitor/a') {
                 let progenitor: any = await operaciones.getPaciente(paciente.relaciones[0].referencia);
                 if (progenitor) {
