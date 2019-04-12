@@ -324,7 +324,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
         let fecha_inscripcion = paciente.createdAt;
         let fecha_carga = fecha_inscripcion;
         let usuario_carga = '1486739';
-    let activo = 1;
+        let activo = 1;
         let queryInsert = 'INSERT INTO [dbo].[PN_beneficiarios] ([clave_beneficiario],[tipo_transaccion],[apellido_benef],[nombre_benef]' +
                 ',[clase_documento_benef],[tipo_documento],[numero_doc],[id_categoria],[sexo],[calle],[fecha_nacimiento_benef]' +
                 ',[provincia_nac],[localidad_nac],[pais_nac],[indigena],[id_tribu],[id_lengua]' +
@@ -336,26 +336,26 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
                 '\',' + id_categoria + ',\'' + sexo + '\',\'' + calle + '\',\'' + fecha_nacimiento_benef + '\',\'' + provincia_nac + '\',\'' + localidad_nac +
                 '\',\'' + pais_nac + '\',\'' + indigena + '\',\'' + id_tribu + '\',\'' + id_lengua + '\',\'' + tipo_doc_madre + '\',\'' + nro_doc_madre + '\',\'' + apellido_madre + '\',\'' + nombre_madre + '\',\'' + tipo_doc_padre + '\',\'' + nro_doc_padre + '\',\'' + apellido_padre + '\',\'' + nombre_padre + '\',\'' + cuie_ea + '\',\'' + cuie_ah + '\',\'' + departamento + '\',\'' + fecha_inscripcion + '\',\'' + fecha_carga + '\',\'' + usuario_carga + '\',\'' + activo + '\'\) ';
         let queryUpdate;
-        try {
-        let id;
-        queryInsert += ' select SCOPE_IDENTITY() as id';
-        const result = await new sql.Request(conexion).query(queryInsert);
-        if (result && result.recordset) {
+    try {
+            let id;
+            queryInsert += ' select SCOPE_IDENTITY() as id';
+            const result = await new sql.Request(conexion).query(queryInsert);
+            if (result && result.recordset) {
                         id = result.recordset[0].id;
                 }
-        queryUpdate = 'UPDATE  [dbo].[PN_beneficiarios] SET clave_beneficiario = ' + (2100000000000000 + parseInt(id)) + ' where id_beneficiarios = ' + id + '  ';
-        const resultUpdate = await new sql.Request(conexion).query(queryUpdate);
-        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente SUMAR:exito', null, { insert: queryInsert, update: queryUpdate });
+            queryUpdate = 'UPDATE  [dbo].[PN_beneficiarios] SET clave_beneficiario = ' + (2100000000000000 + parseInt(id)) + ' where id_beneficiarios = ' + id + '  ';
+            const resultUpdate = await new sql.Request(conexion).query(queryUpdate);
+            log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente SUMAR:exito', null, { insert: queryInsert, update: queryUpdate });
 
-        if (resultUpdate && resultUpdate.recordset) {
+            if (resultUpdate && resultUpdate.recordset) {
 
                     return resultUpdate.recordset[0].clave_beneficiario;
                 }
 
-    } catch (err) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente SUMAR:error', err, { insert: queryInsert, update: queryUpdate });
-        return err;
-    }
+        } catch (err) {
+            log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente SUMAR:error', err, { insert: queryInsert, update: queryUpdate });
+            return err;
+        }
 
 }
 export async function insertarParentezco(pacienteSips: any, tutor, conexion) {
@@ -380,7 +380,9 @@ export async function insertarParentezco(pacienteSips: any, tutor, conexion) {
             case 'tutor':
                 tipoParentesco = 'TUTOR';
                 break;
-
+            default:
+                tipoParentesco = tutor.relacion.nombre;
+                break;
         }
         let idUsuario = '1486739';
         let fechaModificacion = progenitor.updatedAt;
@@ -483,9 +485,9 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
             if (paciente.relaciones[0].relacion.nombre === 'progenitor/a') {
                 let progenitor: any = await operaciones.getPaciente(paciente.relaciones[0].referencia);
                 if (progenitor) {
-                                        numero_doc = progenitor.documento; //  Le pone el documento del tutor porque no tiene documento propio.
-                                        clase_documento_benef = 'A'; // Ajeno
-                                        if (progenitor.sexo === 'masculino') {
+                    numero_doc = progenitor.documento; //  Le pone el documento del tutor porque no tiene documento propio.
+                    clase_documento_benef = 'A'; // Ajeno
+                    if (progenitor.sexo === 'masculino') {
                                                 nro_doc_padre = progenitor.documento;
                                                 apellido_padre = progenitor.apellido;
                                                 nombre_padre = progenitor.nombre;
@@ -494,7 +496,7 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
                                                 apellido_madre = progenitor.apellido;
                                                 nombre_madre = progenitor.nombre;
                                         }
-                                }
+                }
             }
         }
     }
@@ -507,16 +509,16 @@ export async function actualizarPacienteSUMAR(paciente: any, pacienteExistente: 
         tipoCategoria = 5;
     } else if ((edad > 19) && (edad <= 64)) {
         switch (paciente.sexo) {
-                case 'femenino':
+            case 'femenino':
                                 tipoCategoria = 6;
                                 break;
-                case 'masculino':
+            case 'masculino':
                                 tipoCategoria = 7;
                                 break;
-                case 'otro':
+            case 'otro':
                         tipoCategoria = -1;
                         break;
-            }
+        }
     }
 
     let id_categoria = tipoCategoria;
