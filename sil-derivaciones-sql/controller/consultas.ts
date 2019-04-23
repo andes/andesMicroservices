@@ -33,7 +33,8 @@ export const InsertLABProtocoloQuery =
         ,[idUsuarioRegistro]
         ,[fechaRegistro]
         ,[idMuestra]
-        ,[fechaTomaMuestra])
+        ,[fechaTomaMuestra]
+        ,[andesId   ])
     VALUES
         (@idEfector
         ,@numero
@@ -68,7 +69,8 @@ export const InsertLABProtocoloQuery =
         ,@idUsuarioRegistro
         ,@fechaRegistro
         ,@idMuestra
-        ,@fechaTomaMuestra);
+        ,@fechaTomaMuestra
+        ,@andesId)
          SELECT SCOPE_IDENTITY() AS idProtocolo;`;
 
 // export const InsertLABProtocoloQuery =
@@ -221,7 +223,7 @@ export const InsertLABDerivacionQuery =
     `INSERT INTO [dbo].[LAB_Derivacion]
         ([idDetalleProtocolo]
         ,[fechaRegistro]
-        ,[idUsuarioRegistro]
+        ,[idUsuarioRegistro]x
         ,[estado]
         ,[observacion]
         ,[resultado]
