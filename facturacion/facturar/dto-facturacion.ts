@@ -10,7 +10,7 @@ export async function facturacionAutomatica(prestacion: any) {
         prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
     }
 
-    let idOrganizacion = (prestacion.solicitud) ? prestacion.organizacion._id : prestacion.solicitud.organizacion.id;
+    let idOrganizacion = (prestacion.solicitud) ? prestacion.solicitud.organizacion.id : prestacion.organizacion._id;
     let idProfesional = (prestacion.profesionales) ? prestacion.profesionales[0]._id : prestacion.solicitud.profesional.id;
 
     let _datosOrganizacion: any = getOrganizacion(idOrganizacion);
