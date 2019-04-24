@@ -1,4 +1,5 @@
 import * as sql from 'mssql';
+import { IDtoSumar } from '../../interfaces/IDtoSumar';
 
 export class QuerySumar {
 
@@ -128,5 +129,26 @@ export class QuerySumar {
             .query(query);
 
         return resultado.recordset[0] ? { precio: resultado.recordset[0].precio } : null;
+    }
+
+    async getComprobante(pool: any, dtoSumar: IDtoSumar) {
+        return new Promise((resolve: any, reject: any) => {
+            (async () => {
+                try {
+                    let query = 'SELECT TOP 1 * FROM dbo.PN_comprobante WHERE objectId = @objectId';
+                    let result = await new sql.Request(pool)
+                        .input('objectId', sql.VarChar(100), dtoSumar.objectId)
+                        .query(query);
+                    if (result && result.recordset[0]) {
+                        resolve(1);
+                    } else {
+                        resolve(0);
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            })();
+        });
+
     }
 }

@@ -15,7 +15,7 @@ export async function getOrganizacion(idOrganizacion) {
                     });
                 }
             }
-            return reject(error || body);
+            return reject('No se encuentra organización' + body);
         });
     });
 }

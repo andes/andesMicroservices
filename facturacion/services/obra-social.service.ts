@@ -16,7 +16,7 @@ export async function getPuco(dniPaciente) {
                     resolve(null);
                 }
             }
-            return reject(error || body);
+            return reject('No se encuentra datos en PUCO: ' + body);
         });
     });
 }

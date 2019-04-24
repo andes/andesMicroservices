@@ -1,11 +1,16 @@
 import { getOrganizacion } from './../services/organizacion.service';
 import { getPuco } from './../services/obra-social.service';
 import { getProfesional } from './../services/profesional.service';
-import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 import { getSnomed } from './../services/snomed.service';
-import { resolve } from 'url';
+import { getPrestaciones } from './../services/prestaciones.service';
+import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
 export async function facturacionAutomatica(prestacion: any) {
+
+    if (prestacion.idPrestacion !== null) {
+        prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
+    }
+
     let idOrganizacion = (prestacion.solicitud) ? prestacion.solicitud.organizacion.id : prestacion.organizacion._id;
     let idProfesional = (prestacion.solicitud) ? prestacion.solicitud.profesional.id : prestacion.profesionales[0]._id;
     let datosOrganizacion: any = await getOrganizacion(idOrganizacion);
@@ -48,14 +53,10 @@ export async function facturacionAutomatica(prestacion: any) {
     return factura;
 }
 
-function getConfiguracionAutomatica(conceptId: any) {
-    return getConfigAutomatica(conceptId);
-}
-
 async function getDatosReportables(prestacion: any) {
     if (prestacion.solicitud) {
         let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
-        let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
+        let configAuto: any = await getConfigAutomatica(idTipoPrestacion);
 
         if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
             let conceptos: any = [];
@@ -118,7 +119,7 @@ function buscarEnHudsFacturacion(prestacion, conceptos) {
     });
 }
 
-export function matchConceptsFacturacion(registro, conceptos) {
+function matchConceptsFacturacion(registro, conceptos) {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;
 
