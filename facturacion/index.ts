@@ -21,10 +21,12 @@ router.group('/facturacion', (group) => {
             let pool = await sql.connect(SipsDBConfiguration);
             let dtoFacturacion: any = await facturacionAutomatica(req.body.data);
             let factura = new Factura();
-            factura.facturar(pool, dtoFacturacion);
+            await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            console.log('ERROR: ', e);
+            console.log('ERORRRRRR',e)
         }
+        sql.close();
+        res.json('OK')
     });
 });
 

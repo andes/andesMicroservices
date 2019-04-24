@@ -10,8 +10,9 @@ export async function getConfigAutomatica(conceptId) {
                 if (confAuto && confAuto.length) {
                     resolve(confAuto[0]);
                 }
+            } else {
+                return reject(error || body);
             }
-            return reject(error || body);
         });
     });
 }

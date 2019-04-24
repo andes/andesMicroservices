@@ -8,11 +8,18 @@ import { IDtoFacturacion } from './../interfaces/IDtoFacturacion';
 import { IDtoSumar } from '../interfaces/IDtoSumar';
 import { IDtoRecupero } from '../interfaces/IDtoRecupero';
 
+/**
+ *
+ *
+ * @export
+ * @param {*} pool
+ * @param {IDtoFacturacion} dtoFacturacion
+ * @param {*} datosConfiguracionAutomatica
+ */
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, datosConfiguracionAutomatica) {
     let querySumar = new QuerySumar();
 
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
-
     let datoReportable = [];
 
     let facturacion = {
@@ -146,7 +153,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     let dtoSumar: IDtoSumar;
     let dtoRecupero: IDtoRecupero;
     let tipoFacturacion: String = '';
-
     if (dtoFacturacion.obraSocial) {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
@@ -159,7 +165,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             idEfector: dtoFacturacion.organizacion.idSips,
         };
 
-        facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
+        await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
@@ -182,7 +188,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 datosReportables: main.datosReportables
             };
 
-            facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
+            await facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
         }
     }
 }

@@ -6,15 +6,12 @@ import { getSnomed } from './../services/snomed.service';
 import { resolve } from 'url';
 
 export async function facturacionAutomatica(prestacion: any) {
-    let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
+    let idOrganizacion = (prestacion.solicitud) ? prestacion.solicitud.organizacion.id : prestacion.organizacion._id;
     let idProfesional = (prestacion.solicitud) ? prestacion.solicitud.profesional.id : prestacion.profesionales[0]._id;
-
-    let _datosOrganizacion: any = getOrganizacion(idOrganizacion);
-    let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
-    let _datosProfesional: any = getProfesional(idProfesional);
-    let _getDR = getDatosReportables(prestacion);
-
-    let [datosOrganizacion, obraSocialPaciente, datosProfesional, getDR] = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+    let datosOrganizacion: any = await getOrganizacion(idOrganizacion);
+    let obraSocialPaciente: any = await getPuco(prestacion.paciente.documento);
+    let datosProfesional: any = await getProfesional(idProfesional);
+    let getDR = await getDatosReportables(prestacion);
 
     const factura = {
         turno: {
@@ -48,7 +45,6 @@ export async function facturacionAutomatica(prestacion: any) {
             dni: datosProfesional.dni
         }
     };
-
     return factura;
 }
 
