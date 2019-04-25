@@ -2,17 +2,18 @@ import { getOrganizacion } from './../services/organizacion.service';
 import { getPuco } from './../services/obra-social.service';
 import { getProfesional } from './../services/profesional.service';
 import { getSnomed } from './../services/snomed.service';
-import { getPrestaciones } from './../services/prestaciones.service';
+// import { getPrestaciones } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
 export async function facturacionAutomatica(prestacion: any) {
-
-    if (prestacion.idPrestacion !== null) {
-        prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
-    }
+    // console.log("Prestacionnnn: ", prestacion);
+    // if (prestacion.idPrestacion !== null) {
+    //     prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
+    // }
 
     let idOrganizacion = (prestacion.solicitud) ? prestacion.solicitud.organizacion.id : prestacion.organizacion._id;
     let idProfesional = (prestacion.solicitud) ? prestacion.solicitud.profesional.id : prestacion.profesionales[0]._id;
+
     let datosOrganizacion: any = await getOrganizacion(idOrganizacion);
     let obraSocialPaciente: any = await getPuco(prestacion.paciente.documento);
     let datosProfesional: any = await getProfesional(idProfesional);
@@ -20,7 +21,7 @@ export async function facturacionAutomatica(prestacion: any) {
 
     const factura = {
         turno: {
-            _id: (prestacion.solicitud) ? prestacion.solicitud.turno : prestacion.id,
+            _id: (prestacion.solicitud) ? prestacion.solicitud.turno : prestacion.turno._id,
         },
         paciente: {
             nombre: prestacion.paciente.nombre,
@@ -50,6 +51,7 @@ export async function facturacionAutomatica(prestacion: any) {
             dni: datosProfesional.dni
         }
     };
+    // console.log("Factura: ", factura);
     return factura;
 }
 
