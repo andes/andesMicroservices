@@ -3,8 +3,9 @@ import { QuerySumar } from './query-sumar';
 import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
 import { IDtoSumar } from './../../interfaces/IDtoSumar';
 import moment = require('moment');
+import { updateEstadoFacturacion } from '../../services/prestaciones.service';
 
-let querySumar = new QuerySumar()
+let querySumar = new QuerySumar();
 
 /**
  *
@@ -16,7 +17,7 @@ let querySumar = new QuerySumar()
  */
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
     const transaction = new sql.Transaction(pool);
-
+    let _estado;
     try {
         await transaction.begin();
         const request = await new sql.Request(transaction);
@@ -57,7 +58,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 anio: dtoSumar.anio,
                 mes: dtoSumar.mes,
                 dia: dtoSumar.dia,
-            }
+            };
 
             let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
 
@@ -68,10 +69,17 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                     valor: dtoSumar.datosReportables[x].datoReportable
                 }
 
-                let idDatoReportable = await querySumar.saveDatosReportablesSumar(request, datosReportables);
+                await querySumar.saveDatosReportablesSumar(request, datosReportables);
             }
 
             transaction.commit();
+
+            let estado = {
+                tipo: 'sumar',
+                numero: newIdComprobante,
+                estado: _estado
+            }
+            updateEstadoFacturacion(newIdComprobante, estado);
         }
     } catch (e) {
         // log error
