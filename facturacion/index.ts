@@ -1,16 +1,14 @@
 import { SipsDBConfiguration, mongoDB } from './config.private';
 import { Factura } from './factura';
 import { facturacionAutomatica } from './facturar/dto-facturacion';
+import { updateEstadoFacturacion } from './services/prestaciones.service';
 
 import { Microservice } from '@andes/bootstrap';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 import * as sql from 'mssql';
 
-import { IDtoFacturacion } from './interfaces/IDtoFacturacion';
-
 const mongoose = require('mongoose');
-
 const router = ms.router();
 
 router.group('/facturacion', (group) => {
@@ -23,7 +21,7 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            console.log('ERORRRRRR',e)
+            console.log('ERROR:', e);
         }
         sql.close();
         res.json('OK')

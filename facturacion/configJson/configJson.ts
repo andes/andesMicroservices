@@ -148,7 +148,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 return valido;
             }
         }
-    }
+    };
 
     let dtoSumar: IDtoSumar;
     let dtoRecupero: IDtoRecupero;
