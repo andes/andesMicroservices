@@ -8,7 +8,7 @@ const request = require('request');
  * @param {*} idPrestacion
  * @returns
  */
-// export async function getPrestaciones(idPrestacion) {
+// export async function getPrestacion(idPrestacion) {
 //     return new Promise((resolve, reject) => {
 //         const url = `${ANDES_HOST}/modules/rup/prestaciones/${idPrestacion}?token=${ANDES_KEY}`;
 //         request.get();
@@ -31,9 +31,13 @@ const request = require('request');
  * @param {*} idPrestacion
  * @returns
  */
-export async function updateEstadoFacturacion(idPrestacion, _estadoFacturacion) {
+export async function updateEstadoFacturacion(idTurno, _estadoFacturacion) {
+    console.log("Entra a update prestacion: ", idTurno);
+
+    // let idPrestacion = getPrestacion(idTurno);
+
     return new Promise((resolve, reject) => {
-        const url = `${ANDES_HOST}/modules/rup/prestaciones/estadoFacturacion/${idPrestacion}`;
+        const url = `${ANDES_HOST}/modules/rup/prestaciones/estadoFacturacion/${idTurno}`;
         const options = {
             url,
             method: 'PATCH',

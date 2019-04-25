@@ -51,7 +51,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
                 objectId: dtoRecupero.objectId,
                 factAutomatica: 'prestacion'
             };
-            console.log("Antes de guardar orden");
+            console.log("Antes de guardar orden: ", dtoOrden);
             const newIdOrden = await queryRecupero.saveOrdenRecupero(request, dtoOrden);
             console.log("Entra a newIdOrden: ", newIdOrden);
             let dtoOrdendetalle = {

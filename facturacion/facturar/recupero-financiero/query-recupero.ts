@@ -11,9 +11,10 @@ export class QueryRecupero {
                     let resultado = await new sql.Request(pool)
                         .input('dni', sql.VarChar(50), dni)
                         .query(query);
-
                     if (resultado && resultado.recordset[0]) {
                         resolve(resultado.recordset[0] ? resultado.recordset[0].idPaciente : null);
+                    } else {
+                        resolve('No se encuentra Paciente en SIPS: ');
                     }
                 } catch (err) {
                     reject(err);
@@ -30,9 +31,10 @@ export class QueryRecupero {
                     let resultado = await new sql.Request(pool)
                         .input('dni', sql.VarChar(50), dni)
                         .query(query);
-
                     if (resultado && resultado.recordset[0]) {
                         resolve(resultado.recordset[0] ? resultado.recordset[0].idProfesional : null);
+                    } else {
+                        resolve('No se encuentra Profesional en SIPS: ');
                     }
 
                 } catch (err) {
@@ -55,6 +57,8 @@ export class QueryRecupero {
 
                     if (resultado && resultado.recordset[0]) {
                         resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
+                    } else {
+                        resolve('No se encuentra Nomenclador en Recupero: ');
                     }
                 } catch (err) {
                     reject(err);
@@ -71,9 +75,10 @@ export class QueryRecupero {
                     let result = await new sql.Request(pool)
                         .input('codigo', sql.Int, codigoObraSocial)
                         .query(query);
-
                     if (result && result.recordset[0]) {
                         resolve(result.recordset[0] ? result.recordset[0].idObraSocial : 0);
+                    } else {
+                        resolve('No se encuentra Obra Social en SIPS:');
                     }
                 } catch (err) {
                     reject(err);
@@ -173,10 +178,6 @@ export class QueryRecupero {
             .input('objectId', sql.VarChar(50), dtoOrden.objectId)
             .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
             .query(query);
-        // if (err) {
-        //     throw (err);
-        // }
-
         return result.recordset[0] ? result.recordset[0].ID : null;
     }
 

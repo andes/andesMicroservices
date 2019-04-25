@@ -1,7 +1,6 @@
 import { SipsDBConfiguration, mongoDB } from './config.private';
 import { Factura } from './factura';
 import { facturacionAutomatica } from './facturar/dto-facturacion';
-import { updateEstadoFacturacion } from './services/prestaciones.service';
 
 import { Microservice } from '@andes/bootstrap';
 let pkg = require('./package.json');
@@ -24,7 +23,7 @@ router.group('/facturacion', (group) => {
             console.log('ERROR:', e);
         }
         sql.close();
-        res.json('OK')
+        res.json('OK');
     });
 });
 
