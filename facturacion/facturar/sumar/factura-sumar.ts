@@ -83,8 +83,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 numero: newIdComprobante,
                 estado: _estado
             }
-            console.log("Estado Facturacion: ", estado);
-            updateEstadoFacturacion(idTurno, estado);
+            // console.log("Estado Facturacion: ", estado);
+            // updateEstadoFacturacion(idTurno, estado);
         }
     } catch (e) {
         // log error

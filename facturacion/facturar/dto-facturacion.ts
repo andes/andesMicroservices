@@ -98,7 +98,7 @@ async function getDatosReportables(prestacion: any) {
             });
         }
     }
-    return '';
+    return null;
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {
