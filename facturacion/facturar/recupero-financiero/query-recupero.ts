@@ -111,7 +111,7 @@ export class QueryRecupero {
      * @returns
      * @memberof QueryRecupero
      */
-    async saveOrdenRecupero(transaction: any, dtoOrden: any) {
+    async saveOrdenRecupero(request: any, dtoOrden: any) {
         let query = 'INSERT INTO [dbo].[FAC_Orden]' +
             ' ([idEfector]' +
             ' ,[numero]' +
@@ -153,7 +153,7 @@ export class QueryRecupero {
             'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
             'SELECT @numeroOrden as ID';
 
-        const result = await new sql.Request(transaction)
+        const result = await request
             .input('idEfector', sql.Int, dtoOrden.idEfector)
             .input('numero', sql.Int, dtoOrden.numero)
             .input('periodo', sql.Char(10), dtoOrden.periodo)
@@ -172,11 +172,11 @@ export class QueryRecupero {
             .input('monto', sql.Decimal(18, 2), dtoOrden.monto)
             .input('objectId', sql.VarChar(50), dtoOrden.objectId)
             .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
-            .query(query, (err: any) => {
-                if (err) {
-                    throw (err);
-                }
-            });
+            .query(query);
+        // if (err) {
+        //     throw (err);
+        // }
+
         return result.recordset[0] ? result.recordset[0].ID : null;
     }
 
@@ -188,7 +188,7 @@ export class QueryRecupero {
      * @returns
      * @memberof QueryRecupero
      */
-    async saveOrdenDetalle(transaction: any, ordenDetalle: any) {
+    async saveOrdenDetalle(request: any, ordenDetalle: any) {
         let query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
             ' ([idOrden]' +
             ' ,[idEfector]' +
@@ -207,7 +207,7 @@ export class QueryRecupero {
             ' ,@ajuste) ' +
             'SELECT SCOPE_IDENTITY() as ID';
 
-        const result = await new sql.Request(transaction)
+        const result = await request
             .input('idOrden', sql.Int, ordenDetalle.idOrden)
             .input('idEfector', sql.Int, ordenDetalle.idEfector)
             .input('idNomenclador', sql.Int, ordenDetalle.idNomenclador)
@@ -215,11 +215,7 @@ export class QueryRecupero {
             .input('cantidad', sql.Int, ordenDetalle.cantidad)
             .input('valorUnidad', sql.Decimal(18, 2), ordenDetalle.valorUnidad)
             .input('ajuste', sql.Decimal(18, 2), ordenDetalle.ajuste)
-            .query(query, (err: any, result: any) => {
-                if (err) {
-                    throw err;
-                }
-            });
+            .query(query);
 
         return result.recordset[0];
     }
