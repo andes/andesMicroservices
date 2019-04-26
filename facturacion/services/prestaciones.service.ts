@@ -24,6 +24,7 @@ const request = require('request');
 //     });
 // }
 
+
 /**
  *
  *
@@ -31,9 +32,40 @@ const request = require('request');
  * @param {*} idPrestacion
  * @returns
  */
-export async function updateEstadoFacturacion(idPrestacion, _estadoFacturacion) {
+export async function updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoId, _estadoFacturacion) {
     return new Promise((resolve, reject) => {
-        const url = `${ANDES_HOST}/modules/rup/prestaciones/estadoFacturacion/${idPrestacion}`;
+        const url = `${ANDES_HOST}/modules/turnos/estadoFacturacion/turno/${turnoId}/bloque/${bloqueId}/agenda/${agendaId}/`;
+        const options = {
+            url,
+            method: 'PATCH',
+            json: true,
+            body: { estadoFacturacion: _estadoFacturacion },
+            headers: {
+                Authorization: `JWT ${ANDES_KEY}`
+            }
+        };
+
+        request(options, (error, response, body) => {
+            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
+                resolve(body.body);
+            } else {
+
+                return reject('No se encuentra prestaciones: ' + error);
+            }
+        });
+    });
+}
+
+/**
+ *
+ *
+ * @export
+ * @param {*} idPrestacion
+ * @returns
+ */
+export async function updateEstadoFacturacionSinTurno(codificacionId, _estadoFacturacion) {
+    return new Promise((resolve, reject) => {
+        const url = `${ANDES_HOST}/modules/rup/codificacion/estadoFacturacion/${codificacionId}`;
         const options = {
             url,
             method: 'PATCH',
