@@ -18,7 +18,6 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
  */
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, datosConfiguracionAutomatica) {
     let querySumar = new QuerySumar();
-
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
     let datoReportable = [];
 
@@ -50,28 +49,32 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         2091000013100: {
             term: 'otoemisiones',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                let dr = {
-                    idDatoReportable: '',
-                    datoReportable: ''
-                };
+                if (arrayPrestacion) {
+                    let dr = {
+                        idDatoReportable: '',
+                        datoReportable: ''
+                    };
 
-                arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
-                arrayConfiguracion = arrayConfiguracion.map((ac: any) => ac[0]);
+                    arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
+                    arrayConfiguracion = arrayConfiguracion.map((ac: any) => ac[0]);
 
-                arrayPrestacion.forEach((element, index) => {
-                    let oido = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
+                    arrayPrestacion.forEach((element, index) => {
+                        let oido = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
-                    if (oido) {
-                        let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
-                        dr.datoReportable += oido.valor + valor.valor + '/';
-                    }
-                });
+                        if (oido) {
+                            let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
+                            dr.datoReportable += oido.valor + valor.valor + '/';
+                        }
+                    });
 
-                dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
-                dr.datoReportable = dr.datoReportable.slice(0, -1);
+                    dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
+                    dr.datoReportable = dr.datoReportable.slice(0, -1);
 
-                datoReportable.push(dr);
-                return datoReportable;
+                    datoReportable.push(dr);
+                    return datoReportable;
+                } else {
+                    return null;
+                }
             }
         },
 
@@ -115,7 +118,8 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
-                const arrayPrestacion = prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined);
+                console.log("Prestacion en main: ", prestacion);
+                const arrayPrestacion = (prestacion.datosReportables) ? prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined) : null;
                 const arrayConfiguracion = datosConfiguracionAutomatica.sumar.datosReportables.map((config: any) => config.valores);
 
                 let dto: any = {
@@ -131,14 +135,14 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
-                let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+                //let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
 
                 let conditionsArray = [
                     esAfiliado,
-                    datosReportables
+                    // datosReportables
                 ];
 
                 if (conditionsArray.indexOf(false) === -1) {
@@ -164,7 +168,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             codigoFinanciador: dtoFacturacion.obraSocial.codigoFinanciador,
             idEfector: dtoFacturacion.organizacion.idSips,
         };
-
         await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */

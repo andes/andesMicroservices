@@ -8,7 +8,7 @@ const request = require('request');
  * @param {*} idPrestacion
  * @returns
  */
-// export async function getPrestaciones(idPrestacion) {
+// export async function getPrestacion(idPrestacion) {
 //     return new Promise((resolve, reject) => {
 //         const url = `${ANDES_HOST}/modules/rup/prestaciones/${idPrestacion}?token=${ANDES_KEY}`;
 //         request.get();

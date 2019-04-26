@@ -17,7 +17,7 @@ let querySumar = new QuerySumar();
  */
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
     const transaction = new sql.Transaction(pool);
-    let _estado;
+    let _estado = 'Sin Comprobante';
     try {
         await transaction.begin();
         const request = await new sql.Request(transaction);
@@ -40,47 +40,51 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
             let newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
 
-            let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador)
+            if (dtoSumar.datosReportables) {
+                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador)
 
-            let prestacion = {
-                idComprobante: newIdComprobante,
-                idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
-                cantidad: 1,
-                precioPrestacion: precioPrestacion.precio,
-                idAnexo: 301,
-                peso: 0,
-                tensionArterial: '00/00',
-                diagnostico: dtoSumar.diagnostico,
-                edad: dtoSumar.edad,
-                sexo: dtoSumar.sexo,
-                fechaNacimiento: dtoSumar.fechaNacimiento,
-                fechaPrestacion: new Date(),
-                anio: dtoSumar.anio,
-                mes: dtoSumar.mes,
-                dia: dtoSumar.dia,
-            };
+                let prestacion = {
+                    idComprobante: newIdComprobante,
+                    idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
+                    cantidad: 1,
+                    precioPrestacion: precioPrestacion.precio,
+                    idAnexo: 301,
+                    peso: 0,
+                    tensionArterial: '00/00',
+                    diagnostico: dtoSumar.diagnostico,
+                    edad: dtoSumar.edad,
+                    sexo: dtoSumar.sexo,
+                    fechaNacimiento: dtoSumar.fechaNacimiento,
+                    fechaPrestacion: new Date(),
+                    anio: dtoSumar.anio,
+                    mes: dtoSumar.mes,
+                    dia: dtoSumar.dia,
+                };
 
-            let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
+                let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
 
-            for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
-                let datosReportables = {
-                    idPrestacion: newIdPrestacion,
-                    idDatoReportable: dtoSumar.datosReportables[x].idDatoReportable,
-                    valor: dtoSumar.datosReportables[x].datoReportable
+                for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
+                    let datosReportables = {
+                        idPrestacion: newIdPrestacion,
+                        idDatoReportable: dtoSumar.datosReportables[x].idDatoReportable,
+                        valor: dtoSumar.datosReportables[x].datoReportable
+                    }
+
+                    await querySumar.saveDatosReportablesSumar(request, datosReportables);
                 }
-
-                await querySumar.saveDatosReportablesSumar(request, datosReportables);
             }
 
             await transaction.commit();
 
-            const estadoFacturacion = {
-                tipo: 'sumar',
-                numeroComprobante: newIdComprobante,
-                estado: _estado
-            }
+            let idTurno = dtoSumar.objectId;
+            /* dtoSumar.objectId = idTurno Se usa para buscar la prestación */
 
-
+            // const estadoFacturacion = {
+            //     tipo: 'sumar',
+            //     numeroComprobante: _numeroComprobante,
+            //     estado: _estado
+            // }
+            //
             // if (fueraDeAgenda) {
             //     updateEstadoFacturacionSinTurno(codificacionId, estadoFacturacion)
             // } else {

@@ -24,7 +24,7 @@ router.group('/facturacion', (group) => {
             // Loggear error
         }
         sql.close();
-        res.json('OK')
+        res.json('OK');
     });
 });
 
