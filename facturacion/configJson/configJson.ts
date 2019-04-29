@@ -118,8 +118,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
-                console.log("Prestacion en main: ", prestacion);
-                const arrayPrestacion = (prestacion.datosReportables) ? prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined) : null;
+                const arrayPrestacion = (prestacion.prestacion.datosReportables !== null) ? prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined) : null;
                 const arrayConfiguracion = datosConfiguracionAutomatica.sumar.datosReportables.map((config: any) => config.valores);
 
                 let dto: any = {
@@ -160,12 +159,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     if (dtoFacturacion.obraSocial) {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
-
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
             dniPaciente: dtoFacturacion.paciente.dni,
             dniProfesional: dtoFacturacion.profesional.dni,
-            codigoFinanciador: dtoFacturacion.obraSocial.codigoFinanciador,
+            codigoFinanciador: dtoFacturacion.obraSocial.codOS,
             idEfector: dtoFacturacion.organizacion.idSips,
         };
         await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);

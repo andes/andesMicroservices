@@ -7,11 +7,14 @@ export async function getProfesional(idProfesional) {
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const prof: any[] = JSON.parse(body);
+                const profesional: any = {};
                 if (prof && prof.length) {
                     return resolve({
-                        nombre: prof[0].nombre,
-                        apellido: prof[0].apellido,
-                        dni: prof[0].documento
+                        profesional: {
+                            nombre: prof[0].nombre,
+                            apellido: prof[0].apellido,
+                            dni: prof[0].documento
+                        }
                     });
                 }
             }

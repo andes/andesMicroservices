@@ -2,57 +2,101 @@ import { getOrganizacion } from './../services/organizacion.service';
 import { getPuco } from './../services/obra-social.service';
 import { getProfesional } from './../services/profesional.service';
 import { getSnomed } from './../services/snomed.service';
-// import { getPrestaciones } from './../services/prestaciones.service';
+import { getPrestacion } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
 export async function facturacionAutomatica(prestacion: any) {
-    // console.log("Prestacionnnn: ", prestacion);
-    // if (prestacion.idPrestacion !== null) {
-    //     prestacion = (prestacion.idPrestacion) ? await getPrestaciones(prestacion.idPrestacion) : await getPrestaciones(prestacion.id);
-    // }
-
-    let idOrganizacion = (prestacion.solicitud) ? prestacion.solicitud.organizacion.id : prestacion.organizacion._id;
-    let idProfesional = (prestacion.solicitud) ? prestacion.solicitud.profesional.id : prestacion.profesionales[0]._id;
-
-    let datosOrganizacion: any = await getOrganizacion(idOrganizacion);
-    let obraSocialPaciente: any = await getPuco(prestacion.paciente.documento);
-    let datosProfesional: any = await getProfesional(idProfesional);
-    let getDR = await getDatosReportables(prestacion);
+    let datosFactura = await formatDatosFactura(prestacion);
 
     const factura = {
         turno: {
-            _id: (prestacion.solicitud) ? prestacion.solicitud.turno : prestacion.turno._id,
+            _id: datosFactura.idTurno
         },
         paciente: {
-            nombre: prestacion.paciente.nombre,
-            apellido: prestacion.paciente.apellido,
-            dni: prestacion.paciente.documento,
-            fechaNacimiento: prestacion.paciente.fechaNacimiento,
-            sexo: prestacion.paciente.sexo
+            nombre: datosFactura.paciente.nombre,
+            apellido: datosFactura.paciente.apellido,
+            dni: datosFactura.paciente.documento,
+            fechaNacimiento: datosFactura.paciente.fechaNacimiento,
+            sexo: datosFactura.paciente.sexo
         },
         prestacion: {
-            conceptId: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.conceptId : prestacion.tipoPrestacion.conceptId,
-            term: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.term : prestacion.tipoPrestacion.term,
-            fsn: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.fsn : prestacion.tipoPrestacion.fsn,
-            datosReportables: getDR,
+            conceptId: datosFactura.prestacion.conceptId,
+            term: datosFactura.prestacion.term,
+            fsn: datosFactura.prestacion.fsn,
+            datosReportables: datosFactura.datosReportables,
         },
         organizacion: {
-            nombre: datosOrganizacion.nombre,
-            cuie: datosOrganizacion.cuie,
-            idSips: datosOrganizacion.idSips
+            nombre: datosFactura.organizacion.nombre,
+            cuie: datosFactura.organizacion.cuie,
+            idSips: datosFactura.organizacion.idSips
         },
-        obraSocial: (obraSocialPaciente) ? {
-            codigoFinanciador: obraSocialPaciente.codOS,
-            financiador: obraSocialPaciente.financiador
-        } : null,
+        obraSocial: datosFactura.obraSocial,
         profesional: {
-            nombre: datosProfesional.nombre,
-            apellido: datosProfesional.apellido,
-            dni: datosProfesional.dni
+            nombre: datosFactura.profesional.nombre,
+            apellido: datosFactura.profesional.apellido,
+            dni: datosFactura.profesional.dni
         }
     };
-    console.log("Factura: ", factura);
     return factura;
+}
+
+async function formatDatosFactura(prestacion: any) {
+    if (prestacion.origen === 'rup_rf') {
+        let _datosOrganizacion: any = getOrganizacion(prestacion.data.solicitud.organizacion.id);
+        let _obraSocialPaciente: any = getPuco(prestacion.data.paciente.documento);
+        let _datosProfesional: any = getProfesional(prestacion.data.solicitud.profesional.id);
+        let _getDR = getDatosReportables(prestacion.data);
+
+        let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+
+        let dtoDatos = {
+            idTurno: prestacion.data.solicitud.turno,
+            organizacion: datos[0].organizacion,
+            obraSocial: (datos[1]) ? (datos[1].obraSocial) : null,
+            profesional: datos[2].profesional,
+            paciente: prestacion.data.paciente,
+            prestacion: prestacion.data.solicitud.tipoPrestacion,
+            datosReportables: datos[3]
+        }
+
+        return dtoDatos;
+    } else if (prestacion.origen === 'rf_turnos') {
+        let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
+        let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
+        let _datosProfesional: any = getProfesional(prestacion.profesionales[0]._id);
+        let _getDR = null;
+
+        let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+
+        let dtoDatos = {
+            idTurno: prestacion.id,
+            organizacion: datos[0].organizacion,
+            obraSocial: (datos[1]) ? (datos[1].obraSocial) : null,
+            profesional: datos[2].profesional,
+            paciente: prestacion.paciente,
+            prestacion: prestacion.tipoPrestacion,
+            datosReportables: null
+        }
+        return dtoDatos;
+    } else if (prestacion.origen === 'buscador') {
+        let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
+        let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
+        let _datosProfesional: any = getProfesional(prestacion.profesionales[0]._id);
+        let _getDR = getPrestacion(prestacion.idPrestacion);
+
+        let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+
+        let dtoDatos = {
+            idTurno: prestacion.turno._id,
+            organizacion: datos[0].organizacion,
+            obraSocial: (datos[1]) ? (datos[1].obraSocial) : null,
+            profesional: datos[2].profesional,
+            paciente: prestacion.paciente,
+            prestacion: prestacion.tipoPrestacion,
+            datosReportables: await getDatosReportables(datos[3])
+        }
+        return dtoDatos;
+    }
 }
 
 async function getDatosReportables(prestacion: any) {
@@ -98,7 +142,7 @@ async function getDatosReportables(prestacion: any) {
             });
         }
     }
-    return null;
+    return '';
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {

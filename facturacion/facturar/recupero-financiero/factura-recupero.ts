@@ -29,7 +29,6 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
             //     // handle error........s
             // } else {
             let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero);
-            console.log("Entra a else");
             let dtoOrden = {
                 idEfector: dtoRecupero.idEfector,
                 /* Existe un trigger en Fac_Orden [Trigger_NumeroOrden] que actualiza 'numero' cuando el param es -1 */
@@ -51,9 +50,8 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
                 objectId: dtoRecupero.objectId,
                 factAutomatica: 'prestacion'
             };
-            console.log("Antes de guardar orden: ", dtoOrden);
             const newIdOrden = await queryRecupero.saveOrdenRecupero(request, dtoOrden);
-            console.log("Entra a newIdOrden: ", newIdOrden);
+
             let dtoOrdendetalle = {
                 idOrden: newIdOrden,
                 idEfector: dtoRecupero.idEfector,

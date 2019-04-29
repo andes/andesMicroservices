@@ -16,7 +16,6 @@ let querySumar = new QuerySumar();
  * @param {*} datosConfiguracionAutomatica
  */
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
-    console.log("Entra a Facturar Sumar: ", dtoSumar);
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
     try {

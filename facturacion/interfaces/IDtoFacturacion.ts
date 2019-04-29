@@ -26,7 +26,7 @@ export interface IDtoFacturacion {
         idSips: Number;
     };
     obraSocial: {
-        codigoFinanciador: String;
+        codOS: String;
         financiador: String;
     };
     profesional:

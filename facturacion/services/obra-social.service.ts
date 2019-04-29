@@ -7,10 +7,13 @@ export async function getPuco(dniPaciente) {
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const puco: any[] = JSON.parse(body);
+                const obraSocial: any = {};
                 if (puco && puco.length) {
                     return resolve({
-                        codOS: puco[0].codigoFinanciador,
-                        financiador: puco[0].financiador
+                        obraSocial: {
+                            codOS: puco[0].codigoFinanciador,
+                            financiador: puco[0].financiador
+                        }
                     });
                 } else {
                     resolve(null);

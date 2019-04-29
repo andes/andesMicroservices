@@ -7,11 +7,17 @@ export async function getOrganizacion(idOrganizacion) {
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const orgs: any[] = JSON.parse(body);
+                const organizacion: any = {};
                 if (orgs && orgs.length) {
                     return resolve({
-                        nombre: orgs[0].nombre,
-                        cuie: orgs[0].codigo.cuie,
-                        idSips: orgs[0].codigo.sips
+                        organizacion: {
+                            nombre: orgs[0].nombre,
+                            cuie: orgs[0].codigo.cuie,
+                            idSips: orgs[0].codigo.sips
+                        }
+                        // nombre: orgs[0].nombre,
+                        // cuie: orgs[0].codigo.cuie,
+                        // idSips: orgs[0].codigo.sips
                     });
                 }
             }
