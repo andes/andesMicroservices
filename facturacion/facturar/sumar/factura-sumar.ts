@@ -3,7 +3,7 @@ import { QuerySumar } from './query-sumar';
 import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
 import { IDtoSumar } from './../../interfaces/IDtoSumar';
 import moment = require('moment');
-// import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno } from '../../services/prestaciones.service';
+import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno, getDatosTurno } from '../../services/prestaciones.service';
 
 let querySumar = new QuerySumar();
 
@@ -16,15 +16,17 @@ let querySumar = new QuerySumar();
  * @param {*} datosConfiguracionAutomatica
  */
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
+    console.log("Dto Sumar: ", dtoSumar);
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
     try {
         await transaction.begin();
         const request = await new sql.Request(transaction);
 
+        let newIdComprobante: any;
         let existeComprobante = await validaComprobante(pool, dtoSumar);
 
-        if (!existeComprobante) {
+        if (existeComprobante) {
             let dtoComprobante = {
                 cuie: dtoSumar.cuie,
                 fechaComprobante: new Date(),
@@ -38,7 +40,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 objectId: dtoSumar.objectId
             };
 
-            let newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
+            newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
+            _estado = 'Comprobante sin prestacion';
 
             if (dtoSumar.datosReportables) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador)
@@ -72,23 +75,31 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
                     await querySumar.saveDatosReportablesSumar(request, datosReportables);
                 }
+                _estado = 'Comprobante con prestacion';
             }
 
             await transaction.commit();
 
+            let turno: any = await getDatosTurno(dtoSumar.objectId);
+            console.log("Turnooooooo: ", turno);
             let idTurno = dtoSumar.objectId;
+            let idAgenda = turno.agenda_id;
+            let idBloque = turno.bloque_id;
+
+            console.log("IdBloque: ", idBloque);
+            console.log("IdTunro: ", idAgenda);
             /* dtoSumar.objectId = idTurno Se usa para buscar la prestación */
 
-            // const estadoFacturacion = {
-            //     tipo: 'sumar',
-            //     numeroComprobante: _numeroComprobante,
-            //     estado: _estado
-            // }
-            //
+            const estadoFacturacion = {
+                tipo: 'sumar',
+                numeroComprobante: newIdComprobante,
+                estado: _estado
+            }
+
             // if (fueraDeAgenda) {
             //     updateEstadoFacturacionSinTurno(codificacionId, estadoFacturacion)
             // } else {
-            //     updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoId, estadoFacturacion)
+            updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion)
             // }
         }
     } catch (e) {

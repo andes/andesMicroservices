@@ -37,6 +37,7 @@ export async function facturacionAutomatica(prestacion: any) {
             dni: datosFactura.profesional.dni
         }
     };
+    console.log("Facturaaa: ", factura);
     return factura;
 }
 
