@@ -3,7 +3,7 @@ import { QuerySumar } from './query-sumar';
 import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
 import { IDtoSumar } from './../../interfaces/IDtoSumar';
 import moment = require('moment');
-import { updateEstadoFacturacion } from '../../services/prestaciones.service';
+// import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno } from '../../services/prestaciones.service';
 
 let querySumar = new QuerySumar();
 
@@ -73,17 +73,23 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                     await querySumar.saveDatosReportablesSumar(request, datosReportables);
                 }
             }
-            transaction.commit();
 
-            /* dtoSumar.objectId = idTurno Se usa para buscar la prestación */
+            await transaction.commit();
+
             let idTurno = dtoSumar.objectId;
-            let estado = {
-                tipo: 'sumar',
-                numero: newIdComprobante,
-                estado: _estado
-            }
-            // console.log("Estado Facturacion: ", estado);
-            // updateEstadoFacturacion(idTurno, estado);
+            /* dtoSumar.objectId = idTurno Se usa para buscar la prestación */
+
+            // const estadoFacturacion = {
+            //     tipo: 'sumar',
+            //     numeroComprobante: _numeroComprobante,
+            //     estado: _estado
+            // }
+            //
+            // if (fueraDeAgenda) {
+            //     updateEstadoFacturacionSinTurno(codificacionId, estadoFacturacion)
+            // } else {
+            //     updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoId, estadoFacturacion)
+            // }
         }
     } catch (e) {
         // log error

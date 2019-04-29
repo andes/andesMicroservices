@@ -21,6 +21,7 @@ router.group('/facturacion', (group) => {
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
             console.log('ERROR:', e);
+            // Loggear error
         }
         sql.close();
         res.json('OK');
