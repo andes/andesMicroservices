@@ -1,5 +1,4 @@
 import { getOrganizacion } from './../services/organizacion.service';
-import { getPuco } from './../services/obra-social.service';
 import { getProfesional } from './../services/profesional.service';
 import { getSnomed } from './../services/snomed.service';
 import { getPrestacion } from './../services/prestaciones.service';
@@ -12,7 +11,7 @@ export async function facturacionAutomatica(prestacion: any) {
         turno: {
             _id: datosFactura.idTurno
         },
-        idPrestacion: prestacion.data._id,
+        idPrestacion: (prestacion.data) ? prestacion.data._id : null,
         paciente: {
             nombre: datosFactura.paciente.nombre,
             apellido: datosFactura.paciente.apellido,
@@ -45,7 +44,7 @@ export async function facturacionAutomatica(prestacion: any) {
 async function formatDatosFactura(prestacion: any) {
     if (prestacion.origen === 'rup_rf') {
         let _datosOrganizacion: any = getOrganizacion(prestacion.data.solicitud.organizacion.id);
-        let _obraSocialPaciente: any = getPuco(prestacion.data.paciente.documento);
+        let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
         let _datosProfesional: any = getProfesional(prestacion.data.solicitud.profesional.id);
         let _getDR = getDatosReportables(prestacion.data);
 
@@ -54,17 +53,17 @@ async function formatDatosFactura(prestacion: any) {
         let dtoDatos = {
             idTurno: prestacion.data.solicitud.turno,
             organizacion: datos[0].organizacion,
-            obraSocial: (datos[1]) ? (datos[1].obraSocial) : null,
+            obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: datos[2].profesional,
             paciente: prestacion.data.paciente,
             prestacion: prestacion.data.solicitud.tipoPrestacion,
             datosReportables: datos[3]
-        }
+        };
 
         return dtoDatos;
     } else if (prestacion.origen === 'rf_turnos') {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
-        let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
+        let _obraSocialPaciente: any = (prestacion.obraSocial === 'prepaga') ? (prestacion.prepaga) : prestacion.paciente.obraSocial;
         let _datosProfesional: any = getProfesional(prestacion.profesionales[0]._id);
         let _getDR = null;
 
@@ -73,16 +72,16 @@ async function formatDatosFactura(prestacion: any) {
         let dtoDatos = {
             idTurno: prestacion.id,
             organizacion: datos[0].organizacion,
-            obraSocial: (datos[1]) ? (datos[1].obraSocial) : null,
+            obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: datos[2].profesional,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
             datosReportables: null
-        }
+        };
         return dtoDatos;
     } else if (prestacion.origen === 'buscador') {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
-        let _obraSocialPaciente: any = getPuco(prestacion.paciente.documento);
+        let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
         let _datosProfesional: any = getProfesional(prestacion.profesionales[0]._id);
         let _getDR = getPrestacion(prestacion.idPrestacion);
 
@@ -91,12 +90,12 @@ async function formatDatosFactura(prestacion: any) {
         let dtoDatos = {
             idTurno: prestacion.turno._id,
             organizacion: datos[0].organizacion,
-            obraSocial: (datos[1]) ? (datos[1].obraSocial) : null,
+            obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: datos[2].profesional,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
             datosReportables: await getDatosReportables(datos[3])
-        }
+        };
         return dtoDatos;
     }
 }

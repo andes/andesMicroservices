@@ -114,7 +114,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             if (tipoFacturacion === 'recupero') {
                 let dto: any = {
                     factura: 'recupero'
-                }
+                };
 
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
@@ -134,7 +134,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
-                //let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+                // let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
@@ -159,11 +159,12 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     if (dtoFacturacion.obraSocial) {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
+        let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
             dniPaciente: dtoFacturacion.paciente.dni,
             dniProfesional: dtoFacturacion.profesional.dni,
-            codigoFinanciador: dtoFacturacion.obraSocial.codOS,
+            codigoFinanciador: os,
             idEfector: dtoFacturacion.organizacion.idSips,
         };
         await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);

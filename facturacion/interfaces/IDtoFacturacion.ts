@@ -1,5 +1,5 @@
 export interface IDtoFacturacion {
-    idPrestacion: String,
+    idPrestacion: String;
     turno: { _id: String; };
     paciente:
     {
@@ -29,6 +29,9 @@ export interface IDtoFacturacion {
     obraSocial: {
         codOS: String;
         financiador: String;
+        idObraSocial: String;
+        prepaga: Boolean;
+        codigoPuco: String;
     };
     profesional:
     {
