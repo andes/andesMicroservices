@@ -2,7 +2,7 @@ import * as sql from 'mssql';
 import { QueryRecupero } from './query-recupero';
 import { IDtoRecupero } from './../../interfaces/IDtoRecupero';
 
-let queryRecupero = new QueryRecupero()
+let queryRecupero = new QueryRecupero();
 
 /**
  *
@@ -40,7 +40,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
                 fecha: new Date(),
                 fechaPractica: new Date(),
                 idTipoPractica: nomencladorRecupero.idTipoPractica,
-                idObraSocial: await queryRecupero.getIdObraSocialSips(pool, dtoRecupero.codigoFinanciador),
+                idObraSocial: await queryRecupero.getIdObraSocialSips(pool, dtoRecupero),
                 idUsuarioRegistro: 1,
                 fechaRegistro: new Date(),
                 idPrefactura: 0,
@@ -66,13 +66,12 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
             await queryRecupero.saveOrdenDetalle(request, dtoOrdendetalle);
 
             transaction.commit(err => {
-                console.log("Error Commit: ", err);
                 // ... error checks
             });
             // }
         } catch {
             transaction.rollback(err => {
-                console.log("Error rollback: ", err);
+
                 // ... error checks
             });
         }

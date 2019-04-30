@@ -44,7 +44,7 @@ export async function facturacionAutomatica(prestacion: any) {
 async function formatDatosFactura(prestacion: any) {
     if (prestacion.origen === 'rup_rf') {
         let _datosOrganizacion: any = getOrganizacion(prestacion.data.solicitud.organizacion.id);
-        let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
+        let _obraSocialPaciente: any = (prestacion.data.paciente.obraSocial) ? (prestacion.data.paciente.obraSocial) : null;
         let _datosProfesional: any = getProfesional(prestacion.data.solicitud.profesional.id);
         let _getDR = getDatosReportables(prestacion.data);
 

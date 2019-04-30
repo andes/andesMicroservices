@@ -67,13 +67,15 @@ export class QueryRecupero {
         });
     }
 
-    async getIdObraSocialSips(pool: any, codigoObraSocial: any) {
+    async getIdObraSocialSips(pool: any, dtoRecupero: any) {
         return new Promise((resolve: any, reject: any) => {
             (async () => {
                 try {
-                    let query = 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;';
+                    let prepaga = dtoRecupero.prepaga;
+                    let codFinanciador = dtoRecupero.codigoFinanciador;
+                    let query = (!prepaga) ? 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;' : 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE idObraSocial = @codigo;';
                     let result = await new sql.Request(pool)
-                        .input('codigo', sql.Int, codigoObraSocial)
+                        .input('codigo', sql.Int, codFinanciador)
                         .query(query);
                     if (result && result.recordset[0]) {
                         resolve(result.recordset[0] ? result.recordset[0].idObraSocial : 0);

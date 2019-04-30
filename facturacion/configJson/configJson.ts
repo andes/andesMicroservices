@@ -156,16 +156,18 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     let dtoSumar: IDtoSumar;
     let dtoRecupero: IDtoRecupero;
     let tipoFacturacion: String = '';
-    if (dtoFacturacion.obraSocial) {
+    if (dtoFacturacion.obraSocial.financiador !== 'SUMAR') {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
         let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
+
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
             dniPaciente: dtoFacturacion.paciente.dni,
             dniProfesional: dtoFacturacion.profesional.dni,
             codigoFinanciador: os,
             idEfector: dtoFacturacion.organizacion.idSips,
+            prepaga: dtoFacturacion.obraSocial.prepaga,
         };
         await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
