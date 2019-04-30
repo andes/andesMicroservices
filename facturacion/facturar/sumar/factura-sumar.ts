@@ -24,9 +24,9 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         const request = await new sql.Request(transaction);
 
         let newIdComprobante: any;
-        let existeComprobante = await validaComprobante(pool, dtoSumar);
+        let existeComprobante = true;//await validaComprobante(pool, dtoSumar);
 
-        if (!existeComprobante) {
+        if (existeComprobante) {
             let dtoComprobante = {
                 cuie: dtoSumar.cuie,
                 fechaComprobante: new Date(),
@@ -80,27 +80,26 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
             await transaction.commit();
 
-            let turno: any = await getDatosTurno(dtoSumar.objectId);
-            console.log("Turnooooooo: ", turno);
-            let idTurno = dtoSumar.objectId;
-            let idAgenda = turno.agenda_id;
-            let idBloque = turno.bloque_id;
-
-            console.log("IdBloque: ", idBloque);
-            console.log("IdTunro: ", idAgenda);
-            /* dtoSumar.objectId = idTurno Se usa para buscar la prestación */
+            let turno: any;
+            if (dtoSumar.objectId) {
+                turno = await getDatosTurno(dtoSumar.objectId);
+            }
 
             const estadoFacturacion = {
                 tipo: 'sumar',
                 numeroComprobante: newIdComprobante,
                 estado: _estado
-            }
+            };
 
-            // if (fueraDeAgenda) {
-            //     updateEstadoFacturacionSinTurno(codificacionId, estadoFacturacion)
-            // } else {
-            updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion)
-            // }
+            if (!turno) {
+                updateEstadoFacturacionSinTurno(dtoSumar.idPrestacion, estadoFacturacion);
+            } else {
+                let idTurno = dtoSumar.objectId;
+                let idAgenda = turno.idAgenda;
+                let idBloque = turno.idBloque;
+
+                updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
+            }
         }
     } catch (e) {
         // log error

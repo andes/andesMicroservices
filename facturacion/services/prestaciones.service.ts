@@ -26,12 +26,11 @@ export async function getPrestacion(idPrestacion) {
 
 export async function getDatosTurno(idTurno) {
     return new Promise((resolve, reject) => {
-        const url = `${ANDES_HOST}/modules/turnos/turno/${idTurno}?token=${ANDES_KEY}`;
+        const url = `${ANDES_HOST}/modules/turnos/agenda/turno/${idTurno}?token=${ANDES_KEY}`;
         // request.get();
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const datosTurno: any[] = JSON.parse(body);
-                console.log("Adneto de datos turn: ", datosTurno);
                 if (datosTurno) {
                     return resolve(datosTurno[0]);
                 } else {
@@ -82,9 +81,9 @@ export async function updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoI
  * @param {*} idPrestacion
  * @returns
  */
-export async function updateEstadoFacturacionSinTurno(codificacionId, _estadoFacturacion) {
+export async function updateEstadoFacturacionSinTurno(idPrestacion, _estadoFacturacion) {
     return new Promise((resolve, reject) => {
-        const url = `${ANDES_HOST}/modules/rup/codificacion/estadoFacturacion/${codificacionId}`;
+        const url = `${ANDES_HOST}/modules/rup/codificacion/estadoFacturacion/${idPrestacion}`;
         const options = {
             url,
             method: 'PATCH',

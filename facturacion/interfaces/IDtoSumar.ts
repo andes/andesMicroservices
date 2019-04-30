@@ -1,4 +1,5 @@
 export interface IDtoSumar {
+    idPrestacion: String,
     objectId: String;
     cuie: String;
     diagnostico: String;

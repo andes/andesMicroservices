@@ -12,6 +12,7 @@ export async function facturacionAutomatica(prestacion: any) {
         turno: {
             _id: datosFactura.idTurno
         },
+        idPrestacion: prestacion.data._id,
         paciente: {
             nombre: datosFactura.paciente.nombre,
             apellido: datosFactura.paciente.apellido,
@@ -37,7 +38,7 @@ export async function facturacionAutomatica(prestacion: any) {
             dni: datosFactura.profesional.dni
         }
     };
-    console.log("Facturaaa: ", factura);
+
     return factura;
 }
 
