@@ -174,8 +174,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 
             dtoSumar = {
-                idAgenda: dtoFacturacion.agenda.idAgenda,
-                idBloque: dtoFacturacion.agenda.idBloque,
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,
                 diagnostico: main.diagnostico,

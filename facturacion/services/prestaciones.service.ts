@@ -53,7 +53,7 @@ export async function getDatosTurno(idTurno) {
  */
 export async function updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoId, _estadoFacturacion) {
     return new Promise((resolve, reject) => {
-        const url = `${ANDES_HOST}/modules/turnos/turno/${turnoId}/bloque/${bloqueId}/agenda/${agendaId}/`;
+        const url = `${ANDES_HOST}/modules/turnos/turno/${turnoId}/${bloqueId}/${agendaId}/`;
         const options = {
             url,
             method: 'PATCH',
