@@ -50,6 +50,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
                 objectId: dtoRecupero.objectId,
                 factAutomatica: 'prestacion'
             };
+
             const newIdOrden = await queryRecupero.saveOrdenRecupero(request, dtoOrden);
 
             let dtoOrdendetalle = {

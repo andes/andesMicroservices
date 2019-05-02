@@ -32,11 +32,11 @@ export async function facturacionAutomatica(prestacion: any) {
             idSips: datosFactura.organizacion.idSips
         },
         obraSocial: datosFactura.obraSocial,
-        profesional: {
+        profesional: (datosFactura.profesional) ? {
             nombre: datosFactura.profesional.nombre,
             apellido: datosFactura.profesional.apellido,
-            dni: datosFactura.profesional.dni
-        }
+            dni: datosFactura.profesional.dni 
+        } : null
     };
 
     return factura;
@@ -83,7 +83,7 @@ async function formatDatosFactura(prestacion: any) {
     } else if (prestacion.origen === 'buscador') {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
         let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
-        let _datosProfesional: any = getProfesional(prestacion.profesionales[0]._id);
+        let _datosProfesional: any = (prestacion.profesionales.length > 0) ? getProfesional(prestacion.profesionales[0]._id) : null;
         let _getDR = getPrestacion(prestacion.idPrestacion);
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
@@ -92,7 +92,7 @@ async function formatDatosFactura(prestacion: any) {
             idTurno: prestacion.turno._id,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
-            profesional: datos[2].profesional,
+            profesional: (datos[2]) ? datos[2].profesional : null,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
             datosReportables: await getDatosReportables(datos[3])
