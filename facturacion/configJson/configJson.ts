@@ -57,21 +57,30 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                     arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
                     arrayConfiguracion = arrayConfiguracion.map((ac: any) => ac[0]);
+                    let flagDatosReportables = true;
 
                     arrayPrestacion.forEach((element, index) => {
                         let oido = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
                         if (oido) {
                             let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
-                            dr.datoReportable += oido.valor + valor.valor + '/';
+                            if (valor) {
+                                dr.datoReportable += oido.valor + valor.valor + '/';
+                            } else {
+                                console.log('Faltan datos reportables');
+                                flagDatosReportables = false;
+                            }
                         }
                     });
+                    if (flagDatosReportables) {
+                        dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
+                        dr.datoReportable = dr.datoReportable.slice(0, -1);
 
-                    dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
-                    dr.datoReportable = dr.datoReportable.slice(0, -1);
-
-                    datoReportable.push(dr);
-                    return datoReportable;
+                        datoReportable.push(dr);
+                        return datoReportable;
+                    } else {
+                        return null;
+                    }
                 } else {
                     return null;
                 }

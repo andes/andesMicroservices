@@ -30,7 +30,7 @@ export class QuerySumar {
             .input('objectId', sql.VarChar(50), dtoComprobante.objectId)
             .input('factAutomatico', sql.VarChar(50), 'prestacion')
             .query(query);
-
+        console.log('SAVE COMRPOBANTE', result.recordset[0].id);
         return result.recordset[0].id;
     }
 
@@ -64,7 +64,7 @@ export class QuerySumar {
             .input('mes', sql.Int, dtoPrestacion.mes)
             .input('dia', sql.Int, dtoPrestacion.dia)
             .query(query);
-
+        console.log('SAVE prestacion sumar', result.recordset[0].id);
         return result.recordset[0].id;
     }
 
@@ -87,7 +87,7 @@ export class QuerySumar {
             .input('valor', sql.VarChar(500), dtoPrestacion.valor)
             .query(query);
 
-
+        console.log('SAVE datos reportables sumar', result.recordset[0].id);
         return result.recordset[0].id;
     }
 

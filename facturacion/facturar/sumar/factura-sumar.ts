@@ -16,7 +16,6 @@ let querySumar = new QuerySumar();
  * @param {*} datosConfiguracionAutomatica
  */
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
-    console.log("Dto Sumar: ", dtoSumar);
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
     try {
@@ -24,9 +23,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         const request = await new sql.Request(transaction);
 
         let newIdComprobante: any;
-        let existeComprobante = true;//await validaComprobante(pool, dtoSumar);
-
-        if (existeComprobante) {
+        let existeComprobante = await validaComprobante(pool, dtoSumar);
+        if (!existeComprobante) {
             let dtoComprobante = {
                 cuie: dtoSumar.cuie,
                 fechaComprobante: new Date(),
@@ -44,7 +42,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
             _estado = 'Comprobante sin prestacion';
 
             if (dtoSumar.datosReportables) {
-                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador)
+                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
 
                 let prestacion = {
                     idComprobante: newIdComprobante,
@@ -71,7 +69,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                         idPrestacion: newIdPrestacion,
                         idDatoReportable: dtoSumar.datosReportables[x].idDatoReportable,
                         valor: dtoSumar.datosReportables[x].datoReportable
-                    }
+                    };
 
                     await querySumar.saveDatosReportablesSumar(request, datosReportables);
                 }
@@ -135,7 +133,7 @@ export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosCon
 async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
     let existe = false;
 
-    let orden = await querySumar.getComprobante(pool, dtoSumar);// queryRecupero.getOrdenDePrestacion(pool, dtoRecupero);
+    let orden = await querySumar.getComprobante(pool, dtoSumar); // queryRecupero.getOrdenDePrestacion(pool, dtoRecupero);
 
     if (orden > 0) {
         existe = true;
