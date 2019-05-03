@@ -24,9 +24,9 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         const request = await new sql.Request(transaction);
 
         let newIdComprobante: any;
-        let existeComprobante = true;//await validaComprobante(pool, dtoSumar);
+        let existeComprobante = await validaComprobante(pool, dtoSumar);
 
-        if (existeComprobante) {
+        if (!existeComprobante) {
             let dtoComprobante = {
                 cuie: dtoSumar.cuie,
                 fechaComprobante: new Date(),

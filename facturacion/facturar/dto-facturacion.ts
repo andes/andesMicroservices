@@ -6,13 +6,13 @@ import { getConfigAutomatica } from './../services/config-factAutomatica.service
 import { getPuco } from './../services/obra-social.service';
 
 export async function facturacionAutomatica(prestacion: any) {
-    let datosFactura = await formatDatosFactura(prestacion);
+    let datosFactura: any = await formatDatosFactura(prestacion);
 
     const factura = {
         turno: {
             _id: datosFactura.idTurno
         },
-        idPrestacion: (prestacion.data) ? prestacion.data._id : null,
+        idPrestacion: datosFactura.idPrestacion,
         paciente: {
             nombre: datosFactura.paciente.nombre,
             apellido: datosFactura.paciente.apellido,
@@ -35,10 +35,9 @@ export async function facturacionAutomatica(prestacion: any) {
         profesional: (datosFactura.profesional) ? {
             nombre: datosFactura.profesional.nombre,
             apellido: datosFactura.profesional.apellido,
-            dni: datosFactura.profesional.dni 
+            dni: datosFactura.profesional.dni
         } : null
     };
-
     return factura;
 }
 
@@ -80,7 +79,7 @@ async function formatDatosFactura(prestacion: any) {
             datosReportables: null
         };
         return dtoDatos;
-    } else if (prestacion.origen === 'buscador') {
+    } else if ((prestacion.origen === 'buscador') && (prestacion.idAgenda)) {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
         let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
         let _datosProfesional: any = (prestacion.profesionales.length > 0) ? getProfesional(prestacion.profesionales[0]._id) : null;
@@ -90,6 +89,28 @@ async function formatDatosFactura(prestacion: any) {
 
         let dtoDatos = {
             idTurno: prestacion.turno._id,
+            idPrestacion: prestacion.idPrestacion,
+            organizacion: datos[0].organizacion,
+            obraSocial: (datos[1]) ? (datos[1]) : null,
+            profesional: (datos[2]) ? datos[2].profesional : null,
+            paciente: prestacion.paciente,
+            prestacion: prestacion.tipoPrestacion,
+            datosReportables: await getDatosReportables(datos[3])
+        };
+        return dtoDatos;
+
+    } else if ((prestacion.origen === 'buscador') && (!prestacion.idAgenda)) {
+        let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion.id);
+        let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
+        let _datosProfesional: any = (prestacion.profesionales.length > 0) ? getProfesional(prestacion.profesionales[0].id) : null;
+        let _getDR = getPrestacion(prestacion.idPrestacion);
+
+        let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+
+        let dtoDatos = {
+            /* En fuera de agenda se guarda idPrestación porque no se tiene el idTurno. Validar por idPrestación para no facturar por duplicado*/
+            idTurno: prestacion.idPrestacion,
+            idPrestacion: prestacion.idPrestacion,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: (datos[2]) ? datos[2].profesional : null,
@@ -99,6 +120,7 @@ async function formatDatosFactura(prestacion: any) {
         };
         return dtoDatos;
     }
+
 }
 
 async function getDatosReportables(prestacion: any) {
