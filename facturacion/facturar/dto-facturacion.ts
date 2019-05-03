@@ -80,6 +80,7 @@ async function formatDatosFactura(prestacion: any) {
         };
         return dtoDatos;
     } else if ((prestacion.origen === 'buscador') && (prestacion.idAgenda)) {
+        console.log("Buscador con turnooooo: ", prestacion);
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
         let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
         let _datosProfesional: any = (prestacion.profesionales.length > 0) ? getProfesional(prestacion.profesionales[0]._id) : null;
@@ -95,7 +96,7 @@ async function formatDatosFactura(prestacion: any) {
             profesional: (datos[2]) ? datos[2].profesional : null,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
-            datosReportables: await getDatosReportables(datos[3])
+            datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
         };
         return dtoDatos;
 
