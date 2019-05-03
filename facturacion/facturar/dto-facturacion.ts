@@ -24,7 +24,7 @@ export async function facturacionAutomatica(prestacion: any) {
             conceptId: datosFactura.prestacion.conceptId,
             term: datosFactura.prestacion.term,
             fsn: datosFactura.prestacion.fsn,
-            datosReportables: datosFactura.datosReportables,
+            datosReportables: (datosFactura.datosReportables) ? datosFactura.datosReportables : null,
         },
         organizacion: {
             nombre: datosFactura.organizacion.nombre,
@@ -83,7 +83,7 @@ async function formatDatosFactura(prestacion: any) {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
         let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
         let _datosProfesional: any = (prestacion.profesionales.length > 0) ? getProfesional(prestacion.profesionales[0]._id) : null;
-        let _getDR = getPrestacion(prestacion.idPrestacion);
+        let _getDR = (prestacion.idPrestacion) ? getPrestacion(prestacion.idPrestacion) : null;
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
 
@@ -116,7 +116,7 @@ async function formatDatosFactura(prestacion: any) {
             profesional: (datos[2]) ? datos[2].profesional : null,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
-            datosReportables: await getDatosReportables(datos[3])
+            datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
         };
         return dtoDatos;
     }
