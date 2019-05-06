@@ -8,21 +8,27 @@ import { IDtoFacturacion } from './../interfaces/IDtoFacturacion';
 import { IDtoSumar } from '../interfaces/IDtoSumar';
 import { IDtoRecupero } from '../interfaces/IDtoRecupero';
 
+/**
+ *
+ *
+ * @export
+ * @param {*} pool
+ * @param {IDtoFacturacion} dtoFacturacion
+ * @param {*} datosConfiguracionAutomatica
+ */
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, datosConfiguracionAutomatica) {
     let querySumar = new QuerySumar();
-
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
-
     let datoReportable = [];
 
     let facturacion = {
-        /* Prestación Otoemisiones */
+        /* Prestación Odontología */
         /* TODO: poner la expresión que corresponda */
         /* %%%%%%%%% Está en desarrollo todavía  %%%%%%%%%%%%%%%%%%%%% */
         34043003: {
             term: 'consulta de odontologia',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                
+
                 let dr = {
                     idDatoReportable: '',
                     datoReportable: ''
@@ -30,11 +36,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                 arrayPrestacion = arrayPrestacion.filter(obj => obj !== null);
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                
+
                 // let caries = arrayPrestacion.find(obj => console.log("Primero: ", obj.conceptId) === console.log("Segundo: ", arrayConfiguracion[0].conceptId));
-                
+
                 let caries2 = arrayConfiguracion.find(obj => obj.conceptId === arrayPrestacion.conceptId);
-                
+
             }
         },
 
@@ -43,28 +49,41 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         2091000013100: {
             term: 'otoemisiones',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                let dr = {
-                    idDatoReportable: '',
-                    datoReportable: ''
-                };
+                if (arrayPrestacion) {
+                    let dr = {
+                        idDatoReportable: '',
+                        datoReportable: ''
+                    };
 
-                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null).map(obj => obj[0]);
-                arrayConfiguracion = arrayConfiguracion.map(dr => dr[0]);
+                    arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
+                    arrayConfiguracion = arrayConfiguracion.map((ac: any) => ac[0]);
+                    let flagDatosReportables = true;
 
-                arrayPrestacion.forEach((element, index) => {
-                    let oido = arrayConfiguracion.find(obj => obj.conceptId === element.registro.concepto.conceptId);
+                    arrayPrestacion.forEach((element, index) => {
+                        let oido = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
-                    if (oido) {
-                        let valor = arrayConfiguracion.find(obj => obj.conceptId === element.registro.valor.concepto.conceptId);
-                        dr.datoReportable += oido.valor + valor.valor + '/';
+                        if (oido) {
+                            let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
+                            if (valor) {
+                                dr.datoReportable += oido.valor + valor.valor + '/';
+                            } else {
+                                console.log('Faltan datos reportables');
+                                flagDatosReportables = false;
+                            }
+                        }
+                    });
+                    if (flagDatosReportables) {
+                        dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
+                        dr.datoReportable = dr.datoReportable.slice(0, -1);
+
+                        datoReportable.push(dr);
+                        return datoReportable;
+                    } else {
+                        return null;
                     }
-                });
-
-                dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
-                dr.datoReportable = dr.datoReportable.slice(0, -1);
-
-                datoReportable.push(dr);
-                return datoReportable;
+                } else {
+                    return null;
+                }
             }
         },
 
@@ -76,11 +95,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 let x = 0;
 
                 arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                arrayPrestacion = arrayPrestacion.map(obj => obj[0]);
+                arrayPrestacion = arrayPrestacion.map((obj: any) => obj);
 
                 arrayPrestacion.forEach((element: any) => {
                     if (element) {
-                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.registro.concepto.conceptId);
+                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
                         let dr = {
                             idDatoReportable: '',
@@ -89,7 +108,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
                         if (data) {
                             dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
-                            dr.datoReportable = element.registro.valor;
+                            dr.datoReportable = element.valor;
 
                             datoReportable.push(dr);
                             x++;
@@ -104,12 +123,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             if (tipoFacturacion === 'recupero') {
                 let dto: any = {
                     factura: 'recupero'
-                }
+                };
 
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
-                const arrayPrestacion = prestacion.prestacion.datosReportables.map((dr: any) => dr);
-
+                const arrayPrestacion = (prestacion.prestacion.datosReportables !== null) ? prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined) : null;
                 const arrayConfiguracion = datosConfiguracionAutomatica.sumar.datosReportables.map((config: any) => config.valores);
 
                 let dto: any = {
@@ -125,15 +143,15 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
-                let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+                // let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
 
                 let conditionsArray = [
                     esAfiliado,
-                    datosReportables
-                ]
+                    // datosReportables
+                ];
 
                 if (conditionsArray.indexOf(false) === -1) {
                     valido = true;
@@ -142,33 +160,33 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 return valido;
             }
         }
-    }
+    };
 
     let dtoSumar: IDtoSumar;
     let dtoRecupero: IDtoRecupero;
     let tipoFacturacion: String = '';
-
-    if (dtoFacturacion.obraSocial) {
+    if (dtoFacturacion.obraSocial.financiador !== 'SUMAR') {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
+        let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
 
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
             dniPaciente: dtoFacturacion.paciente.dni,
             dniProfesional: dtoFacturacion.profesional.dni,
-            codigoFinanciador: dtoFacturacion.obraSocial.codigoFinanciador,
+            codigoFinanciador: os,
             idEfector: dtoFacturacion.organizacion.idSips,
-        }
-
-        facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
+            prepaga: dtoFacturacion.obraSocial.prepaga,
+        };
+        await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
-
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 
             dtoSumar = {
+                idPrestacion: dtoFacturacion.idPrestacion,
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,
                 diagnostico: main.diagnostico,
@@ -184,7 +202,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 datosReportables: main.datosReportables
             };
 
-            facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
+            await facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
         }
     }
 }
