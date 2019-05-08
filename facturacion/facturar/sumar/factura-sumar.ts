@@ -1,60 +1,110 @@
-import * as moment from 'moment';
+import * as sql from 'mssql';
 import { QuerySumar } from './query-sumar';
-
 import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
 import { IDtoSumar } from './../../interfaces/IDtoSumar';
+import moment = require('moment');
+import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno, getDatosTurno } from '../../services/prestaciones.service';
 
-let querySumar = new QuerySumar()
+let querySumar = new QuerySumar();
 
+/**
+ *
+ *
+ * @export
+ * @param {*} pool
+ * @param {IDtoSumar} dtoSumar
+ * @param {*} datosConfiguracionAutomatica
+ */
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
+    const transaction = new sql.Transaction(pool);
+    let _estado = 'Sin Comprobante';
+    try {
+        await transaction.begin();
+        const request = await new sql.Request(transaction);
 
-    let dtoComprobante = {
-        cuie: dtoSumar.cuie,
-        fechaComprobante: new Date(),
-        claveBeneficiario: dtoSumar.claveBeneficiario,
-        idAfiliado: dtoSumar.idAfiliado,
-        fechaCarga: new Date(),
-        comentario: 'Carga Automática',
-        periodo: moment(new Date, 'YYYY/MM/DD').format('YYYY') + '/' + moment(new Date, 'YYYY/MM/DD').format('MM'),
-        activo: 'S',
-        idTipoPrestacion: 1,
-        objectId: dtoSumar.objectId
-    };
+        let newIdComprobante: any;
+        let existeComprobante = await validaComprobante(pool, dtoSumar);
 
-    let idComprobante = await querySumar.saveComprobanteSumar(pool, dtoComprobante);
+        if (!existeComprobante) {
+            let dtoComprobante = {
+                cuie: dtoSumar.cuie,
+                fechaComprobante: new Date(),
+                claveBeneficiario: dtoSumar.claveBeneficiario,
+                idAfiliado: dtoSumar.idAfiliado,
+                fechaCarga: new Date(),
+                comentario: 'Carga Automática',
+                periodo: moment(new Date, 'YYYY/MM/DD').format('YYYY') + '/' + moment(new Date, 'YYYY/MM/DD').format('MM'),
+                activo: 'S',
+                idTipoPrestacion: 1,
+                objectId: dtoSumar.objectId
+            };
 
-    let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador)
+            newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
+            _estado = 'Comprobante sin prestacion';
 
-    let prestacion = {
-        idComprobante: idComprobante,
-        idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
-        cantidad: 1,
-        precioPrestacion: precioPrestacion.precio,
-        idAnexo: 301,
-        peso: 0,
-        tensionArterial: '00/00',
-        diagnostico: dtoSumar.diagnostico,
-        edad: dtoSumar.edad,
-        sexo: dtoSumar.sexo,
-        fechaNacimiento: dtoSumar.fechaNacimiento,
-        fechaPrestacion: new Date(),
-        anio: dtoSumar.anio,
-        mes: dtoSumar.mes,
-        dia: dtoSumar.dia,
-    }
+            if (dtoSumar.datosReportables) {
+                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
 
-    let idPrestacion = await querySumar.savePrestacionSumar(pool, prestacion);
+                let prestacion = {
+                    idComprobante: newIdComprobante,
+                    idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
+                    cantidad: 1,
+                    precioPrestacion: precioPrestacion.precio,
+                    idAnexo: 301,
+                    peso: 0,
+                    tensionArterial: '00/00',
+                    diagnostico: dtoSumar.diagnostico,
+                    edad: dtoSumar.edad,
+                    sexo: dtoSumar.sexo,
+                    fechaNacimiento: dtoSumar.fechaNacimiento,
+                    fechaPrestacion: new Date(),
+                    anio: dtoSumar.anio,
+                    mes: dtoSumar.mes,
+                    dia: dtoSumar.dia,
+                };
 
-    for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
-        let datosReportables = {
-            idPrestacion: idPrestacion,
-            idDatoReportable: dtoSumar.datosReportables[x].idDatoReportable,
-            valor: dtoSumar.datosReportables[x].datoReportable
+                let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
+
+                for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
+                    let datosReportables = {
+                        idPrestacion: newIdPrestacion,
+                        idDatoReportable: dtoSumar.datosReportables[x].idDatoReportable,
+                        valor: dtoSumar.datosReportables[x].datoReportable
+                    };
+
+                    await querySumar.saveDatosReportablesSumar(request, datosReportables);
+                }
+                _estado = 'Comprobante con prestacion';
+            }
+
+            await transaction.commit();
+
+            let turno: any;
+            if (dtoSumar.objectId) {
+                turno = await getDatosTurno(dtoSumar.objectId);
+            }
+
+            const estadoFacturacion = {
+                tipo: 'sumar',
+                numeroComprobante: newIdComprobante,
+                estado: _estado
+            };
+
+            if (!turno) {
+                updateEstadoFacturacionSinTurno(dtoSumar.idPrestacion, estadoFacturacion);
+            } else {
+                let idTurno = dtoSumar.objectId;
+                let idAgenda = turno.idAgenda;
+                let idBloque = turno.idBloque;
+
+                updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
+            }
         }
-
-        let idDatoReportable = await querySumar.saveDatosReportablesSumar(pool, datosReportables);
+    } catch (e) {
+        // log error
+        console.log(e);
+        transaction.rollback();
     }
-
 }
 
 export async function saveBeneficiario() {
@@ -75,7 +125,20 @@ export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosCon
             found = true;
         } else {
             found = false;
-            break
+            break;
         }
     }
+}
+
+/* Valida si el comprobante ya fue cread en la BD de SUMAR */
+async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
+    let existe = false;
+
+    let orden = await querySumar.getComprobante(pool, dtoSumar); // queryRecupero.getOrdenDePrestacion(pool, dtoRecupero);
+
+    if (orden > 0) {
+        existe = true;
+    }
+
+    return existe;
 }
