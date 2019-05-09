@@ -9,7 +9,7 @@ export async function getProfesional(idProfesional) {
                 const prof: any[] = JSON.parse(body);
                 const profesional: any = {};
                 if (prof && prof.length) {
-                    return resolve({
+                    resolve({
                         profesional: {
                             nombre: prof[0].nombre,
                             apellido: prof[0].apellido,
@@ -18,7 +18,7 @@ export async function getProfesional(idProfesional) {
                     });
                 }
             }
-            return reject('No se encuentra profesional: ' + body);
+            reject('No se encuentra profesional: ' + body);
         });
     });
 }

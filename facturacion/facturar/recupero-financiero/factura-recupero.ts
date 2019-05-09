@@ -13,21 +13,14 @@ let queryRecupero = new QueryRecupero();
  * @param {*} datosConfiguracionAutomatica
  */
 export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConfiguracionAutomatica) {
-
-
     let existeOrden = await validaOrden(pool, dtoRecupero);
 
     if (!existeOrden) {
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
         const request = await new sql.Request(transaction);
-        // transaction.begin(async err => {
 
         try {
-            // if (err) {
-            //     console.log("Hay error: ", err);
-            //     // handle error........s
-            // } else {
             let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero);
             let dtoOrden = {
                 idEfector: dtoRecupero.idEfector,
@@ -69,14 +62,12 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
             transaction.commit(err => {
                 // ... error checks
             });
-            // }
+
         } catch {
             transaction.rollback(err => {
-
                 // ... error checks
             });
         }
-        // });
     }
 }
 

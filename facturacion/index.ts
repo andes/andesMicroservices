@@ -34,9 +34,6 @@ router.group('/facturacion', (group) => {
                 }
             };
             log(fakeRequest, 'microservices:facturacionAutomatica:subse', null, 'Error en en factruración', e);
-            
-            // console.log('ERROR:', e);
-            // Loggear error
         }
         sql.close();
         res.json('OK');

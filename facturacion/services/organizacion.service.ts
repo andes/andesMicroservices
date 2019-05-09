@@ -9,19 +9,16 @@ export async function getOrganizacion(idOrganizacion) {
                 const orgs: any[] = JSON.parse(body);
                 const organizacion: any = {};
                 if (orgs && orgs.length) {
-                    return resolve({
+                    resolve({
                         organizacion: {
                             nombre: orgs[0].nombre,
                             cuie: orgs[0].codigo.cuie,
                             idSips: orgs[0].codigo.sips
                         }
-                        // nombre: orgs[0].nombre,
-                        // cuie: orgs[0].codigo.cuie,
-                        // idSips: orgs[0].codigo.sips
                     });
                 }
             }
-            return reject('No se encuentra organización' + body);
+            reject('No se encuentra organización' + body);
         });
     });
 }
