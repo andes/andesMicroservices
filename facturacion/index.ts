@@ -7,6 +7,8 @@ let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 import * as sql from 'mssql';
 
+import { log } from '@andes/log';
+
 const mongoose = require('mongoose');
 const router = ms.router();
 
@@ -20,7 +22,20 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            console.log('ERROR:', e);
+            let fakeRequest = {
+                user: {
+                    usuario: 'msFacturacion',
+                    app: 'facturacionAutomatica',
+                    organizacion: 'sss'
+                },
+                ip: '',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            log(fakeRequest, 'microservices:facturacionAutomatica:subse', null, 'Error en en factruración', e);
+            
+            // console.log('ERROR:', e);
             // Loggear error
         }
         sql.close();
