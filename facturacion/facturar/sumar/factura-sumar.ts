@@ -3,6 +3,7 @@ import { QuerySumar } from './query-sumar';
 import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
 import { IDtoSumar } from './../../interfaces/IDtoSumar';
 import moment = require('moment');
+import 'moment/locale/es';
 import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno, getDatosTurno } from '../../services/prestaciones.service';
 
 let querySumar = new QuerySumar();
@@ -49,6 +50,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
             if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
 
+                moment.locale('es');
                 let prestacion = {
                     idComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
                     idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
@@ -61,7 +63,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                     edad: dtoSumar.edad,
                     sexo: dtoSumar.sexo,
                     fechaNacimiento: dtoSumar.fechaNacimiento,
-                    fechaPrestacion: moment(dtoSumar.fechaTurno),//new Date(),
+                    fechaPrestacion: moment(dtoSumar.fechaTurno).format('MM/DD/YYYY'),
                     anio: dtoSumar.anio,
                     mes: dtoSumar.mes,
                     dia: dtoSumar.dia,
@@ -149,7 +151,7 @@ async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolea
 /* Valida si la prestación ya fue creada en la BD de SUMAR */
 async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
     let idPrestacion: any = await querySumar.getPrestacion(pool, dtoSumar);
-    
+
     if (idPrestacion) {
         return idPrestacion;
     } else {
