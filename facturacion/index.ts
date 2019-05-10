@@ -22,18 +22,31 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            let fakeRequest = {
-                user: {
-                    usuario: 'msFacturacion',
-                    app: 'facturacionAutomatica',
-                    organizacion: 'sss'
-                },
-                ip: '',
-                connection: {
-                    localAddress: ''
-                }
-            };
-            log(fakeRequest, 'microservices:facturacionAutomatica:subse', null, 'Error en en factruración', e);
+            console.log("Error sql: ");
+            // let fakeRequestSql = {
+            //     user: {
+            //         usuario: 'msHeller',
+            //         app: 'integracion-heller',
+            //         organizacion: 'sss'
+            //     },
+            //     ip: '192.168.1.999',
+            //     connection: {
+            //         localAddress: ''
+            //     }
+            // };
+            // log(fakeRequestSql, 'microservices:factura:create', 9739, '/ejecuta CDA exito', null);
+            // let fakeRequest = {
+            //     usuario: {
+            //         usuario: 'msFacturacion',
+            //         app: 'facturacionAutomatica',
+            //         organizacion: 'sss'
+            //     },
+            //     ip: '',
+            //     connection: {
+            //         localAddress: ''
+            //     }
+            // };
+            // log(fakeRequest, 'microservices:facturacionAutomatica:subse', null, 'Error en en factruración', e);
         }
         sql.close();
         res.json('OK');

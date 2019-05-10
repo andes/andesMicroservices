@@ -45,7 +45,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
         if (dtoSumar.datosReportables) {
             let existePrestacion = await validaPrestacion(pool, dtoSumar);
-
+            
             if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
 
@@ -61,7 +61,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                     edad: dtoSumar.edad,
                     sexo: dtoSumar.sexo,
                     fechaNacimiento: dtoSumar.fechaNacimiento,
-                    fechaPrestacion: new Date(),
+                    fechaPrestacion: moment(dtoSumar.fechaTurno),//new Date(),
                     anio: dtoSumar.anio,
                     mes: dtoSumar.mes,
                     dia: dtoSumar.dia,
@@ -152,7 +152,7 @@ async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean
     // let e = false;
 
     let idPrestacion: any = await querySumar.getPrestacion(pool, dtoSumar);
-
+    console.log("Id Prestacion: ", idPrestacion);
     if (idPrestacion) {
         return idPrestacion;
     } else {

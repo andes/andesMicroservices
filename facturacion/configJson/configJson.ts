@@ -184,9 +184,10 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
-
+            
             dtoSumar = {
                 idPrestacion: dtoFacturacion.idPrestacion,
+                fechaTurno: dtoFacturacion.turno.fechaTurno,
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,
                 diagnostico: main.diagnostico,

@@ -10,7 +10,8 @@ export async function facturacionAutomatica(prestacion: any) {
 
     const factura = {
         turno: {
-            _id: datosFactura.idTurno
+            _id: datosFactura.idTurno,
+            fechaTurno: prestacion.turno.horaInicio
         },
         idPrestacion: datosFactura.idPrestacion,
         paciente: {
@@ -38,6 +39,7 @@ export async function facturacionAutomatica(prestacion: any) {
             dni: datosFactura.profesional.dni
         } : null
     };
+    console.log("Factura: ", factura);
     return factura;
 }
 
