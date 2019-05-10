@@ -11,7 +11,7 @@ export async function facturacionAutomatica(prestacion: any) {
     const factura = {
         turno: {
             _id: datosFactura.idTurno,
-            fechaTurno: prestacion.turno.horaInicio
+            fechaTurno: datosFactura.fechaPrestacion,
         },
         idPrestacion: datosFactura.idPrestacion,
         paciente: {
@@ -92,6 +92,7 @@ async function formatDatosFactura(prestacion: any) {
         let dtoDatos = {
             idTurno: prestacion.turno._id,
             idPrestacion: prestacion.idPrestacion,
+            fechaPrestacion: prestacion.turno.horaInicio,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: (datos[2]) ? datos[2].profesional : null,
@@ -112,6 +113,7 @@ async function formatDatosFactura(prestacion: any) {
         let dtoDatos = {
             /* En fuera de agenda se guarda idPrestación porque no se tiene el idTurno. Validar por idPrestación para no facturar por duplicado*/
             idTurno: prestacion.idPrestacion,
+            fechaPrestacion: prestacion.fecha,
             idPrestacion: prestacion.idPrestacion,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
