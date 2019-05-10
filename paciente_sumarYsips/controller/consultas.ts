@@ -454,6 +454,7 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
     }) : null;
     let telefonoFijo = telefono[0].telefonoFijo;
     let telefonoCelular = telefono[0].telefonoCelular;
+    let objectId = paciente.id;
     let query = 'UPDATE [dbo].[Sys_Paciente] SET ' +
                 '[apellido] =' + '\'' + apellido + '\'' +
                 ',[nombre] = ' + '\'' + nombre + '\'' +
@@ -465,6 +466,7 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
                 ',[calle] = ' + '\'' + calle + '\'' +
                 ',[fechaUltimaActualizacion] =' + '\'' + fechaUltimaActualizacion + '\'' +
                 ',[telefonoFijo] = ' + '\'' + telefonoFijo + '\'' +
+                ',[objectId] = ' + '\'' + objectId + '\'' +
                 ',[telefonoCelular] =' + '\'' + telefonoCelular + '\'' +
                 ' where [idPaciente] = ' + idPaciente + '  ';
     try {
