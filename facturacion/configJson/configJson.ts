@@ -66,8 +66,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                             let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
                             if (valor) {
                                 dr.datoReportable += oido.valor + valor.valor + '/';
-                            } else {
-                                console.log('Faltan datos reportables');
+                            } else {                                
                                 flagDatosReportables = false;
                             }
                         }

@@ -45,7 +45,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
         if (dtoSumar.datosReportables) {
             let existePrestacion = await validaPrestacion(pool, dtoSumar);
-            
+
             if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
 
@@ -107,8 +107,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         }
 
     } catch (e) {
-        // log error
-        console.log(e);
+        // log error        
         transaction.rollback();
     }
 }
@@ -149,10 +148,8 @@ async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolea
 
 /* Valida si la prestación ya fue creada en la BD de SUMAR */
 async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    // let e = false;
-
     let idPrestacion: any = await querySumar.getPrestacion(pool, dtoSumar);
-    console.log("Id Prestacion: ", idPrestacion);
+    
     if (idPrestacion) {
         return idPrestacion;
     } else {

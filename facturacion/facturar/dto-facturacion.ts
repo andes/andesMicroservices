@@ -39,7 +39,6 @@ export async function facturacionAutomatica(prestacion: any) {
             dni: datosFactura.profesional.dni
         } : null
     };
-    console.log("Factura: ", factura);
     return factura;
 }
 

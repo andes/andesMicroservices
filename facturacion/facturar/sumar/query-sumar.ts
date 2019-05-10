@@ -41,8 +41,7 @@ export class QuerySumar {
      * @returns
      * @memberof QuerySumar
      */
-    async savePrestacionSumar(request: any, dtoPrestacion: any) {
-        console.log("DTO Prestacion: ", dtoPrestacion);
+    async savePrestacionSumar(request: any, dtoPrestacion: any) {        
         let query = 'INSERT INTO [dbo].[PN_prestacion] ([id_comprobante],[id_nomenclador],[cantidad],[precio_prestacion],[id_anexo],[peso],[tension_arterial],[diagnostico],[edad],[sexo],[fecha_nacimiento],[fecha_prestacion],[anio],[mes],[dia],[objectId],[factAutomatico] )' +
             ' VALUES (@idComprobante,@idNomenclador,@cantidad,@precioPrestacion,@idAnexo,@peso,@tensionArterial,@diagnostico,@edad,@sexo,@fechaNacimiento,@fechaPrestacion,@anio,@mes,@dia,@objectId,@factAutomatico)' +
             ' SELECT SCOPE_IDENTITY() AS id';
