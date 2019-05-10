@@ -30,7 +30,6 @@ export class QuerySumar {
             .input('objectId', sql.VarChar(50), dtoComprobante.objectId)
             .input('factAutomatico', sql.VarChar(50), 'prestacion')
             .query(query);
-        console.log('SAVE COMRPOBANTE', result.recordset[0].id);
         return result.recordset[0].id;
     }
 
@@ -42,9 +41,9 @@ export class QuerySumar {
      * @returns
      * @memberof QuerySumar
      */
-    async savePrestacionSumar(request: any, dtoPrestacion: any) {
-        let query = 'INSERT INTO [dbo].[PN_prestacion] ([id_comprobante],[id_nomenclador],[cantidad],[precio_prestacion],[id_anexo],[peso],[tension_arterial],[diagnostico],[edad],[sexo],[fecha_nacimiento],[fecha_prestacion],[anio],[mes],[dia] )' +
-            ' VALUES (@idComprobante,@idNomenclador,@cantidad,@precioPrestacion,@idAnexo,@peso,@tensionArterial,@diagnostico,@edad,@sexo,@fechaNacimiento,@fechaPrestacion,@anio,@mes,@dia)' +
+    async savePrestacionSumar(request: any, dtoPrestacion: any) {        
+        let query = 'INSERT INTO [dbo].[PN_prestacion] ([id_comprobante],[id_nomenclador],[cantidad],[precio_prestacion],[id_anexo],[peso],[tension_arterial],[diagnostico],[edad],[sexo],[fecha_nacimiento],[fecha_prestacion],[anio],[mes],[dia],[objectId],[factAutomatico] )' +
+            ' VALUES (@idComprobante,@idNomenclador,@cantidad,@precioPrestacion,@idAnexo,@peso,@tensionArterial,@diagnostico,@edad,@sexo,@fechaNacimiento,@fechaPrestacion,@anio,@mes,@dia,@objectId,@factAutomatico)' +
             ' SELECT SCOPE_IDENTITY() AS id';
 
         let result = await request
@@ -63,8 +62,9 @@ export class QuerySumar {
             .input('anio', sql.Int, dtoPrestacion.anio)
             .input('mes', sql.Int, dtoPrestacion.mes)
             .input('dia', sql.Int, dtoPrestacion.dia)
+            .input('objectId', sql.VarChar(50), dtoPrestacion.objectId)
+            .input('factAutomatico', sql.VarChar(50), 'prestacion')
             .query(query);
-        console.log('SAVE prestacion sumar', result.recordset[0].id);
         return result.recordset[0].id;
     }
 
@@ -86,8 +86,6 @@ export class QuerySumar {
             .input('idDatoReportable', sql.Int, dtoPrestacion.idDatoReportable)
             .input('valor', sql.VarChar(500), dtoPrestacion.valor)
             .query(query);
-
-        console.log('SAVE datos reportables sumar', result.recordset[0].id);
         return result.recordset[0].id;
     }
 
@@ -135,14 +133,34 @@ export class QuerySumar {
         return new Promise((resolve: any, reject: any) => {
             (async () => {
                 try {
-                    let query = 'SELECT TOP 1 * FROM dbo.PN_comprobante WHERE objectId = @objectId';
+                    let query = 'SELECT id_comprobante FROM dbo.PN_comprobante WHERE objectId = @objectId';
                     let result = await new sql.Request(pool)
                         .input('objectId', sql.VarChar(100), dtoSumar.objectId)
                         .query(query);
                     if (result && result.recordset[0]) {
-                        resolve(1);
+                        resolve(result.recordset[0].id_comprobante);
                     } else {
-                        resolve(0);
+                        resolve(null);
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            })();
+        });
+    }
+
+    async getPrestacion(pool: any, dtoSumar: IDtoSumar) {
+        return new Promise((resolve: any, reject: any) => {
+            (async () => {
+                try {
+                    let query = 'SELECT id_prestacion FROM dbo.PN_prestacion WHERE objectId = @objectId';
+                    let result = await new sql.Request(pool)
+                        .input('objectId', sql.VarChar(100), dtoSumar.objectId)
+                        .query(query);
+                    if (result && result.recordset[0]) {
+                        resolve(result.recordset[0].id_prestacion);
+                    } else {
+                        resolve(null);
                     }
                 } catch (err) {
                     reject(err);

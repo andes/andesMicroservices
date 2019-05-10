@@ -9,7 +9,7 @@ export async function getPuco(dniPaciente) {
                 const puco: any[] = JSON.parse(body);
                 const obraSocial: any = {};
                 if (puco && puco.length) {
-                    return resolve({
+                    resolve({
                         obraSocial: {
                             codOS: puco[0].codigoFinanciador,
                             financiador: puco[0].financiador
@@ -19,7 +19,7 @@ export async function getPuco(dniPaciente) {
                     resolve(null);
                 }
             }
-            return reject('No se encuentra datos en PUCO: ' + body);
+            reject('No se encuentra datos en PUCO: ' + body);
         });
     });
 }

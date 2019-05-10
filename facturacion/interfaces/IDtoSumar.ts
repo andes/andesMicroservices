@@ -1,5 +1,6 @@
 export interface IDtoSumar {
     idPrestacion: String,
+    fechaTurno: Date,
     objectId: String;
     cuie: String;
     diagnostico: String;

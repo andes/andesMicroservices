@@ -41,12 +41,16 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
             newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
             _estado = 'Comprobante sin prestacion';
+        }
 
-            if (dtoSumar.datosReportables) {
+        if (dtoSumar.datosReportables) {
+            let existePrestacion = await validaPrestacion(pool, dtoSumar);
+
+            if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
 
                 let prestacion = {
-                    idComprobante: newIdComprobante,
+                    idComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
                     idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
                     cantidad: 1,
                     precioPrestacion: precioPrestacion.precio,
@@ -57,10 +61,11 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                     edad: dtoSumar.edad,
                     sexo: dtoSumar.sexo,
                     fechaNacimiento: dtoSumar.fechaNacimiento,
-                    fechaPrestacion: new Date(),
+                    fechaPrestacion: moment(dtoSumar.fechaTurno),//new Date(),
                     anio: dtoSumar.anio,
                     mes: dtoSumar.mes,
                     dia: dtoSumar.dia,
+                    objectId: dtoSumar.objectId
                 };
 
                 let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
@@ -76,33 +81,33 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 }
                 _estado = 'Comprobante con prestacion';
             }
-
-            await transaction.commit();
-
-            let turno: any;
-            if (dtoSumar.objectId) {
-                turno = await getDatosTurno(dtoSumar.objectId);
-            }
-
-            const estadoFacturacion = {
-                tipo: 'sumar',
-                numeroComprobante: newIdComprobante,
-                estado: _estado
-            };
-
-            if (!turno) {
-                updateEstadoFacturacionSinTurno(dtoSumar.idPrestacion, estadoFacturacion);
-            } else {
-                let idTurno = dtoSumar.objectId;
-                let idAgenda = turno.idAgenda;
-                let idBloque = turno.idBloque;
-
-                updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
-            }
         }
+
+        await transaction.commit();
+
+        let turno: any;
+        if (dtoSumar.objectId) {
+            turno = await getDatosTurno(dtoSumar.objectId);
+        }
+
+        const estadoFacturacion = {
+            tipo: 'sumar',
+            numeroComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
+            estado: _estado
+        };
+
+        if (!turno) {
+            updateEstadoFacturacionSinTurno(dtoSumar.idPrestacion, estadoFacturacion);
+        } else {
+            let idTurno = dtoSumar.objectId;
+            let idAgenda = turno.idAgenda;
+            let idBloque = turno.idBloque;
+
+            updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
+        }
+
     } catch (e) {
-        // log error
-        console.log(e);
+        // log error        
         transaction.rollback();
     }
 }
@@ -130,15 +135,24 @@ export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosCon
     }
 }
 
-/* Valida si el comprobante ya fue cread en la BD de SUMAR */
+/* Valida si el comprobante ya fue creado en la BD de SUMAR */
 async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let existe = false;
+    let idComprobante: any = await querySumar.getComprobante(pool, dtoSumar);
 
-    let orden = await querySumar.getComprobante(pool, dtoSumar); // queryRecupero.getOrdenDePrestacion(pool, dtoRecupero);
-
-    if (orden > 0) {
-        existe = true;
+    if (idComprobante) {
+        return idComprobante;
+    } else {
+        return null;
     }
+}
 
-    return existe;
+/* Valida si la prestación ya fue creada en la BD de SUMAR */
+async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
+    let idPrestacion: any = await querySumar.getPrestacion(pool, dtoSumar);
+    
+    if (idPrestacion) {
+        return idPrestacion;
+    } else {
+        return null;
+    }
 }

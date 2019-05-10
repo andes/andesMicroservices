@@ -66,8 +66,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                             let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
                             if (valor) {
                                 dr.datoReportable += oido.valor + valor.valor + '/';
-                            } else {
-                                console.log('Faltan datos reportables');
+                            } else {                                
                                 flagDatosReportables = false;
                             }
                         }
@@ -184,9 +183,10 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
-
+            
             dtoSumar = {
                 idPrestacion: dtoFacturacion.idPrestacion,
+                fechaTurno: dtoFacturacion.turno.fechaTurno,
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,
                 diagnostico: main.diagnostico,

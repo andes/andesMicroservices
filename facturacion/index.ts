@@ -7,6 +7,8 @@ let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 import * as sql from 'mssql';
 
+import { log } from '@andes/log';
+
 const mongoose = require('mongoose');
 const router = ms.router();
 
@@ -20,8 +22,31 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            console.log('ERROR:', e);
-            // Loggear error
+            // console.log("Error sql: ");
+            // let fakeRequestSql = {
+            //     user: {
+            //         usuario: 'msHeller',
+            //         app: 'integracion-heller',
+            //         organizacion: 'sss'
+            //     },
+            //     ip: '192.168.1.999',
+            //     connection: {
+            //         localAddress: ''
+            //     }
+            // };
+            // log(fakeRequestSql, 'microservices:factura:create', 9739, '/ejecuta CDA exito', null);
+            // let fakeRequest = {
+            //     usuario: {
+            //         usuario: 'msFacturacion',
+            //         app: 'facturacionAutomatica',
+            //         organizacion: 'sss'
+            //     },
+            //     ip: '',
+            //     connection: {
+            //         localAddress: ''
+            //     }
+            // };
+            // log(fakeRequest, 'microservices:facturacionAutomatica:subse', null, 'Error en en factruración', e);
         }
         sql.close();
         res.json('OK');

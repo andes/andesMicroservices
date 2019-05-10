@@ -11,15 +11,14 @@ const request = require('request');
 export async function getPrestacion(idPrestacion) {
     return new Promise((resolve, reject) => {
         const url = `${ANDES_HOST}/modules/rup/prestaciones/${idPrestacion}?token=${ANDES_KEY}`;
-        // request.get();
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const prestacion: any[] = JSON.parse(body);
                 if (prestacion) {
-                    return resolve(prestacion);
+                    resolve(prestacion);
                 }
             }
-            return reject('No se encuentra prestaciones: ' + error);
+            reject('No se encuentra prestaciones: ' + error);
         });
     });
 }
@@ -27,17 +26,16 @@ export async function getPrestacion(idPrestacion) {
 export async function getDatosTurno(idTurno) {
     return new Promise((resolve, reject) => {
         const url = `${ANDES_HOST}/modules/turnos/agenda/turno/${idTurno}?token=${ANDES_KEY}`;
-        // request.get();
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 const datosTurno: any[] = JSON.parse(body);
                 if (datosTurno) {
-                    return resolve(datosTurno[0]);
+                    resolve(datosTurno[0]);
                 } else {
-                    return resolve(null);
+                    resolve(null);
                 }
             }
-            return reject('No se encuentran Turnos: ' + error);
+            reject('No se encuentran Turnos: ' + error);
         });
     });
 }
@@ -67,8 +65,7 @@ export async function updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoI
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 resolve(body.body);
             } else {
-
-                return reject('No se encuentra prestaciones: ' + error);
+                reject('No se encuentra prestaciones: ' + error);
             }
         });
     });
@@ -98,7 +95,7 @@ export async function updateEstadoFacturacionSinTurno(idPrestacion, _estadoFactu
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 resolve(body.body);
             } else {
-                return reject('No se encuentra prestaciones: ' + error);
+                reject('No se encuentra prestaciones: ' + error);
             }
         });
     });

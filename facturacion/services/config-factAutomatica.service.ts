@@ -11,7 +11,7 @@ export async function getConfigAutomatica(conceptId) {
                     resolve(confAuto[0]);
                 }
             } else {
-                return reject('No se encuentra facturación: ' + body);
+                reject('No se encuentra facturación: ' + body);
             }
         });
     });
