@@ -38,7 +38,7 @@ export async function facturacionAutomatica(prestacion: any) {
             apellido: datosFactura.profesional.apellido,
             dni: datosFactura.profesional.dni
         } : null
-    };
+    };    
     return factura;
 }
 

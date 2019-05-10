@@ -20,7 +20,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
     let datoReportable = [];
-
+    
     let facturacion = {
         /* Prestación Odontología */
         /* TODO: poner la expresión que corresponda */
@@ -66,7 +66,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                             let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
                             if (valor) {
                                 dr.datoReportable += oido.valor + valor.valor + '/';
-                            } else {                                
+                            } else {
                                 flagDatosReportables = false;
                             }
                         }
@@ -93,29 +93,33 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 let x = 0;
 
-                arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-                arrayPrestacion = arrayPrestacion.map((obj: any) => obj);
+                if ((arrayPrestacion) && (arrayPrestacion.length > 0)) {
+                    arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
+                    arrayPrestacion = arrayPrestacion.map((obj: any) => obj);
 
-                arrayPrestacion.forEach((element: any) => {
-                    if (element) {
-                        let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
+                    arrayPrestacion.forEach((element: any) => {
+                        if (element) {
+                            let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
 
-                        let dr = {
-                            idDatoReportable: '',
-                            datoReportable: ''
-                        };
+                            let dr = {
+                                idDatoReportable: '',
+                                datoReportable: ''
+                            };
 
-                        if (data) {
-                            dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
-                            dr.datoReportable = element.valor;
+                            if (data) {
+                                dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
+                                dr.datoReportable = element.valor;
 
-                            datoReportable.push(dr);
-                            x++;
+                                datoReportable.push(dr);
+                                x++;
+                            }
                         }
-                    }
-                });
+                    });
 
-                return datoReportable;
+                    return datoReportable;
+                } else {
+                    return null;
+                }
             },
         },
         main: async (prestacion: any, tipoFacturacion: String) => {
@@ -134,7 +138,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                     diagnostico: datosConfiguracionAutomatica.sumar.diagnostico[0].diagnostico,
                     datosReportables: await facturacion[datosConfiguracionAutomatica.expresionSnomed].sumar(arrayPrestacion, arrayConfiguracion)
                 };
-
                 return dto;
             }
         },
@@ -182,8 +185,9 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
             tipoFacturacion = 'sumar';
+
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
-            
+
             dtoSumar = {
                 idPrestacion: dtoFacturacion.idPrestacion,
                 fechaTurno: dtoFacturacion.turno.fechaTurno,

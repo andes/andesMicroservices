@@ -1,5 +1,7 @@
 import * as sql from 'mssql';
 import { IDtoSumar } from '../../interfaces/IDtoSumar';
+import moment = require('moment');
+import 'moment/locale/es';
 
 export class QuerySumar {
 
@@ -41,31 +43,35 @@ export class QuerySumar {
      * @returns
      * @memberof QuerySumar
      */
-    async savePrestacionSumar(request: any, dtoPrestacion: any) {        
+    async savePrestacionSumar(request: any, dtoPrestacion: any) {
         let query = 'INSERT INTO [dbo].[PN_prestacion] ([id_comprobante],[id_nomenclador],[cantidad],[precio_prestacion],[id_anexo],[peso],[tension_arterial],[diagnostico],[edad],[sexo],[fecha_nacimiento],[fecha_prestacion],[anio],[mes],[dia],[objectId],[factAutomatico] )' +
             ' VALUES (@idComprobante,@idNomenclador,@cantidad,@precioPrestacion,@idAnexo,@peso,@tensionArterial,@diagnostico,@edad,@sexo,@fechaNacimiento,@fechaPrestacion,@anio,@mes,@dia,@objectId,@factAutomatico)' +
             ' SELECT SCOPE_IDENTITY() AS id';
 
-        let result = await request
-            .input('idComprobante', sql.Int, dtoPrestacion.idComprobante)
-            .input('idNomenclador', sql.Int, dtoPrestacion.idNomenclador)
-            .input('cantidad', sql.Int, 1) // Valor por defecto
-            .input('precioPrestacion', sql.Decimal, dtoPrestacion.precioPrestacion)
-            .input('idAnexo', sql.Int, 301) // Valor por defecto (No corresponde)
-            .input('peso', sql.Decimal, 0)
-            .input('tensionArterial', sql.VarChar(7), '00/00')
-            .input('diagnostico', sql.VarChar(500), dtoPrestacion.diagnostico)
-            .input('edad', sql.VarChar(2), dtoPrestacion.edad)
-            .input('sexo', sql.VarChar(2), dtoPrestacion.sexo)
-            .input('fechaNacimiento', sql.DateTime, new Date(dtoPrestacion.fechaNacimiento))
-            .input('fechaPrestacion', sql.DateTime, new Date(dtoPrestacion.fechaPrestacion))
-            .input('anio', sql.Int, dtoPrestacion.anio)
-            .input('mes', sql.Int, dtoPrestacion.mes)
-            .input('dia', sql.Int, dtoPrestacion.dia)
-            .input('objectId', sql.VarChar(50), dtoPrestacion.objectId)
-            .input('factAutomatico', sql.VarChar(50), 'prestacion')
-            .query(query);
-        return result.recordset[0].id;
+        try {
+            let result = await request
+                .input('idComprobante', sql.Int, dtoPrestacion.idComprobante)
+                .input('idNomenclador', sql.Int, dtoPrestacion.idNomenclador)
+                .input('cantidad', sql.Int, 1) // Valor por defecto
+                .input('precioPrestacion', sql.Decimal, dtoPrestacion.precioPrestacion)
+                .input('idAnexo', sql.Int, 301) // Valor por defecto (No corresponde)
+                .input('peso', sql.Decimal, 0)
+                .input('tensionArterial', sql.VarChar(7), '00/00')
+                .input('diagnostico', sql.VarChar(500), dtoPrestacion.diagnostico)
+                .input('edad', sql.VarChar(2), dtoPrestacion.edad)
+                .input('sexo', sql.VarChar(2), dtoPrestacion.sexo)
+                .input('fechaNacimiento', sql.DateTime, new Date(dtoPrestacion.fechaNacimiento))
+                .input('fechaPrestacion', sql.DateTime, new Date(dtoPrestacion.fechaPrestacion))
+                .input('anio', sql.Int, dtoPrestacion.anio)
+                .input('mes', sql.Int, dtoPrestacion.mes)
+                .input('dia', sql.Int, dtoPrestacion.dia)
+                .input('objectId', sql.VarChar(50), dtoPrestacion.objectId)
+                .input('factAutomatico', sql.VarChar(50), 'prestacion')
+                .query(query);
+            return result.recordset[0].id;
+        } catch (err) {
+            throw err;
+        }
     }
 
     /**
