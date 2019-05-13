@@ -38,7 +38,7 @@ export async function facturacionAutomatica(prestacion: any) {
             apellido: datosFactura.profesional.apellido,
             dni: datosFactura.profesional.dni
         } : null
-    };    
+    };
     return factura;
 }
 
@@ -166,9 +166,12 @@ async function getDatosReportables(prestacion: any) {
             return await Promise.all(promises).then((results) => {
                 return results;
             });
+        } else {
+            return null;
         }
+
     }
-    return '';
+    return null;
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {

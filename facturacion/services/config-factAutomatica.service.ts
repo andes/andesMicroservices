@@ -9,6 +9,8 @@ export async function getConfigAutomatica(conceptId) {
                 const confAuto: any[] = JSON.parse(body);
                 if (confAuto && confAuto.length) {
                     resolve(confAuto[0]);
+                } else {
+                    resolve(null);
                 }
             } else {
                 reject('No se encuentra facturación: ' + body);
