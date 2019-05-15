@@ -91,29 +91,18 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         410620009: {
             term: 'consulta de niño sano',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
-                let x = 0;
-
                 if ((arrayPrestacion) && (arrayPrestacion.length > 0)) {
-                    arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
                     arrayPrestacion = arrayPrestacion.map((obj: any) => obj);
 
                     arrayPrestacion.forEach((element: any) => {
-                        if (element) {
-                            let data = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
+                        let dr = {
+                            idDatoReportable: '',
+                            datoReportable: ''
+                        };
+                        dr.idDatoReportable = element.idDatoReportable
+                        dr.datoReportable = element.valor;
 
-                            let dr = {
-                                idDatoReportable: '',
-                                datoReportable: ''
-                            };
-
-                            if (data) {
-                                dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[x].idDatosReportables;
-                                dr.datoReportable = element.valor;
-
-                                datoReportable.push(dr);
-                                x++;
-                            }
-                        }
+                        datoReportable.push(dr);
                     });
 
                     return datoReportable;
