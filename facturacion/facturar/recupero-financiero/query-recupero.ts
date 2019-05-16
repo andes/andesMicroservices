@@ -1,5 +1,7 @@
 import * as sql from 'mssql';
 import { IDtoRecupero } from '../../interfaces/IDtoRecupero';
+import { fakeRequestSql } from './../../config.private';
+import { log } from '@andes/log';
 
 export class QueryRecupero {
 
@@ -119,68 +121,72 @@ export class QueryRecupero {
      * @memberof QueryRecupero
      */
     async saveOrdenRecupero(request: any, dtoOrden: any) {
-        let query = 'INSERT INTO [dbo].[FAC_Orden]' +
-            ' ([idEfector]' +
-            ' ,[numero]' +
-            ' ,[periodo]' +
-            ' ,[idServicio]' +
-            ' ,[idPaciente]' +
-            ' ,[idProfesional]' +
-            ' ,[fecha]' +
-            ' ,[fechaPractica]' +
-            ' ,[idTipoPractica]' +
-            ' ,[idObraSocial]' +
-            ' ,[idUsuarioRegistro]' +
-            ' ,[fechaRegistro]' +
-            ' ,[idPrefactura]' +
-            ' ,[idFactura]' +
-            ' ,[baja]' +
-            ' ,[monto]' +
-            ' ,[objectId] ' +
-            ' ,[factAutomatico])' +
-            ' VALUES' +
-            ' (@idEfector' +
-            ' ,@numero' +
-            ' ,@periodo' +
-            ' ,@idServicio' +
-            ' ,@idPaciente' +
-            ' ,@idProfesional' +
-            ' ,@fecha' +
-            ' ,@fechaPractica' +
-            ' ,@idTipoPractica' +
-            ' ,@idObraSocial' +
-            ' ,@idUsuarioRegistro' +
-            ' ,@fechaRegistro' +
-            ' ,@idPrefactura' +
-            ' ,@idFactura' +
-            ' ,@baja' +
-            ' ,@monto' +
-            ' ,@objectId ' +
-            ' ,@factAutomatico) ' +
-            'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
-            'SELECT @numeroOrden as ID';
+        try {
+            let query = 'INSERT INTO [dbo].[FAC_Orden]' +
+                ' ([idEfector]' +
+                ' ,[numero]' +
+                ' ,[periodo]' +
+                ' ,[idServicio]' +
+                ' ,[idPaciente]' +
+                ' ,[idProfesional]' +
+                ' ,[fecha]' +
+                ' ,[fechaPractica]' +
+                ' ,[idTipoPractica]' +
+                ' ,[idObraSocial]' +
+                ' ,[idUsuarioRegistro]' +
+                ' ,[fechaRegistro]' +
+                ' ,[idPrefactura]' +
+                ' ,[idFactura]' +
+                ' ,[baja]' +
+                ' ,[monto]' +
+                ' ,[objectId] ' +
+                ' ,[factAutomatico])' +
+                ' VALUES' +
+                ' (@idEfector' +
+                ' ,@numero' +
+                ' ,@periodo' +
+                ' ,@idServicio' +
+                ' ,@idPaciente' +
+                ' ,@idProfesional' +
+                ' ,@fecha' +
+                ' ,@fechaPractica' +
+                ' ,@idTipoPractica' +
+                ' ,@idObraSocial' +
+                ' ,@idUsuarioRegistro' +
+                ' ,@fechaRegistro' +
+                ' ,@idPrefactura' +
+                ' ,@idFactura' +
+                ' ,@baja' +
+                ' ,@monto' +
+                ' ,@objectId ' +
+                ' ,@factAutomatico) ' +
+                'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
+                'SELECT @numeroOrden as ID';
 
-        const result = await request
-            .input('idEfector', sql.Int, dtoOrden.idEfector)
-            .input('numero', sql.Int, dtoOrden.numero)
-            .input('periodo', sql.Char(10), dtoOrden.periodo)
-            .input('idServicio', sql.Int, dtoOrden.idServicio)
-            .input('idPaciente', sql.Int, dtoOrden.idPaciente)
-            .input('idProfesional', sql.Int, dtoOrden.idProfesional)
-            .input('fecha', sql.DateTime, new Date(dtoOrden.fecha))
-            .input('fechaPractica', sql.DateTime, new Date(dtoOrden.fechaPractica))
-            .input('idTipoPractica', sql.Int, dtoOrden.idTipoPractica)
-            .input('idObraSocial', sql.Int, dtoOrden.idObraSocial)
-            .input('idUsuarioRegistro', sql.Int, dtoOrden.idUsuarioRegistro)
-            .input('fechaRegistro', sql.DateTime, new Date(dtoOrden.fechaRegistro))
-            .input('idPrefactura', sql.Int, dtoOrden.idPrefactura)
-            .input('idFactura', sql.Int, dtoOrden.idFactura)
-            .input('baja', sql.Bit, dtoOrden.baja)
-            .input('monto', sql.Decimal(18, 2), dtoOrden.monto)
-            .input('objectId', sql.VarChar(50), dtoOrden.objectId)
-            .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
-            .query(query);
-        return result.recordset[0] ? result.recordset[0].ID : null;
+            const result = await request
+                .input('idEfector', sql.Int, dtoOrden.idEfector)
+                .input('numero', sql.Int, dtoOrden.numero)
+                .input('periodo', sql.Char(10), dtoOrden.periodo)
+                .input('idServicio', sql.Int, dtoOrden.idServicio)
+                .input('idPaciente', sql.Int, dtoOrden.idPaciente)
+                .input('idProfesional', sql.Int, dtoOrden.idProfesional)
+                .input('fecha', sql.DateTime, new Date(dtoOrden.fecha))
+                .input('fechaPractica', sql.DateTime, new Date(dtoOrden.fechaPractica))
+                .input('idTipoPractica', sql.Int, dtoOrden.idTipoPractica)
+                .input('idObraSocial', sql.Int, dtoOrden.idObraSocial)
+                .input('idUsuarioRegistro', sql.Int, dtoOrden.idUsuarioRegistro)
+                .input('fechaRegistro', sql.DateTime, new Date(dtoOrden.fechaRegistro))
+                .input('idPrefactura', sql.Int, dtoOrden.idPrefactura)
+                .input('idFactura', sql.Int, dtoOrden.idFactura)
+                .input('baja', sql.Bit, dtoOrden.baja)
+                .input('monto', sql.Decimal(18, 2), dtoOrden.monto)
+                .input('objectId', sql.VarChar(50), dtoOrden.objectId)
+                .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
+                .query(query);
+            return result.recordset[0] ? result.recordset[0].ID : null;
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenRecupero', null, null, error);
+        }
     }
 
     /**
@@ -192,35 +198,39 @@ export class QueryRecupero {
      * @memberof QueryRecupero
      */
     async saveOrdenDetalle(request: any, ordenDetalle: any) {
-        let query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
-            ' ([idOrden]' +
-            ' ,[idEfector]' +
-            ' ,[idNomenclador]' +
-            ' ,[descripcion]' +
-            ' ,[cantidad]' +
-            ' ,[valorUnidad]' +
-            ' ,[ajuste])' +
-            ' VALUES' +
-            ' (@idOrden' +
-            ' ,@idEfector' +
-            ' ,@idNomenclador' +
-            ' ,@descripcion' +
-            ' ,@cantidad' +
-            ' ,@valorUnidad' +
-            ' ,@ajuste) ' +
-            'SELECT SCOPE_IDENTITY() as ID';
+        try {
+            let query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
+                ' ([idOrden]' +
+                ' ,[idEfector]' +
+                ' ,[idNomenclador]' +
+                ' ,[descripcion]' +
+                ' ,[cantidad]' +
+                ' ,[valorUnidad]' +
+                ' ,[ajuste])' +
+                ' VALUES' +
+                ' (@idOrden' +
+                ' ,@idEfector' +
+                ' ,@idNomenclador' +
+                ' ,@descripcion' +
+                ' ,@cantidad' +
+                ' ,@valorUnidad' +
+                ' ,@ajuste) ' +
+                'SELECT SCOPE_IDENTITY() as ID';
 
-        const result = await request
-            .input('idOrden', sql.Int, ordenDetalle.idOrden)
-            .input('idEfector', sql.Int, ordenDetalle.idEfector)
-            .input('idNomenclador', sql.Int, ordenDetalle.idNomenclador)
-            .input('descripcion', sql.VarChar(500), ordenDetalle.descripcion)
-            .input('cantidad', sql.Int, ordenDetalle.cantidad)
-            .input('valorUnidad', sql.Decimal(18, 2), ordenDetalle.valorUnidad)
-            .input('ajuste', sql.Decimal(18, 2), ordenDetalle.ajuste)
-            .query(query);
+            const result = await request
+                .input('idOrden', sql.Int, ordenDetalle.idOrden)
+                .input('idEfector', sql.Int, ordenDetalle.idEfector)
+                .input('idNomenclador', sql.Int, ordenDetalle.idNomenclador)
+                .input('descripcion', sql.VarChar(500), ordenDetalle.descripcion)
+                .input('cantidad', sql.Int, ordenDetalle.cantidad)
+                .input('valorUnidad', sql.Decimal(18, 2), ordenDetalle.valorUnidad)
+                .input('ajuste', sql.Decimal(18, 2), ordenDetalle.ajuste)
+                .query(query);
 
-        return result.recordset[0];
+            return result.recordset[0];
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenDetalleRecupero', null, null, error);
+        }
     }
 }
 
