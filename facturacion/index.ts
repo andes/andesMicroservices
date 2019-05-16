@@ -35,7 +35,7 @@ router.group('/facturacion', (group) => {
                     localAddress: ''
                 }
             };
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/ejecuta CDA exito', e);
+            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión', e);
         }
         sql.close();
         res.json('OK');
