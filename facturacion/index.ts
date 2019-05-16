@@ -24,7 +24,6 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            console.log("Error sql: ", e);
             let fakeRequestSql = {
                 user: {
                     usuario: 'msHeller',
@@ -36,7 +35,7 @@ router.group('/facturacion', (group) => {
                     localAddress: ''
                 }
             };
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/ejecuta CDA exito', e);
+            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión', e);
         }
         sql.close();
         res.json('OK');
