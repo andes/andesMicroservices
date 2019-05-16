@@ -65,7 +65,7 @@ export async function updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoI
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 resolve(body.body);
             } else {
-                reject('No se encuentra prestaciones: ' + error);
+                reject('No hace patch con turno: ' + error);
             }
         });
     });
@@ -95,7 +95,7 @@ export async function updateEstadoFacturacionSinTurno(idPrestacion, _estadoFactu
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                 resolve(body.body);
             } else {
-                reject('No se encuentra prestaciones: ' + error);
+                reject('No hace patch sin turno: ' + error);
             }
         });
     });

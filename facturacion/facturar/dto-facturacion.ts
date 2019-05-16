@@ -122,6 +122,9 @@ async function formatDatosFactura(prestacion: any) {
             datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
         };
         return dtoDatos;
+    } else {
+        /* Ningún origen es válido*/
+        return null;
     }
 }
 
@@ -132,10 +135,10 @@ async function getDatosReportables(prestacion: any) {
 
         if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
             let conceptos: any = [];
-            const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
+            const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config);
 
             let promises = expresionesDR.map(async (exp, index) => {
-                let docs: any = await getSnomed(exp[0].expresion);
+                let docs: any = await getSnomed(exp.valores[0].expresion);
 
                 conceptos = docs.map((item: any) => {
                     return {
@@ -151,6 +154,7 @@ async function getDatosReportables(prestacion: any) {
 
                 if (data.length > 0) {
                     let datoReportable = {
+                        idDatoReportable: exp.idDatosReportables,
                         conceptId: data[0].registro.concepto.conceptId,
                         term: data[0].registro.concepto.term,
                         valor: (data[0].registro.valor.concepto) ? {
@@ -160,6 +164,8 @@ async function getDatosReportables(prestacion: any) {
                     };
 
                     return datoReportable;
+                } else {
+                    return null;
                 }
             });
 
