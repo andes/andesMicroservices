@@ -27,6 +27,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         let existeComprobante = await validaComprobante(pool, dtoSumar);
 
         if (!existeComprobante) {
+            _estado = 'Comprobante sin prestacion';
+
             let dtoComprobante = {
                 cuie: dtoSumar.cuie,
                 fechaComprobante: new Date(),
@@ -41,7 +43,6 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
             };
 
             newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
-            _estado = 'Comprobante sin prestacion';
         }
 
         if (dtoSumar.datosReportables) {
@@ -71,7 +72,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 };
 
                 let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
-
+                
                 for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
                     let datosReportables = {
                         idPrestacion: newIdPrestacion,
@@ -109,7 +110,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         }
 
     } catch (e) {
-        // log error        
+        // log error          
         transaction.rollback();
     }
 }
