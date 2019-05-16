@@ -24,7 +24,6 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            console.log("Error sql: ", e);
             let fakeRequestSql = {
                 user: {
                     usuario: 'msHeller',
