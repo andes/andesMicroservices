@@ -92,14 +92,14 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             term: 'consulta de niño sano',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 if ((arrayPrestacion) && (arrayPrestacion.length > 0)) {
-                    arrayPrestacion = arrayPrestacion.map((obj: any) => obj);
+                    arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
 
                     arrayPrestacion.forEach((element: any) => {
                         let dr = {
                             idDatoReportable: '',
                             datoReportable: ''
                         };
-                        dr.idDatoReportable = element.idDatoReportable
+                        dr.idDatoReportable = element.idDatoReportable;
                         dr.datoReportable = element.valor;
 
                         datoReportable.push(dr);

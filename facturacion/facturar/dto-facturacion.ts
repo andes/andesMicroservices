@@ -38,7 +38,7 @@ export async function facturacionAutomatica(prestacion: any) {
             apellido: datosFactura.profesional.apellido,
             dni: datosFactura.profesional.dni
         } : null
-    };    
+    };
     return factura;
 }
 
@@ -122,6 +122,9 @@ async function formatDatosFactura(prestacion: any) {
             datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
         };
         return dtoDatos;
+    } else {
+        /* Ningún origen es válido*/
+        return null;
     }
 }
 
@@ -161,6 +164,8 @@ async function getDatosReportables(prestacion: any) {
                     };
 
                     return datoReportable;
+                } else {
+                    return null;
                 }
             });
 
