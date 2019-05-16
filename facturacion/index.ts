@@ -24,10 +24,10 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (e) {
-            let fakeRequestSql = {
+            let fakeRequestSql1 = {
                 user: {
-                    usuario: 'msHeller',
-                    app: 'integracion-heller',
+                    usuario: 'msFacturacion',
+                    app: 'facturacion_automatica',
                     organizacion: 'sss'
                 },
                 ip: '192.168.1.999',
@@ -35,7 +35,7 @@ router.group('/facturacion', (group) => {
                     localAddress: ''
                 }
             };
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión', e);
+            await log(fakeRequestSql1, 'microservices:factura:create', null, '/error en la conexión', null, null, e);
         }
         sql.close();
         res.json('OK');
