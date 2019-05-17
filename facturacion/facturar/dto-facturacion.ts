@@ -133,45 +133,49 @@ async function getDatosReportables(prestacion: any) {
         let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
         let configAuto: any = await getConfigAutomatica(idTipoPrestacion);
 
-        if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
-            let conceptos: any = [];
-            const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config);
+        if ((configAuto) && (configAuto.sumar)) {
+            if (configAuto.sumar.datosReportables.length > 0) {
+                let conceptos: any = [];
+                const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config);
 
-            let promises = expresionesDR.map(async (exp, index) => {
-                let docs: any = await getSnomed(exp.valores[0].expresion);
+                let promises = expresionesDR.map(async (exp, index) => {
+                    let docs: any = await getSnomed(exp.valores[0].expresion);
 
-                conceptos = docs.map((item: any) => {
-                    return {
-                        fsn: item.fsn,
-                        term: item.term,
-                        conceptId: item.conceptId,
-                        semanticTag: item.semanticTag
-                    };
+                    conceptos = docs.map((item: any) => {
+                        return {
+                            fsn: item.fsn,
+                            term: item.term,
+                            conceptId: item.conceptId,
+                            semanticTag: item.semanticTag
+                        };
+                    });
+
+                    // ejecutamos busqueda recursiva
+                    let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
+
+                    if (data.length > 0) {
+                        let datoReportable = {
+                            idDatoReportable: exp.idDatosReportables,
+                            conceptId: data[0].registro.concepto.conceptId,
+                            term: data[0].registro.concepto.term,
+                            valor: (data[0].registro.valor.concepto) ? {
+                                conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
+                                nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
+                            } : data[0].registro.valor
+                        };
+
+                        return datoReportable;
+                    } else {
+                        return null;
+                    }
                 });
 
-                // ejecutamos busqueda recursiva
-                let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
-
-                if (data.length > 0) {
-                    let datoReportable = {
-                        idDatoReportable: exp.idDatosReportables,
-                        conceptId: data[0].registro.concepto.conceptId,
-                        term: data[0].registro.concepto.term,
-                        valor: (data[0].registro.valor.concepto) ? {
-                            conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
-                            nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
-                        } : data[0].registro.valor
-                    };
-
-                    return datoReportable;
-                } else {
-                    return null;
-                }
-            });
-
-            return await Promise.all(promises).then((results) => {
-                return results;
-            });
+                return await Promise.all(promises).then((results) => {
+                    return results;
+                });
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
