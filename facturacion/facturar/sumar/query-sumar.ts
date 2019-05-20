@@ -23,7 +23,7 @@ export class QuerySumar {
 
             const result = await request
                 .input('cuie', sql.VarChar(10), dtoComprobante.cuie)
-                .input('fechaComprobante', sql.DateTime, dtoComprobante.fechaComprobante)
+                .input('fechaComprobante', sql.DateTime, new Date(dtoComprobante.fechaComprobante))
                 .input('claveBeneficiario', sql.VarChar(50), dtoComprobante.claveBeneficiario)
                 .input('idAfiliado', sql.Int, dtoComprobante.idAfiliado)
                 .input('fechaCarga', sql.DateTime, dtoComprobante.fechaCarga)
