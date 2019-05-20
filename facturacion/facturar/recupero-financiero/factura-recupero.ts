@@ -1,6 +1,8 @@
 import * as sql from 'mssql';
 import { QueryRecupero } from './query-recupero';
 import { IDtoRecupero } from './../../interfaces/IDtoRecupero';
+import { fakeRequestSql } from './../../config.private';
+import { log } from '@andes/log';
 
 let queryRecupero = new QueryRecupero();
 
@@ -59,13 +61,13 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
 
             await queryRecupero.saveOrdenDetalle(request, dtoOrdendetalle);
 
-            transaction.commit(err => {
+            transaction.commit(error => {
                 // ... error checks
             });
 
         } catch {
-            transaction.rollback(err => {
-                // ... error checks
+            transaction.rollback(error => {
+                log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear orden recupero', null, null, error);
             });
         }
     }

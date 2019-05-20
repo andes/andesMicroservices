@@ -1,5 +1,4 @@
-// import { SipsDBConfiguration, mongoDB, logDatabase } from './config.private';
-import * as ConfigPrivate from './config.private';
+import { logDatabase, mongoDB, SipsDBConfiguration, fakeRequestSql } from './config.private';
 import { Factura } from './factura';
 import { facturacionAutomatica } from './facturar/dto-facturacion';
 
@@ -14,28 +13,17 @@ const mongoose = require('mongoose');
 const router = ms.router();
 
 router.group('/facturacion', (group) => {
-    Connections.initialize(ConfigPrivate.logDatabase.log.host, ConfigPrivate.logDatabase.log.options);
-    mongoose.connect(ConfigPrivate.mongoDB.mongoDB_main.host, { useNewUrlParser: true });
+    Connections.initialize(logDatabase.log.host, logDatabase.log.options);
+    mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
     group.post('/facturar', async (req, res) => {
         try {
             sql.close();
-            let pool = await sql.connect(ConfigPrivate.SipsDBConfiguration);
+            let pool = await sql.connect(SipsDBConfiguration);
             let dtoFacturacion: any = await facturacionAutomatica(req.body.data);
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
-        } catch (e) {
-            let fakeRequestSql = {
-                user: {
-                    usuario: 'msHeller',
-                    app: 'integracion-heller',
-                    organizacion: 'sss'
-                },
-                ip: '192.168.1.999',
-                connection: {
-                    localAddress: ''
-                }
-            };
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión', e);
+        } catch (error) {
+            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, null, error);
         }
         sql.close();
         res.json('OK');

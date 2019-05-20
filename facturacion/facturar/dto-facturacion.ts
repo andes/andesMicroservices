@@ -4,6 +4,8 @@ import { getSnomed } from './../services/snomed.service';
 import { getPrestacion } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 import { getPuco } from './../services/obra-social.service';
+import { fakeRequestSql } from './../config.private';
+import { log } from '@andes/log';
 
 export async function facturacionAutomatica(prestacion: any) {
     let datosFactura: any = await formatDatosFactura(prestacion);
@@ -124,7 +126,7 @@ async function formatDatosFactura(prestacion: any) {
         return dtoDatos;
     } else {
         /* Ningún origen es válido*/
-        return null;
+        return log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null, null);
     }
 }
 

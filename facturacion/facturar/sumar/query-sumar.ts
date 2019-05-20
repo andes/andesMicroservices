@@ -2,6 +2,8 @@ import * as sql from 'mssql';
 import { IDtoSumar } from '../../interfaces/IDtoSumar';
 import moment = require('moment');
 import 'moment/locale/es';
+import { fakeRequestSql } from './../../config.private';
+import { log } from '@andes/log';
 
 export class QuerySumar {
 
@@ -14,25 +16,29 @@ export class QuerySumar {
      * @memberof QuerySumar
      */
     async saveComprobanteSumar(request: any, dtoComprobante: any) {
-        let query = 'INSERT INTO dbo.PN_comprobante (cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion,objectId,factAutomatico) ' +
-            ' values (@cuie, NULL, NULL, @fechaComprobante, @claveBeneficiario, @idAfiliado, @fechaCarga, @comentario, @marca, @periodo, @activo, @idTipoPrestacion, @objectId, @factAutomatico)' +
-            ' SELECT SCOPE_IDENTITY() AS id';
+        try {
+            let query = 'INSERT INTO dbo.PN_comprobante (cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion,objectId,factAutomatico) ' +
+                ' values (@cuie, NULL, NULL, @fechaComprobante, @claveBeneficiario, @idAfiliado, @fechaCarga, @comentario, @marca, @periodo, @activo, @idTipoPrestacion, @objectId, @factAutomatico)' +
+                ' SELECT SCOPE_IDENTITY() AS id';
 
-        const result = await request
-            .input('cuie', sql.VarChar(10), dtoComprobante.cuie)
-            .input('fechaComprobante', sql.DateTime, dtoComprobante.fechaComprobante)
-            .input('claveBeneficiario', sql.VarChar(50), dtoComprobante.claveBeneficiario)
-            .input('idAfiliado', sql.Int, dtoComprobante.idAfiliado)
-            .input('fechaCarga', sql.DateTime, dtoComprobante.fechaCarga)
-            .input('comentario', sql.VarChar(500), dtoComprobante.comentario)
-            .input('marca', sql.VarChar(10), dtoComprobante.marca)
-            .input('periodo', sql.VarChar(7), dtoComprobante.periodo)
-            .input('activo', sql.VarChar(1), dtoComprobante.activo)
-            .input('idTipoPrestacion', sql.Int, dtoComprobante.idTipoPrestacion)
-            .input('objectId', sql.VarChar(50), dtoComprobante.objectId)
-            .input('factAutomatico', sql.VarChar(50), 'prestacion')
-            .query(query);
-        return result.recordset[0].id;
+            const result = await request
+                .input('cuie', sql.VarChar(10), dtoComprobante.cuie)
+                .input('fechaComprobante', sql.DateTime, new Date(dtoComprobante.fechaComprobante))
+                .input('claveBeneficiario', sql.VarChar(50), dtoComprobante.claveBeneficiario)
+                .input('idAfiliado', sql.Int, dtoComprobante.idAfiliado)
+                .input('fechaCarga', sql.DateTime, dtoComprobante.fechaCarga)
+                .input('comentario', sql.VarChar(500), dtoComprobante.comentario)
+                .input('marca', sql.VarChar(10), dtoComprobante.marca)
+                .input('periodo', sql.VarChar(7), dtoComprobante.periodo)
+                .input('activo', sql.VarChar(1), dtoComprobante.activo)
+                .input('idTipoPrestacion', sql.Int, dtoComprobante.idTipoPrestacion)
+                .input('objectId', sql.VarChar(50), dtoComprobante.objectId)
+                .input('factAutomatico', sql.VarChar(50), 'prestacion')
+                .query(query);
+            return result.recordset[0].id;
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveComprobanteSumar', null, null, error);
+        }
     }
 
     /**
@@ -69,8 +75,8 @@ export class QuerySumar {
                 .input('factAutomatico', sql.VarChar(50), 'prestacion')
                 .query(query);
             return result.recordset[0].id;
-        } catch (err) {
-            throw err;
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en savePrestacionSumar', null, null, error);
         }
     }
 
@@ -87,12 +93,16 @@ export class QuerySumar {
             ' values (@idPrestacion, @idDatoReportable, @valor)' +
             'SELECT SCOPE_IDENTITY() AS id';
 
-        const result = await request
-            .input('idPrestacion', sql.Int, dtoPrestacion.idPrestacion)
-            .input('idDatoReportable', sql.Int, dtoPrestacion.idDatoReportable)
-            .input('valor', sql.VarChar(500), dtoPrestacion.valor)
-            .query(query);
-        return result.recordset[0].id;
+        try {
+            const result = await request
+                .input('idPrestacion', sql.Int, dtoPrestacion.idPrestacion)
+                .input('idDatoReportable', sql.Int, dtoPrestacion.idDatoReportable)
+                .input('valor', sql.VarChar(500), dtoPrestacion.valor)
+                .query(query);
+            return result.recordset[0].id;
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveDatosReportablesSumar', null, null, error);
+        }
     }
 
     async getAfiliadoSumar(pool: any, documento: any) {
