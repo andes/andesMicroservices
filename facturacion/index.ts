@@ -23,7 +23,7 @@ router.group('/facturacion', (group) => {
             let factura = new Factura();
             await factura.facturar(pool, dtoFacturacion);
         } catch (error) {
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, null, error);
+            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, error);
         }
         sql.close();
         res.json('OK');

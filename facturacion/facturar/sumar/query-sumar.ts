@@ -37,7 +37,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveComprobanteSumar', null, null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveComprobanteSumar', null, error);
         }
     }
 
@@ -76,7 +76,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en savePrestacionSumar', null, null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en savePrestacionSumar', null, error);
         }
     }
 
@@ -101,7 +101,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveDatosReportablesSumar', null, null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveDatosReportablesSumar', null, error);
         }
     }
 
