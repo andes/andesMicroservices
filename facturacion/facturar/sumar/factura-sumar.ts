@@ -31,7 +31,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
 
             let dtoComprobante = {
                 cuie: dtoSumar.cuie,
-                fechaComprobante: new Date(),
+                fechaComprobante: moment(dtoSumar.fechaTurno).format('MM/DD/YYYY'),
                 claveBeneficiario: dtoSumar.claveBeneficiario,
                 idAfiliado: dtoSumar.idAfiliado,
                 fechaCarga: new Date(),
