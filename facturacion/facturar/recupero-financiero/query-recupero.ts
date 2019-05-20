@@ -185,7 +185,7 @@ export class QueryRecupero {
                 .query(query);
             return result.recordset[0] ? result.recordset[0].ID : null;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenRecupero', null, null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenRecupero', null, error);
         }
     }
 
@@ -229,7 +229,7 @@ export class QueryRecupero {
 
             return result.recordset[0];
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenDetalleRecupero', null, null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenDetalleRecupero', null, error);
         }
     }
 }

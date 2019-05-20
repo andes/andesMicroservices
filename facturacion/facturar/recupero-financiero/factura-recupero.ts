@@ -67,7 +67,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
 
         } catch {
             transaction.rollback(error => {
-                log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear orden recupero', null, null, error);
+                log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear orden recupero', null, error);
             });
         }
     }

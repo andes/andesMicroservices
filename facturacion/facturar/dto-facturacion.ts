@@ -126,7 +126,7 @@ async function formatDatosFactura(prestacion: any) {
         return dtoDatos;
     } else {
         /* Ningún origen es válido*/
-        return log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null, null);
+        return log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);
     }
 }
 
