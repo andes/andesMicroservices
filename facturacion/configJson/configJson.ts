@@ -19,6 +19,8 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, datosConfiguracionAutomatica) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
+    let esDatosReportables = await validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+
     let datoReportable = [];
 
     let facturacion = {
@@ -130,22 +132,17 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                     };
                     return dto;
                 } else {
-                    return null
+                    return null;
                 }
             }
         },
         sumar: {
-            preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
+            preCondicionSumar: () => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
-                // let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
-
-                /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
-                prestación no se debería poder facturar */
 
                 let conditionsArray = [
-                    esAfiliado,
-                    // datosReportables
+                    esAfiliado
                 ];
 
                 if (conditionsArray.indexOf(false) === -1) {
@@ -176,7 +173,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
         await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
-        if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
+        if (facturacion['sumar'].preCondicionSumar()) {
             tipoFacturacion = 'sumar';
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 
@@ -195,7 +192,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
                 mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
                 dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
-                datosReportables: (main) ? main.datosReportables : null
+                datosReportables: ((main) && (esDatosReportables)) ? main.datosReportables : null
             };
 
             await facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
