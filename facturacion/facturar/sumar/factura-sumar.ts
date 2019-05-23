@@ -110,13 +110,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         }
 
     } catch (e) {
-        // log error          
         transaction.rollback();
     }
-}
-
-export async function saveBeneficiario() {
-
 }
 
 /* Valida quelos datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */

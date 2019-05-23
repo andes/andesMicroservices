@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { facturaSumar, validaDatosReportables } from './../facturar/sumar/factura-sumar';
+import { facturaSumar, validaDatosReportables, saveBeneficiario } from './../facturar/sumar/factura-sumar';
 import { facturaRecupero } from './../facturar/recupero-financiero/factura-recupero';
 
 import { QuerySumar } from './../facturar/sumar/query-sumar';
@@ -196,6 +196,12 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
             };
 
             await facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
+        } else {
+            let esBeneficiario = await querySumar.validaBeneficiarioSumar(pool, dtoFacturacion.paciente);
+
+            if (!esBeneficiario) {
+                await querySumar.saveBeneficiario(pool, dtoFacturacion.paciente);
+            }
         }
     }
 }
