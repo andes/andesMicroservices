@@ -10,38 +10,40 @@ import { log } from '@andes/log';
 export async function facturacionAutomatica(prestacion: any) {
     let datosFactura: any = await formatDatosFactura(prestacion);
 
-    const factura = {
-        turno: {
-            _id: datosFactura.idTurno,
-            fechaTurno: datosFactura.fechaPrestacion,
-        },
-        idPrestacion: datosFactura.idPrestacion,
-        paciente: {
-            nombre: datosFactura.paciente.nombre,
-            apellido: datosFactura.paciente.apellido,
-            dni: datosFactura.paciente.documento,
-            fechaNacimiento: datosFactura.paciente.fechaNacimiento,
-            sexo: datosFactura.paciente.sexo
-        },
-        prestacion: {
-            conceptId: datosFactura.prestacion.conceptId,
-            term: datosFactura.prestacion.term,
-            fsn: datosFactura.prestacion.fsn,
-            datosReportables: (datosFactura.datosReportables) ? datosFactura.datosReportables : null,
-        },
-        organizacion: {
-            nombre: datosFactura.organizacion.nombre,
-            cuie: datosFactura.organizacion.cuie,
-            idSips: datosFactura.organizacion.idSips
-        },
-        obraSocial: datosFactura.obraSocial,
-        profesional: (datosFactura.profesional) ? {
-            nombre: datosFactura.profesional.nombre,
-            apellido: datosFactura.profesional.apellido,
-            dni: datosFactura.profesional.dni
-        } : null
-    };
-    return factura;
+    if (datosFactura) {
+        const factura = {
+            turno: {
+                _id: datosFactura.idTurno,
+                fechaTurno: datosFactura.fechaPrestacion,
+            },
+            idPrestacion: datosFactura.idPrestacion,
+            paciente: {
+                nombre: datosFactura.paciente.nombre,
+                apellido: datosFactura.paciente.apellido,
+                dni: datosFactura.paciente.documento,
+                fechaNacimiento: datosFactura.paciente.fechaNacimiento,
+                sexo: datosFactura.paciente.sexo
+            },
+            prestacion: {
+                conceptId: datosFactura.prestacion.conceptId,
+                term: datosFactura.prestacion.term,
+                fsn: datosFactura.prestacion.fsn,
+                datosReportables: (datosFactura.datosReportables) ? datosFactura.datosReportables : null,
+            },
+            organizacion: {
+                nombre: datosFactura.organizacion.nombre,
+                cuie: datosFactura.organizacion.cuie,
+                idSips: datosFactura.organizacion.idSips
+            },
+            obraSocial: datosFactura.obraSocial,
+            profesional: (datosFactura.profesional) ? {
+                nombre: datosFactura.profesional.nombre,
+                apellido: datosFactura.profesional.apellido,
+                dni: datosFactura.profesional.dni
+            } : null
+        };
+        return factura;
+    }
 }
 
 async function formatDatosFactura(prestacion: any) {
@@ -126,7 +128,7 @@ async function formatDatosFactura(prestacion: any) {
         return dtoDatos;
     } else {
         /* Ningún origen es válido*/
-        return log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);
+        log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);
     }
 }
 
