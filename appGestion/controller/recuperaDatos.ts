@@ -13,8 +13,10 @@ export async function recuperaDatos() {
     };
     try {
         let conexion = await new sql.ConnectionPool(connectionString).connect();
-        const query = `SELECT ef.*, app.Camas, app.Consultas, app.Egresos, app.Guardia_con, app.Periodo, app.RH
-        FROM [Efectores] as ef INNER JOIN [App_Datos] as app ON ef.IdEfector=app.idEfector`;
+        const query = `SELECT ef.*, app.Camas, app.Consultas, app.Egresos, app.Guardia_con, app.Periodo,
+        app.RH_total,app.RH_operativos,app.RH_tecnicos,app.RH_profesionales,app.RH_asistentes,
+        app.RH_administrativos,app.RH_medicos,app.RH_enfermeros
+        FROM [Efectores] as ef INNER JOIN [App_DatosCOPIA] as app ON ef.IdEfector=app.idEfector`;
         /*CONSULTA PARA RECUPERAR EL ULTIMO PERIODO.
         const query= `SELECT ef.*, app.Camas, app.Consultas, app.Egresos, app.Guardia_con, app.Periodo, app.RH
         FROM ([Efectores] as ef JOIN [dbo].[App_Datos] as app ON ef.IdEfector=app.idEfector)
