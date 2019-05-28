@@ -160,6 +160,26 @@ async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean
     }
 }
 
-export async function anularComprobanteSumar(pool, idTurno) {
-    let idPrestacion = await querySumar.anularComprobanteSumar(pool, idTurno);
+export async function anularComprobanteSumar(pool, dtoSumar) {
+
+    let idTurno = dtoSumar.solicitud.turno;
+    let esComprobanteAnulado = await querySumar.anularComprobanteSumar(pool, idTurno);
+
+    if (esComprobanteAnulado > 0) {
+        let turno: any = await getDatosTurno(idTurno);
+
+        const estadoFacturacion = {
+            tipo: 'sumar',
+            numeroComprobante: null,
+            estado: 'Sin Comprobante'
+        };
+        let idAgenda = turno.idAgenda;
+        let idBloque = turno.idBloque;
+
+        await updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
+    }
+
+
+
+
 }

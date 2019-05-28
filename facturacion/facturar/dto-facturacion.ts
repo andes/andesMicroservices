@@ -129,7 +129,7 @@ async function formatDatosFactura(pool, prestacion: any) {
         };
         return dtoDatos;
     } else if (prestacion.origen === 'romperValidacion') {
-        await anularComprobanteSumar(pool, prestacion.data.solicitud.turno);
+        await anularComprobanteSumar(pool, prestacion.data);
     } else {
         /* Ningún origen es válido*/
         log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);

@@ -195,12 +195,12 @@ export class QuerySumar {
             await transaction.begin();
             const request = await new sql.Request(pool);
 
-            let query = 'UPDATE dbo.PN_comprobante SET marca = 1 WHERE objectId = @objectId';
+            let query = 'UPDATE dbo.PN_comprobante SET marca = 1, objectId = null WHERE objectId = @objectId';
             try {
                 const result = await request
                     .input('objectId', sql.VarChar(100), idTurno)
                     .query(query);
-                return result.recordset;
+                return result.rowsAffected[0];
             } catch (error) {
                 log(fakeRequestSql, 'microservices:factura:create', null, '/error en anularComprobanteSumar', null, error);
             }
