@@ -159,3 +159,7 @@ async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean
         return null;
     }
 }
+
+export async function anularComprobanteSumar(pool, idTurno) {
+    let idPrestacion = await querySumar.anularComprobanteSumar(pool, idTurno);
+}

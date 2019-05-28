@@ -5,10 +5,12 @@ import { getPrestacion } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 import { getPuco } from './../services/obra-social.service';
 import { fakeRequestSql } from './../config.private';
+import { anularComprobanteSumar } from './sumar/factura-sumar';
+
 import { log } from '@andes/log';
 
-export async function facturacionAutomatica(prestacion: any) {
-    let datosFactura: any = await formatDatosFactura(prestacion);
+export async function facturacionAutomatica(pool: any, prestacion: any) {
+    let datosFactura: any = await formatDatosFactura(pool, prestacion);
 
     if (datosFactura) {
         const factura = {
@@ -46,7 +48,7 @@ export async function facturacionAutomatica(prestacion: any) {
     }
 }
 
-async function formatDatosFactura(prestacion: any) {
+async function formatDatosFactura(pool, prestacion: any) {
     if (prestacion.origen === 'rup_rf') {
         let _datosOrganizacion: any = getOrganizacion(prestacion.data.solicitud.organizacion.id);
         let _obraSocialPaciente: any = (prestacion.data.paciente.obraSocial) ? (prestacion.data.paciente.obraSocial) : getPuco(prestacion.paciente.documento);
@@ -126,6 +128,8 @@ async function formatDatosFactura(prestacion: any) {
             datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
         };
         return dtoDatos;
+    } else if (prestacion.origen === 'romperValidacion') {
+        await anularComprobanteSumar(pool, prestacion.data.solicitud.turno);
     } else {
         /* Ningún origen es válido*/
         log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);

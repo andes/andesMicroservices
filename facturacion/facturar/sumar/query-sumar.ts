@@ -185,4 +185,49 @@ export class QuerySumar {
         });
 
     }
+
+    async anularComprobanteSumar(pool, idTurno) {
+        let idFactura = await this.validaPrestacionFacturada(pool, idTurno);
+
+        if (!idFactura) {
+            const transaction = new sql.Transaction(pool);
+
+            await transaction.begin();
+            const request = await new sql.Request(pool);
+
+            let query = 'UPDATE dbo.PN_comprobante SET marca = 1 WHERE objectId = @objectId';
+            try {
+                const result = await request
+                    .input('objectId', sql.VarChar(100), idTurno)
+                    .query(query);
+                return result.recordset;
+            } catch (error) {
+                log(fakeRequestSql, 'microservices:factura:create', null, '/error en anularComprobanteSumar', null, error);
+            }
+        }
+    }
+
+    /* Se verifica si la prestación fue facturada para poder anular el comprobante. Si la prestación está facturada
+    no se puede anular*/
+    validaPrestacionFacturada(pool, idTurno) {
+        return new Promise((resolve: any, reject: any) => {
+            (async () => {
+                try {
+                    let query = 'SELECT id_factura FROM PN_comprobante WHERE objectId = @objectId';
+                    let result = await new sql.Request(pool)
+                        .input('objectId', sql.VarChar(100), idTurno)
+                        .query(query);
+                    if (result && result.recordset[0]) {
+                        resolve(result.recordset[0].id_factura);
+                    } else {
+                        resolve(null);
+                    }
+                } catch (err) {
+                    reject(err);
+                }
+            })();
+        });
+    }
 }
+
+
