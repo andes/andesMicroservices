@@ -45,6 +45,8 @@ export async function facturacionAutomatica(pool: any, prestacion: any) {
             } : null
         };
         return factura;
+    } else {
+        return null;
     }
 }
 
@@ -132,7 +134,7 @@ async function formatDatosFactura(pool, prestacion: any) {
         await anularComprobanteSumar(pool, prestacion.data);
     } else {
         /* Ningún origen es válido*/
-        log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);
+        return log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);
     }
 }
 
