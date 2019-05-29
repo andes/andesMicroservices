@@ -207,6 +207,25 @@ export class QuerySumar {
         }
     }
 
+    /* Se borra el objectId de la prestación asociada al comprobante anulado */
+    async anularPrestacionSumar(pool, objectId) {
+        const transaction = new sql.Transaction(pool);
+
+        await transaction.begin();
+        const request = await new sql.Request(pool);
+
+        let query = 'UPDATE dbo.PN_prestacion SET objectId = null WHERE objectId = @objectId';
+        try {
+            const result = await request
+                .input('objectId', sql.VarChar(100), objectId)
+                .query(query);
+            return result.rowsAffected[0];
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en anularPrestacionSumar', null, error);
+        }
+
+    }
+
     /* Se verifica si la prestación fue facturada para poder anular el comprobante. Si la prestación está facturada
     no se puede anular*/
     validaPrestacionFacturada(pool, idTurno) {

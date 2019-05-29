@@ -172,6 +172,8 @@ export async function anularComprobanteSumar(pool, dtoSumar) {
     let esComprobanteAnulado = await querySumar.anularComprobanteSumar(pool, objectId);
 
     if (esComprobanteAnulado > 0) {
+        await querySumar.anularPrestacionSumar(pool, objectId);
+        
         let turno: any = await getDatosTurno(objectId);
 
         const estadoFacturacion = {
