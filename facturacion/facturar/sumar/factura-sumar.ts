@@ -72,7 +72,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 };
 
                 let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
-                
+
                 for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
                     let datosReportables = {
                         idPrestacion: newIdPrestacion,
@@ -161,25 +161,31 @@ async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean
 }
 
 export async function anularComprobanteSumar(pool, dtoSumar) {
+    let objectId: any;
 
-    let idTurno = dtoSumar.solicitud.turno;
-    let esComprobanteAnulado = await querySumar.anularComprobanteSumar(pool, idTurno);
+    if (dtoSumar.solicitud.turno) {
+        objectId = dtoSumar.solicitud.turno;
+    } else {
+        objectId = dtoSumar._id;
+    }
+
+    let esComprobanteAnulado = await querySumar.anularComprobanteSumar(pool, objectId);
 
     if (esComprobanteAnulado > 0) {
-        let turno: any = await getDatosTurno(idTurno);
+        let turno: any = await getDatosTurno(objectId);
 
         const estadoFacturacion = {
             tipo: 'sumar',
             numeroComprobante: null,
             estado: 'Sin Comprobante'
         };
-        let idAgenda = turno.idAgenda;
-        let idBloque = turno.idBloque;
 
-        await updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
+        if (turno) {
+            let idTurno = objectId;
+            let idAgenda = turno.idAgenda;
+            let idBloque = turno.idBloque;
+
+            await updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
+        }
     }
-
-
-
-
 }
