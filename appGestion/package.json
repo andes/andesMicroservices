@@ -1,0 +1,17 @@
+{
+  "name": "appGestion",
+  "version": "1.0.0",
+  "description": "Servicio para migración de datos MySQL a SQLite en app mobile",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --project ..",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w"
+  },
+  "author": "Nahir",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "mssql": "^4.1.0"
+  }
+}
