@@ -9,6 +9,8 @@ export class Factura {
         /* Traigo colección de configFacturacionAutomatica */
         let datosConfiguracionAutomatica = await getConfigAutomatica(dtoFacturacion.prestacion.conceptId);
 
-        await jsonFacturacion(pool, dtoFacturacion, datosConfiguracionAutomatica);
+        if (datosConfiguracionAutomatica) {
+            await jsonFacturacion(pool, dtoFacturacion, datosConfiguracionAutomatica);
+        }
     }
 }
