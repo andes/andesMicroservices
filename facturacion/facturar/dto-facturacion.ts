@@ -72,6 +72,7 @@ async function formatDatosFactura(prestacion: any) {
         let _getDR = null;
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+        let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
 
         let dtoDatos = {
             idTurno: prestacion.id,
@@ -80,6 +81,7 @@ async function formatDatosFactura(prestacion: any) {
             profesional: datos[2].profesional,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
+            configAutomatica: configAuto,
             datosReportables: null
         };
         return dtoDatos;
