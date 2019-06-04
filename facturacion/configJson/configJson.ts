@@ -120,7 +120,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
                 const arrayPrestacion = (prestacion.prestacion.datosReportables !== null) ? prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined) : null;
-                const arrayConfiguracion = (dtoFacturacion.configAutomatica.sumar) ? dtoFacturacion.configAutomatica.sumar.datosReportables.map((config: any) => config.valores) : null;
+                const arrayConfiguracion = (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.datosReportables.map((config: any) => config.valores) : null;
 
                 if (arrayConfiguracion) {
                     let dto: any = {
@@ -180,11 +180,12 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
             tipoFacturacion = 'sumar';
+
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 
             dtoSumar = {
                 idPrestacion: dtoFacturacion.idPrestacion,
-                idNomenclador: dtoFacturacion.configAutomatica.sumar.idNomenclador,
+                idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
                 fechaTurno: dtoFacturacion.turno.fechaTurno,
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,

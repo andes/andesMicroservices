@@ -91,8 +91,8 @@ async function formatDatosFactura(prestacion: any) {
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
 
-        let idPrestacionEjecutada = datos[3].ejecucion.registros[0].concepto.conceptId;
-        let idPrestacionTurneable = datos[3].solicitud.tipoPrestacion.conceptId;
+        let idPrestacionEjecutada = (datos[3]) ? datos[3].ejecucion.registros[0].concepto.conceptId : null;
+        let idPrestacionTurneable = (datos[3]) ? datos[3].solicitud.tipoPrestacion.conceptId : null;
         let configAuto: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada);
 
         let dtoDatos = {
