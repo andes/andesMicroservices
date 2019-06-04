@@ -39,7 +39,8 @@ export async function facturacionAutomatica(prestacion: any) {
             nombre: datosFactura.profesional.nombre,
             apellido: datosFactura.profesional.apellido,
             dni: datosFactura.profesional.dni
-        } : null
+        } : null,
+        configAutomatica: datosFactura.configAutomatica
     };
     return factura;
 }
@@ -49,7 +50,7 @@ async function formatDatosFactura(prestacion: any) {
         let _datosOrganizacion: any = getOrganizacion(prestacion.data.solicitud.organizacion.id);
         let _obraSocialPaciente: any = (prestacion.data.paciente.obraSocial) ? (prestacion.data.paciente.obraSocial) : getPuco(prestacion.paciente.documento);
         let _datosProfesional: any = getProfesional(prestacion.data.solicitud.profesional.id);
-        let _getDR = getDatosReportables(prestacion.data);
+        let _getDR = getDatosReportables(prestacion.data, null);
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
 
@@ -90,6 +91,10 @@ async function formatDatosFactura(prestacion: any) {
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
 
+        let idPrestacionEjecutada = datos[3].ejecucion.registros[0].concepto.conceptId;
+        let idPrestacionTurneable = datos[3].solicitud.tipoPrestacion.conceptId;
+        let configAuto: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada);
+
         let dtoDatos = {
             idTurno: prestacion.turno._id,
             idPrestacion: prestacion.idPrestacion,
@@ -99,7 +104,8 @@ async function formatDatosFactura(prestacion: any) {
             profesional: (datos[2]) ? datos[2].profesional : null,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
-            datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
+            configAutomatica: configAuto,
+            datosReportables: (datos[3]) ? await getDatosReportables(datos[3], configAuto) : null
         };
         return dtoDatos;
 
@@ -121,7 +127,7 @@ async function formatDatosFactura(prestacion: any) {
             profesional: (datos[2]) ? datos[2].profesional : null,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
-            datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
+            datosReportables: (datos[3]) ? await getDatosReportables(datos[3], null) : null
         };
         return dtoDatos;
     } else {
@@ -130,11 +136,9 @@ async function formatDatosFactura(prestacion: any) {
     }
 }
 
-async function getDatosReportables(prestacion: any) {
+async function getDatosReportables(prestacion: any, configAuto: any) {
     if (prestacion.solicitud) {
-        let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
-        let configAuto: any = await getConfigAutomatica(idTipoPrestacion);
-
+        /* TODO: el array de registros hay que iterarlo */
         if ((configAuto) && (configAuto.sumar)) {
             if (configAuto.sumar.datosReportables.length > 0) {
                 let conceptos: any = [];

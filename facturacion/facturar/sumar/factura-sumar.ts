@@ -16,7 +16,7 @@ let querySumar = new QuerySumar();
  * @param {IDtoSumar} dtoSumar
  * @param {*} datosConfiguracionAutomatica
  */
-export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
+export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
     try {
@@ -49,12 +49,12 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
             let existePrestacion = await validaPrestacion(pool, dtoSumar);
 
             if (!existePrestacion) {
-                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
+                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
 
                 moment.locale('es');
                 let prestacion = {
                     idComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
-                    idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
+                    idNomenclador: dtoSumar.idNomenclador,
                     cantidad: 1,
                     precioPrestacion: precioPrestacion.precio,
                     idAnexo: 301,
@@ -72,7 +72,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 };
 
                 let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
-                
+
                 for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
                     let datosReportables = {
                         idPrestacion: newIdPrestacion,

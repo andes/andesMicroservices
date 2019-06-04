@@ -16,7 +16,7 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
  * @param {IDtoFacturacion} dtoFacturacion
  * @param {*} datosConfiguracionAutomatica
  */
-export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, datosConfiguracionAutomatica) {
+export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
     let datoReportable = [];
@@ -72,7 +72,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                         }
                     });
                     if (flagDatosReportables) {
-                        dr.idDatoReportable = datosConfiguracionAutomatica.sumar.datosReportables[0].idDatosReportables;
+                        dr.idDatoReportable = dtoFacturacion.configAutomatica.sumar.datosReportables[0].idDatosReportables;
                         dr.datoReportable = dr.datoReportable.slice(0, -1);
 
                         datoReportable.push(dr);
@@ -88,8 +88,8 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
         /* Prestación Niño Sano 410621008*/
         /* TODO: poner la expresión que corresponda */
-        410620009: {
-            term: 'consulta de niño sano',
+        niño_sano: {
+            term: 'niño sano',
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
                 if ((arrayPrestacion) && (arrayPrestacion.length > 0)) {
                     arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
@@ -120,13 +120,13 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 return dto;
             } else if (tipoFacturacion === 'sumar') {
                 const arrayPrestacion = (prestacion.prestacion.datosReportables !== null) ? prestacion.prestacion.datosReportables.map((dr: any) => dr).filter((value) => value !== undefined) : null;
-                const arrayConfiguracion = (datosConfiguracionAutomatica.sumar) ? datosConfiguracionAutomatica.sumar.datosReportables.map((config: any) => config.valores) : null;
+                const arrayConfiguracion = (dtoFacturacion.configAutomatica.sumar) ? dtoFacturacion.configAutomatica.sumar.datosReportables.map((config: any) => config.valores) : null;
 
                 if (arrayConfiguracion) {
                     let dto: any = {
                         factura: 'sumar',
-                        diagnostico: datosConfiguracionAutomatica.sumar.diagnostico[0].diagnostico,
-                        datosReportables: await facturacion[datosConfiguracionAutomatica.expresionSnomed].sumar(arrayPrestacion, arrayConfiguracion)
+                        diagnostico: dtoFacturacion.configAutomatica.sumar.diagnostico[0].diagnostico,
+                        datosReportables: await facturacion[dtoFacturacion.configAutomatica.sumar.key_datosreportables].sumar(arrayPrestacion, arrayConfiguracion)
                     };
                     return dto;
                 } else {
@@ -167,13 +167,15 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
+            idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
+            idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,
             dniPaciente: dtoFacturacion.paciente.dni,
             dniProfesional: dtoFacturacion.profesional.dni,
             codigoFinanciador: os,
             idEfector: dtoFacturacion.organizacion.idSips,
             prepaga: dtoFacturacion.obraSocial.prepaga,
         };
-        await facturaRecupero(pool, dtoRecupero, datosConfiguracionAutomatica);
+        await facturaRecupero(pool, dtoRecupero);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar(dtoFacturacion)) {
@@ -182,6 +184,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
 
             dtoSumar = {
                 idPrestacion: dtoFacturacion.idPrestacion,
+                idNomenclador: dtoFacturacion.configAutomatica.sumar.idNomenclador,
                 fechaTurno: dtoFacturacion.turno.fechaTurno,
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,
@@ -198,7 +201,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion, dat
                 datosReportables: (main) ? main.datosReportables : null
             };
 
-            await facturaSumar(pool, dtoSumar, datosConfiguracionAutomatica);
+            await facturaSumar(pool, dtoSumar);
         }
     }
 }

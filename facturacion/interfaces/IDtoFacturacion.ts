@@ -39,4 +39,5 @@ export interface IDtoFacturacion {
         apellido: String;
         dni: String;
     };
+    configAutomatica: any;
 }
