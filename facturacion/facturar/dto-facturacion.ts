@@ -39,7 +39,8 @@ export async function facturacionAutomatica(prestacion: any) {
         profesional: (datosFactura.profesional) ? {
             nombre: datosFactura.profesional.nombre,
             apellido: datosFactura.profesional.apellido,
-            dni: datosFactura.profesional.dni
+            dni: datosFactura.profesional.dni,
+            formacionGrado: datosFactura.profesional.formacionGrado.find(f => f.profesion.nombre === 'MEDICO').profesion.nombre.toLowerCase()
         } : null,
         configAutomatica: datosFactura.configAutomatica
     };

@@ -46,7 +46,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
 
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
-        2091000013100: {
+        otoemisiones: {
             term: 'otoemisiones',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
                 if (arrayPrestacion) {
@@ -138,13 +138,21 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
             preCondicionSumar: (dtoFacturacion: IDtoFacturacion) => {
                 let valido = false;
                 let esAfiliado = (afiliadoSumar) ? true : false;
+
+                let niñoSano = true; /* Se valida que si la prestación es niño sano se pueda facturar si fue validada por un médico*/
+                if ((dtoFacturacion.configAutomatica) && (dtoFacturacion.configAutomatica.sumar.key_datosreportables === 'niño_sano')) {
+                    if (dtoFacturacion.profesional.formacionGrado !== 'medico') {
+                        niñoSano = false;
+                    }
+                }
+
                 // let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
-
                 let conditionsArray = [
                     esAfiliado,
+                    niñoSano
                     // datosReportables
                 ];
 
@@ -193,6 +201,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 cuie: dtoFacturacion.organizacion.cuie,
                 diagnostico: (main) ? main.diagnostico : null,
                 dniPaciente: dtoFacturacion.paciente.dni,
+                profesional: dtoFacturacion.profesional,
                 claveBeneficiario: afiliadoSumar.clavebeneficiario,
                 idAfiliado: afiliadoSumar.id_smiafiliados,
                 edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
@@ -203,7 +212,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
                 datosReportables: (main) ? main.datosReportables : null
             };
-
             await facturaSumar(pool, dtoSumar);
         }
     }

@@ -6,6 +6,7 @@ export interface IDtoSumar {
     cuie: String;
     diagnostico: String;
     dniPaciente: String;
+    profesional: any;
     claveBeneficiario: String;
     idAfiliado: Number;
     edad: Number;
