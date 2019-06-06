@@ -174,6 +174,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
             dniProfesional: dtoFacturacion.profesional.dni,
             codigoFinanciador: os,
             idEfector: dtoFacturacion.organizacion.idSips,
+            motivoDeConsulta: dtoFacturacion.motivoConsulta,
             prepaga: dtoFacturacion.obraSocial.prepaga,
         };
         await facturaRecupero(pool, dtoRecupero);

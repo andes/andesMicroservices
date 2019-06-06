@@ -8,4 +8,5 @@ export interface IDtoRecupero {
     codigoFinanciador: String;
     idEfector: Number;
     prepaga: Boolean;
+    motivoDeConsulta: String;
 }

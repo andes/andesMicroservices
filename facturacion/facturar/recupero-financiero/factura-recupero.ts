@@ -43,12 +43,13 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
                 idFactura: 0,
                 baja: 0,
                 monto: nomencladorRecupero.valorUnidad,
+                motivoConsulta: dtoRecupero.motivoDeConsulta,
                 objectId: dtoRecupero.objectId,
                 factAutomatica: 'prestacion'
             };
-            console.log("Dto Orden: ", dtoOrden);
+
             const newIdOrden = await queryRecupero.saveOrdenRecupero(request, dtoOrden);
-            console.log("Dto New  Orden: ", newIdOrden);
+
             let dtoOrdendetalle = {
                 idOrden: newIdOrden,
                 idEfector: dtoRecupero.idEfector,

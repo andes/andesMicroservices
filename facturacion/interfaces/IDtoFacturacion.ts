@@ -1,5 +1,6 @@
 export interface IDtoFacturacion {
     idPrestacion: String;
+    motivoConsulta: String;
     turno: { _id: String; fechaTurno: Date };
     paciente:
     {

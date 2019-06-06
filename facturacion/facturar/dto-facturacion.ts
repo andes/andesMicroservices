@@ -16,6 +16,7 @@ export async function facturacionAutomatica(prestacion: any) {
             fechaTurno: datosFactura.fechaPrestacion,
         },
         idPrestacion: datosFactura.idPrestacion,
+        motivoConsulta: datosFactura.motivoDeConsulta,
         paciente: {
             nombre: datosFactura.paciente.nombre,
             apellido: datosFactura.paciente.apellido,
@@ -81,6 +82,7 @@ async function formatDatosFactura(prestacion: any) {
             profesional: datos[2].profesional,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
+            motivoDeConsulta: prestacion.motivoConsulta,
             configAutomatica: configAuto,
             datosReportables: null
         };
