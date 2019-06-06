@@ -165,14 +165,22 @@ export class QuerySumar {
         });
     }
 
-    async getPrestacion(pool: any, dtoSumar: IDtoSumar) {
+    async getPrestacionSips(pool: any, dtoSumar: IDtoSumar) {
         return new Promise((resolve: any, reject: any) => {
             (async () => {
                 try {
-                    let query = 'SELECT id_prestacion FROM dbo.PN_prestacion WHERE objectId = @objectId';
+                    let fechaPrestacion = moment(dtoSumar.fechaTurno).format('YYYY-MM-DD');
+                    let query = 'SELECT p.id_prestacion FROM dbo.PN_comprobante c ' +
+                        ' INNER JOIN dbo.PN_prestacion p ON p.id_comprobante = c.id_comprobante ' +
+                        ' WHERE c.id_smiafiliados = @idAfiliado AND p.id_nomenclador = @idNomenclador' +
+                        ' AND cast (p.fecha_prestacion as date) = @fechaPrestacion';
+
                     let result = await new sql.Request(pool)
-                        .input('objectId', sql.VarChar(100), dtoSumar.objectId)
+                        .input('idAfiliado', sql.Int, dtoSumar.idAfiliado)
+                        .input('idNomenclador', sql.VarChar(10), dtoSumar.idNomenclador)
+                        .input('fechaPrestacion', sql.Date, fechaPrestacion)
                         .query(query);
+
                     if (result && result.recordset[0]) {
                         resolve(result.recordset[0].id_prestacion);
                     } else {
@@ -183,6 +191,5 @@ export class QuerySumar {
                 }
             })();
         });
-
     }
 }

@@ -48,6 +48,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         if (dtoSumar.datosReportables) {
             let existePrestacion = await validaPrestacion(pool, dtoSumar);
 
+            console.log("Existe prestacion: ", existePrestacion);
+
             if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
 
@@ -149,9 +151,9 @@ async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolea
     }
 }
 
-/* Valida si la prestación ya fue creada en la BD de SUMAR */
+/* Valida si la prestación ya fue creada en la BD de SUMAR desde ANDES */
 async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let idPrestacion: any = await querySumar.getPrestacion(pool, dtoSumar);
+    let idPrestacion: any = await querySumar.getPrestacionSips(pool, dtoSumar);
 
     if (idPrestacion) {
         return idPrestacion;
