@@ -12,7 +12,7 @@ router.group('/mobile', (group) => {
         let usuario = _req.query.usuario;
         let login;
         try {
-            login = await postLogin(usuario);
+            login = usuario ? await postLogin(usuario) : null;
             if (login && login.estado >= 200 && login.estado < 300) {
                 // migrar datos
                 const registros = await recuperaDatos();

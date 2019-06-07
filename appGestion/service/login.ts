@@ -21,8 +21,8 @@ export function postLogin(data: any) {
         };
         request(options, (response, body) => {
             let respuesta = {
-                body,
-                estado: response.statusCode
+                mensaje: body ? body.body.msj : '',
+                estado: body ? body.statusCode : 422
             };
             return resolve(respuesta);
 
