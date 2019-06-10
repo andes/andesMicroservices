@@ -72,7 +72,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 };
 
                 let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
-                
+
                 for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
                     let datosReportables = {
                         idPrestacion: newIdPrestacion,
@@ -110,31 +110,29 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         }
 
     } catch (e) {
-        // log error          
         transaction.rollback();
     }
 }
 
-export async function saveBeneficiario() {
-
-}
-
 /* Valida quelos datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
-/* Falta Terminar */
 export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosConfigAutomatica) {
-    /* TODO: configurar en configFacturacion si el dato reportable puede venir null o no */
 
-    let drPrestacion = dtoFacturacion.prestacion.datosReportables.map(obj => obj[0]);
-    let drConfigAutomatica = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
+    if (dtoFacturacion.prestacion.datosReportables) {
+        let drPrestacion: any = dtoFacturacion.prestacion.datosReportables.filter((obj: any) => obj !== null).map(obj => obj);
+        let drConfigAutomatica: any = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
 
-    let found = false;
-    for (let i = 0; i < drPrestacion.length; i++) {
-        if (drConfigAutomatica[i].valores[0].conceptId.indexOf(drPrestacion[i].registro.concepto.conceptId) > -1) {
-            found = true;
-        } else {
-            found = false;
-            break;
+        for (let x = 0; x < drConfigAutomatica.length; x++) {
+            for (let z = 0; z < drPrestacion.length; z++) {
+                if (drConfigAutomatica[x].valores[0].conceptId === drPrestacion[z].conceptId) {
+                    if (!drPrestacion[z].valor) {
+                        return false;
+                    }
+                }
+            }
         }
+        return true;
+    } else {
+        return false;
     }
 }
 
