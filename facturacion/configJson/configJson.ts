@@ -94,16 +94,29 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 if ((arrayPrestacion) && (arrayPrestacion.length > 0)) {
                     arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
 
+                    let ta = '';
                     arrayPrestacion.forEach((element: any) => {
                         let dr = {
                             idDatoReportable: '',
                             datoReportable: ''
                         };
-                        dr.idDatoReportable = element.idDatoReportable;
-                        dr.datoReportable = element.valor;
 
+                        if (element.idDatoReportable === '3') {
+                            ta += element.valor + '/';
+
+                            dr.idDatoReportable = element.idDatoReportable;
+                            dr.datoReportable = ta;
+                        } else {
+                            dr.idDatoReportable = element.idDatoReportable;
+                            dr.datoReportable = element.valor;
+                        }
                         datoReportable.push(dr);
                     });
+
+                    if (((datoReportable[2])) && (datoReportable[2].idDatoReportable === '3')) {
+                        datoReportable.splice(2, 1);
+                        datoReportable[2].datoReportable = datoReportable[2].datoReportable.slice(0, -1);
+                    }
 
                     return datoReportable;
                 } else {
