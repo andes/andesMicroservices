@@ -21,7 +21,10 @@ router.group('/facturacion', (group) => {
             let pool = await sql.connect(SipsDBConfiguration);
             let dtoFacturacion: any = await facturacionAutomatica(req.body.data);
             let factura = new Factura();
-            await factura.facturar(pool, dtoFacturacion);
+
+            for (let x = 0; x < dtoFacturacion.length; x++) {
+                await factura.facturar(pool, dtoFacturacion[x]);
+            }
         } catch (error) {
             await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, error);
         }

@@ -1,5 +1,6 @@
 export interface IDtoFacturacion {
     idPrestacion: String;
+    motivoConsulta: String;
     turno: { _id: String; fechaTurno: Date };
     paciente:
     {
@@ -38,5 +39,7 @@ export interface IDtoFacturacion {
         nombre: String;
         apellido: String;
         dni: String;
+        formacionGrado: String;
     };
+    configAutomatica: any;
 }

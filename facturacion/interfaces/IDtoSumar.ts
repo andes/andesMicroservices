@@ -1,10 +1,12 @@
 export interface IDtoSumar {
-    idPrestacion: String,
-    fechaTurno: Date,
+    idPrestacion: String;
+    idNomenclador: Number;
+    fechaTurno: Date;
     objectId: String;
     cuie: String;
     diagnostico: String;
     dniPaciente: String;
+    profesional: any;
     claveBeneficiario: String;
     idAfiliado: Number;
     edad: Number;

@@ -13,7 +13,8 @@ export async function getProfesional(idProfesional) {
                         profesional: {
                             nombre: prof[0].nombre,
                             apellido: prof[0].apellido,
-                            dni: prof[0].documento
+                            dni: prof[0].documento,
+                            formacionGrado: prof[0].formacionGrado
                         }
                     });
                 }
