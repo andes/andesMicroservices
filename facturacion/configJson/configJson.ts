@@ -95,13 +95,14 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                     arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
 
                     let ta = '';
+                    const tensionArterial = '3';
                     arrayPrestacion.forEach((element: any) => {
                         let dr = {
                             idDatoReportable: '',
                             datoReportable: ''
                         };
 
-                        if (element.idDatoReportable === '3') {
+                        if (element.idDatoReportable === tensionArterial) {
                             ta += element.valor + '/';
 
                             dr.idDatoReportable = element.idDatoReportable;
