@@ -48,8 +48,6 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         if (dtoSumar.datosReportables) {
             let existePrestacion = await validaPrestacion(pool, dtoSumar);
 
-            console.log("Existe prestacion: ", existePrestacion);
-
             if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
 
