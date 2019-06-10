@@ -197,7 +197,7 @@ async function getDatosReportables(prestacion: any, configAuto: any) {
                             idDatoReportable: exp.idDatosReportables,
                             conceptId: data[0].registro.concepto.conceptId,
                             term: data[0].registro.concepto.term,
-                            valor: (data[0].registro.valor.concepto) ? {
+                            valor: (!data[0].registro.valor) ? null : (data[0].registro.valor.concepto) ? {
                                 conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
                                 nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
                             } : data[0].registro.valor
