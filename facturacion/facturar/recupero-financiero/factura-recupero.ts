@@ -14,7 +14,7 @@ let queryRecupero = new QueryRecupero();
  * @param {IDtoRecupero} dtoRecupero
  * @param {*} datosConfiguracionAutomatica
  */
-export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConfiguracionAutomatica) {
+export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
     let existeOrden = await validaOrden(pool, dtoRecupero);
 
     if (!existeOrden) {
@@ -23,13 +23,14 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
         const request = await new sql.Request(transaction);
 
         try {
-            let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, datosConfiguracionAutomatica.recuperoFinanciero);
+            let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, dtoRecupero);
+
             let dtoOrden = {
                 idEfector: dtoRecupero.idEfector,
                 /* Existe un trigger en Fac_Orden [Trigger_NumeroOrden] que actualiza 'numero' cuando el param es -1 */
                 numero: -1,
                 periodo: '0000/00',
-                idServicio: datosConfiguracionAutomatica.recuperoFinanciero.idServicio,
+                idServicio: dtoRecupero.idServicio,
                 idPaciente: await queryRecupero.getIdPacienteSips(pool, dtoRecupero.dniPaciente),
                 idProfesional: await queryRecupero.getIdProfesionalSips(pool, dtoRecupero.dniProfesional),
                 fecha: new Date(),
@@ -42,6 +43,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero, datosConf
                 idFactura: 0,
                 baja: 0,
                 monto: nomencladorRecupero.valorUnidad,
+                motivoConsulta: dtoRecupero.motivoDeConsulta,
                 objectId: dtoRecupero.objectId,
                 factAutomatica: 'prestacion'
             };

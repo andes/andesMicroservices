@@ -10,38 +10,47 @@ import { log } from '@andes/log';
 export async function facturacionAutomatica(prestacion: any) {
     let datosFactura: any = await formatDatosFactura(prestacion);
 
-    const factura = {
-        turno: {
-            _id: datosFactura.idTurno,
-            fechaTurno: datosFactura.fechaPrestacion,
-        },
-        idPrestacion: datosFactura.idPrestacion,
-        paciente: {
-            nombre: datosFactura.paciente.nombre,
-            apellido: datosFactura.paciente.apellido,
-            dni: datosFactura.paciente.documento,
-            fechaNacimiento: datosFactura.paciente.fechaNacimiento,
-            sexo: datosFactura.paciente.sexo
-        },
-        prestacion: {
-            conceptId: datosFactura.prestacion.conceptId,
-            term: datosFactura.prestacion.term,
-            fsn: datosFactura.prestacion.fsn,
-            datosReportables: (datosFactura.datosReportables) ? datosFactura.datosReportables : null,
-        },
-        organizacion: {
-            nombre: datosFactura.organizacion.nombre,
-            cuie: datosFactura.organizacion.cuie,
-            idSips: datosFactura.organizacion.idSips
-        },
-        obraSocial: datosFactura.obraSocial,
-        profesional: (datosFactura.profesional) ? {
-            nombre: datosFactura.profesional.nombre,
-            apellido: datosFactura.profesional.apellido,
-            dni: datosFactura.profesional.dni
-        } : null
-    };
-    return factura;
+    let factura = {};
+    let facturaArray = [];
+
+    for (let x = 0; x < datosFactura.length; x++) {
+        factura = {
+            turno: {
+                _id: datosFactura[x].idTurno,
+                fechaTurno: datosFactura[x].fechaPrestacion,
+            },
+            idPrestacion: datosFactura[x].idPrestacion,
+            motivoConsulta: datosFactura[x].motivoDeConsulta,
+            paciente: {
+                nombre: datosFactura[x].paciente.nombre,
+                apellido: datosFactura[x].paciente.apellido,
+                dni: datosFactura[x].paciente.documento,
+                fechaNacimiento: datosFactura[x].paciente.fechaNacimiento,
+                sexo: datosFactura[x].paciente.sexo
+            },
+            prestacion: {
+                conceptId: datosFactura[x].prestacion.conceptId,
+                term: datosFactura[x].prestacion.term,
+                fsn: datosFactura[x].prestacion.fsn,
+                datosReportables: (datosFactura[x].datosReportables) ? datosFactura[x].datosReportables : null,
+            },
+            organizacion: {
+                nombre: datosFactura[x].organizacion.nombre,
+                cuie: datosFactura[x].organizacion.cuie,
+                idSips: datosFactura[x].organizacion.idSips
+            },
+            obraSocial: datosFactura[x].obraSocial,
+            profesional: (datosFactura[x].profesional) ? {
+                nombre: datosFactura[x].profesional.nombre,
+                apellido: datosFactura[x].profesional.apellido,
+                dni: datosFactura[x].profesional.dni,
+                formacionGrado: (datosFactura[x].profesional.formacionGrado.length > 0) ? datosFactura[x].profesional.formacionGrado.find(f => f.profesion.nombre === 'MEDICO').profesion.nombre.toLowerCase() : null
+            } : null,
+            configAutomatica: datosFactura[x].configAutomatica
+        };
+        facturaArray.push(factura);
+    }
+    return facturaArray;
 }
 
 async function formatDatosFactura(prestacion: any) {
@@ -49,7 +58,7 @@ async function formatDatosFactura(prestacion: any) {
         let _datosOrganizacion: any = getOrganizacion(prestacion.data.solicitud.organizacion.id);
         let _obraSocialPaciente: any = (prestacion.data.paciente.obraSocial) ? (prestacion.data.paciente.obraSocial) : getPuco(prestacion.paciente.documento);
         let _datosProfesional: any = getProfesional(prestacion.data.solicitud.profesional.id);
-        let _getDR = getDatosReportables(prestacion.data);
+        let _getDR = getDatosReportables(prestacion.data, null);
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
 
@@ -71,16 +80,19 @@ async function formatDatosFactura(prestacion: any) {
         let _getDR = null;
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+        let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
 
-        let dtoDatos = {
+        let dtoDatos = [{
             idTurno: prestacion.id,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: datos[2].profesional,
             paciente: prestacion.paciente,
             prestacion: prestacion.tipoPrestacion,
+            motivoDeConsulta: (prestacion.motivoConsulta) ? prestacion.motivoConsulta : '',
+            configAutomatica: configAuto,
             datosReportables: null
-        };
+        }];
         return dtoDatos;
     } else if ((prestacion.origen === 'buscador') && (prestacion.idAgenda)) {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
@@ -89,19 +101,32 @@ async function formatDatosFactura(prestacion: any) {
         let _getDR = (prestacion.idPrestacion) ? getPrestacion(prestacion.idPrestacion) : null;
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+        let dtoDatos = {};
+        let dtoDatosArray = [];
 
-        let dtoDatos = {
-            idTurno: prestacion.turno._id,
-            idPrestacion: prestacion.idPrestacion,
-            fechaPrestacion: prestacion.turno.horaInicio,
-            organizacion: datos[0].organizacion,
-            obraSocial: (datos[1]) ? (datos[1]) : null,
-            profesional: (datos[2]) ? datos[2].profesional : null,
-            paciente: prestacion.paciente,
-            prestacion: prestacion.tipoPrestacion,
-            datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
-        };
-        return dtoDatos;
+        let z = (datos[3]) ? datos[3].ejecucion.registros.length : 1;
+        for (let x = 0; x < z; x++) {
+
+            let idPrestacionEjecutada = (datos[3]) ? datos[3].ejecucion.registros[x].concepto.conceptId : null;
+            let idPrestacionTurneable = (datos[3]) ? datos[3].solicitud.tipoPrestacion.conceptId : null;
+            let configAuto: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada);
+
+            dtoDatos = {
+                idTurno: prestacion.turno._id,
+                idPrestacion: prestacion.idPrestacion,
+                fechaPrestacion: prestacion.turno.horaInicio,
+                organizacion: datos[0].organizacion,
+                obraSocial: (datos[1]) ? (datos[1]) : null,
+                profesional: (datos[2]) ? datos[2].profesional : null,
+                paciente: prestacion.paciente,
+                prestacion: prestacion.tipoPrestacion,
+                configAutomatica: configAuto,
+                datosReportables: (datos[3]) ? await getDatosReportables(datos[3], configAuto) : null
+            };
+
+            dtoDatosArray.push(dtoDatos);
+        }
+        return dtoDatosArray;
 
     } else if ((prestacion.origen === 'buscador') && (!prestacion.idAgenda)) {
         let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion.id);
@@ -110,31 +135,43 @@ async function formatDatosFactura(prestacion: any) {
         let _getDR = getPrestacion(prestacion.idPrestacion);
 
         let datos: any = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
+        let dtoDatos = {};
+        let dtoDatosArray = [];
 
-        let dtoDatos = {
-            /* En fuera de agenda se guarda idPrestación porque no se tiene el idTurno. Validar por idPrestación para no facturar por duplicado*/
-            idTurno: prestacion.idPrestacion,
-            fechaPrestacion: prestacion.fecha,
-            idPrestacion: prestacion.idPrestacion,
-            organizacion: datos[0].organizacion,
-            obraSocial: (datos[1]) ? (datos[1]) : null,
-            profesional: (datos[2]) ? datos[2].profesional : null,
-            paciente: prestacion.paciente,
-            prestacion: prestacion.tipoPrestacion,
-            datosReportables: (datos[3]) ? await getDatosReportables(datos[3]) : null
-        };
-        return dtoDatos;
+        let z = (datos[3]) ? datos[3].ejecucion.registros.length : 1;
+        for (let x = 0; x < z; x++) {
+
+            let idPrestacionEjecutada = (datos[3]) ? datos[3].ejecucion.registros[x].concepto.conceptId : null;
+            let idPrestacionTurneable = (datos[3]) ? datos[3].solicitud.tipoPrestacion.conceptId : null;
+            let configAuto: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada);
+
+            dtoDatos = {
+                idTurno: prestacion.idPrestacion,
+                fechaPrestacion: prestacion.fecha,
+                idPrestacion: prestacion.idPrestacion,
+                organizacion: datos[0].organizacion,
+                obraSocial: (datos[1]) ? (datos[1]) : null,
+                profesional: (datos[2]) ? datos[2].profesional : null,
+                paciente: prestacion.paciente,
+                prestacion: prestacion.tipoPrestacion,
+                configAutomatica: configAuto,
+                datosReportables: (datos[3]) ? await getDatosReportables(datos[3], configAuto) : null
+            };
+
+            dtoDatosArray.push(dtoDatos);
+        }
+        console.log("Dto Datos Array: ", dtoDatosArray);
+
+        return dtoDatosArray;
     } else {
         /* Ningún origen es válido*/
         return log(fakeRequestSql, 'microservices:factura:create', null, '/origen de la prestación inválido', null, null);
     }
 }
 
-async function getDatosReportables(prestacion: any) {
+async function getDatosReportables(prestacion: any, configAuto: any) {
     if (prestacion.solicitud) {
-        let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
-        let configAuto: any = await getConfigAutomatica(idTipoPrestacion);
-
+        /* TODO: el array de registros hay que iterarlo */
         if ((configAuto) && (configAuto.sumar)) {
             if (configAuto.sumar.datosReportables.length > 0) {
                 let conceptos: any = [];
@@ -160,7 +197,7 @@ async function getDatosReportables(prestacion: any) {
                             idDatoReportable: exp.idDatosReportables,
                             conceptId: data[0].registro.concepto.conceptId,
                             term: data[0].registro.concepto.term,
-                            valor: (data[0].registro.valor.concepto) ? {
+                            valor: (!data[0].registro.valor) ? null : (data[0].registro.valor.concepto) ? {
                                 conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
                                 nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
                             } : data[0].registro.valor

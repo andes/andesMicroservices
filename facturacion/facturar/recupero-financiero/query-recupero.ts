@@ -132,6 +132,7 @@ export class QueryRecupero {
                 ' ,[fecha]' +
                 ' ,[fechaPractica]' +
                 ' ,[idTipoPractica]' +
+                ' ,[observaciones]' +
                 ' ,[idObraSocial]' +
                 ' ,[idUsuarioRegistro]' +
                 ' ,[fechaRegistro]' +
@@ -151,6 +152,7 @@ export class QueryRecupero {
                 ' ,@fecha' +
                 ' ,@fechaPractica' +
                 ' ,@idTipoPractica' +
+                ' ,@observaciones ' +
                 ' ,@idObraSocial' +
                 ' ,@idUsuarioRegistro' +
                 ' ,@fechaRegistro' +
@@ -173,6 +175,7 @@ export class QueryRecupero {
                 .input('fecha', sql.DateTime, new Date(dtoOrden.fecha))
                 .input('fechaPractica', sql.DateTime, new Date(dtoOrden.fechaPractica))
                 .input('idTipoPractica', sql.Int, dtoOrden.idTipoPractica)
+                .input('observaciones', sql.VarChar(500), dtoOrden.motivoConsulta)
                 .input('idObraSocial', sql.Int, dtoOrden.idObraSocial)
                 .input('idUsuarioRegistro', sql.Int, dtoOrden.idUsuarioRegistro)
                 .input('fechaRegistro', sql.DateTime, new Date(dtoOrden.fechaRegistro))

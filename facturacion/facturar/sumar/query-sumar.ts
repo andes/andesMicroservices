@@ -105,6 +105,93 @@ export class QuerySumar {
         }
     }
 
+    async saveBeneficiario(pool: any, paciente: any) {
+        const transaction = new sql.Transaction(pool);
+
+        await transaction.begin();
+        const request = await new sql.Request(pool);
+
+        let query = 'INSERT INTO [dbo].[PN_beneficiarios] ([clave_beneficiario],[tipo_transaccion],[apellido_benef],[nombre_benef]' +
+            ',[tipo_documento],[numero_doc],[id_categoria],[sexo],[fecha_nacimiento_benef], [id_tribu], [id_lengua],[fecha_inscripcion]' +
+            ',[fecha_carga], [usuario_carga],[activo]) ' +
+            'VALUES (@clave_beneficiario, @tipo_transaccion, @apellido_benef, @nombre_benef, @tipo_documento, @numero_doc, @id_categoria ' +
+            ',@sexo, @fecha_nacimiento_benef, @id_tribu,@id_lengua, @fecha_inscripcion, @fecha_carga, @usuario_carga, @activo) ' +
+            'SELECT SCOPE_IDENTITY() AS id';
+
+        try {
+            const result = await request
+                .input('clave_beneficiario', sql.VarChar(50), '2100000000000000')
+                .input('tipo_transaccion', sql.VarChar(100), 'A')
+                .input('apellido_benef', sql.VarChar(100), paciente.apellido)
+                .input('nombre_benef', sql.VarChar(100), paciente.nombre)
+                .input('tipo_documento', sql.VarChar(100), 'DNI')
+                .input('numero_doc', sql.VarChar(10), paciente.dni)
+                .input('id_categoria', sql.Int, await this.getCategoriaBeneficiario(paciente))
+                .input('sexo', sql.VarChar(100), (paciente.sexo === 'masculino') ? 'M' : paciente.sexo === 'femenino' ? 'F' : 'I')
+                .input('fecha_nacimiento_benef', sql.DateTime, new Date(paciente.fechaNacimiento))
+                .input('id_tribu', sql.Int, 0)
+                .input('id_lengua', sql.Int, 0)
+                .input('fecha_inscripcion', sql.DateTime, new Date())
+                .input('fecha_carga', sql.DateTime, new Date())
+                .input('usuario_carga', sql.VarChar(100), 'Fact.Auto')
+                .input('activo', sql.VarChar(100), '1')
+
+                .query(query);
+
+            return result.recordset;
+        } catch (error) {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveBeneficiarioesSumar', null, error);
+        }
+    }
+
+    /* Valida si existe el beneficiario en Pn_Beneficiario */
+    async validaBeneficiarioSumar(pool: any, paciente: any) {
+        return new Promise((resolve: any, reject: any) => {
+            (async () => {
+                try {
+                    let query = 'SELECT * FROM dbo.PN_beneficiarios WHERE numero_doc = @numero_doc AND activo = @activo';
+                    let resultado = await new sql.Request(pool)
+                        .input('numero_doc', sql.VarChar(50), paciente.dni)
+                        .input('activo', sql.VarChar(1), '1')
+                        .query(query);
+                    if (resultado && resultado.recordset[0]) {
+                        resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
+                    } else {
+                        resolve(null);
+                    }
+
+                } catch (err) {
+                    reject(err);
+                }
+            })();
+        });
+    }
+
+    async getCategoriaBeneficiario(paciente: any) {
+        return new Promise((resolve: any, reject: any) => {
+            let tipoCategoria = 0;
+            let edad = paciente.edadReal ? paciente.edadReal.valor : moment().diff(paciente.fechaNacimiento, 'years');
+            if ((edad >= 0) && (edad <= 10)) {
+                tipoCategoria = 4;
+            } else if ((edad > 10) && (edad <= 19)) {
+                tipoCategoria = 5;
+            } else if ((edad > 19) && (edad <= 64)) {
+                switch (paciente.sexo) {
+                    case 'femenino':
+                        tipoCategoria = 6;
+                        break;
+                    case 'masculino':
+                        tipoCategoria = 7;
+                        break;
+                    case 'otro':
+                        tipoCategoria = -1;
+                        break;
+                }
+            }
+            resolve(tipoCategoria);
+        });
+    }
+
     async getAfiliadoSumar(pool: any, documento: any) {
         return new Promise((resolve: any, reject: any) => {
             (async () => {
@@ -165,14 +252,22 @@ export class QuerySumar {
         });
     }
 
-    async getPrestacion(pool: any, dtoSumar: IDtoSumar) {
+    async getPrestacionSips(pool: any, dtoSumar: IDtoSumar) {
         return new Promise((resolve: any, reject: any) => {
             (async () => {
                 try {
-                    let query = 'SELECT id_prestacion FROM dbo.PN_prestacion WHERE objectId = @objectId';
+                    let fechaPrestacion = moment(dtoSumar.fechaTurno).format('YYYY-MM-DD');
+                    let query = 'SELECT p.id_prestacion FROM dbo.PN_comprobante c ' +
+                        ' INNER JOIN dbo.PN_prestacion p ON p.id_comprobante = c.id_comprobante ' +
+                        ' WHERE c.id_smiafiliados = @idAfiliado AND p.id_nomenclador = @idNomenclador' +
+                        ' AND cast (p.fecha_prestacion as date) = @fechaPrestacion';
+
                     let result = await new sql.Request(pool)
-                        .input('objectId', sql.VarChar(100), dtoSumar.objectId)
+                        .input('idAfiliado', sql.Int, dtoSumar.idAfiliado)
+                        .input('idNomenclador', sql.VarChar(10), dtoSumar.idNomenclador)
+                        .input('fechaPrestacion', sql.Date, fechaPrestacion)
                         .query(query);
+
                     if (result && result.recordset[0]) {
                         resolve(result.recordset[0].id_prestacion);
                     } else {
@@ -183,6 +278,5 @@ export class QuerySumar {
                 }
             })();
         });
-
     }
 }

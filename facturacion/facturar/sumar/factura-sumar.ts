@@ -16,7 +16,7 @@ let querySumar = new QuerySumar();
  * @param {IDtoSumar} dtoSumar
  * @param {*} datosConfiguracionAutomatica
  */
-export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfiguracionAutomatica) {
+export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
     try {
@@ -49,12 +49,12 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
             let existePrestacion = await validaPrestacion(pool, dtoSumar);
 
             if (!existePrestacion) {
-                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, datosConfiguracionAutomatica.sumar.idNomenclador);
+                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
 
                 moment.locale('es');
                 let prestacion = {
                     idComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
-                    idNomenclador: datosConfiguracionAutomatica.sumar.idNomenclador,
+                    idNomenclador: dtoSumar.idNomenclador,
                     cantidad: 1,
                     precioPrestacion: precioPrestacion.precio,
                     idAnexo: 301,
@@ -72,7 +72,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
                 };
 
                 let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
-                
+
                 for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
                     let datosReportables = {
                         idPrestacion: newIdPrestacion,
@@ -110,31 +110,28 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar, datosConfigur
         }
 
     } catch (e) {
-        // log error          
         transaction.rollback();
     }
 }
 
-export async function saveBeneficiario() {
+/* Valida que los datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
+export function validaDatosReportables(dtoFacturacion: IDtoFacturacion) {
+    if (dtoFacturacion.prestacion.datosReportables) {
+        let drPrestacion: any = dtoFacturacion.prestacion.datosReportables.filter((obj: any) => obj !== null).map(obj => obj);
+        let drConfigAutomatica: any = dtoFacturacion.configAutomatica.sumar.datosReportables.map(obj => obj);
 
-}
-
-/* Valida quelos datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
-/* Falta Terminar */
-export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosConfigAutomatica) {
-    /* TODO: configurar en configFacturacion si el dato reportable puede venir null o no */
-
-    let drPrestacion = dtoFacturacion.prestacion.datosReportables.map(obj => obj[0]);
-    let drConfigAutomatica = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
-
-    let found = false;
-    for (let i = 0; i < drPrestacion.length; i++) {
-        if (drConfigAutomatica[i].valores[0].conceptId.indexOf(drPrestacion[i].registro.concepto.conceptId) > -1) {
-            found = true;
-        } else {
-            found = false;
-            break;
+        for (let x = 0; x < drConfigAutomatica.length; x++) {
+            for (let z = 0; z < drPrestacion.length; z++) {
+                if (drConfigAutomatica[x].valores[0].conceptId === drPrestacion[z].conceptId) {
+                    if (!drPrestacion[z].valor) {
+                        return false;
+                    }
+                }
+            }
         }
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -149,9 +146,9 @@ async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolea
     }
 }
 
-/* Valida si la prestación ya fue creada en la BD de SUMAR */
+/* Valida si la prestación ya fue creada en la BD de SUMAR desde ANDES */
 async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let idPrestacion: any = await querySumar.getPrestacion(pool, dtoSumar);
+    let idPrestacion: any = await querySumar.getPrestacionSips(pool, dtoSumar);
 
     if (idPrestacion) {
         return idPrestacion;

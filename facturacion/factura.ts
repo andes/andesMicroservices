@@ -6,9 +6,6 @@ import { IDtoFacturacion } from './interfaces/IDtoFacturacion';
 export class Factura {
 
     async facturar(pool: any, dtoFacturacion: IDtoFacturacion) {
-        /* Traigo colección de configFacturacionAutomatica */
-        let datosConfiguracionAutomatica = await getConfigAutomatica(dtoFacturacion.prestacion.conceptId);
-
-        await jsonFacturacion(pool, dtoFacturacion, datosConfiguracionAutomatica);
+        await jsonFacturacion(pool, dtoFacturacion);
     }
 }
