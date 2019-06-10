@@ -114,12 +114,11 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
     }
 }
 
-/* Valida quelos datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
-export function validaDatosReportables(dtoFacturacion: IDtoFacturacion, datosConfigAutomatica) {
-
+/* Valida que los datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
+export function validaDatosReportables(dtoFacturacion: IDtoFacturacion) {
     if (dtoFacturacion.prestacion.datosReportables) {
         let drPrestacion: any = dtoFacturacion.prestacion.datosReportables.filter((obj: any) => obj !== null).map(obj => obj);
-        let drConfigAutomatica: any = datosConfigAutomatica.sumar.datosReportables.map(obj => obj);
+        let drConfigAutomatica: any = dtoFacturacion.configAutomatica.sumar.datosReportables.map(obj => obj);
 
         for (let x = 0; x < drConfigAutomatica.length; x++) {
             for (let z = 0; z < drPrestacion.length; z++) {

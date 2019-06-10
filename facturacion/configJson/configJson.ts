@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { facturaSumar, validaDatosReportables, saveBeneficiario } from './../facturar/sumar/factura-sumar';
+import { facturaSumar, validaDatosReportables } from './../facturar/sumar/factura-sumar';
 import { facturaRecupero } from './../facturar/recupero-financiero/factura-recupero';
 
 import { QuerySumar } from './../facturar/sumar/query-sumar';
@@ -19,7 +19,7 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
-    let esDatosReportables = await validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+    let esDatosReportables = await validaDatosReportables(dtoFacturacion);
 
     let datoReportable = [];
 
