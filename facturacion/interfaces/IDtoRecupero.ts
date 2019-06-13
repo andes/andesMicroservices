@@ -1,5 +1,6 @@
 export interface IDtoRecupero {
     objectId: String;
+    fechaTurno: Date;
     idTipoNomenclador: Number;
     idServicio: Number;
     codigo: String;

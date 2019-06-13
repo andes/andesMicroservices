@@ -218,6 +218,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
 
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
+            fechaTurno: dtoFacturacion.turno.fechaTurno,
             idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
             codigo: dtoFacturacion.configAutomatica.recuperoFinanciero.codigo,
             idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,

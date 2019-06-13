@@ -84,6 +84,7 @@ async function formatDatosFactura(prestacion: any) {
 
         let dtoDatos = [{
             idTurno: prestacion.id,
+            fechaPrestacion: prestacion.horaInicio,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: datos[2].profesional,
