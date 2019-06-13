@@ -119,17 +119,18 @@ export function validaDatosReportables(dtoFacturacion: IDtoFacturacion) {
     if (dtoFacturacion.prestacion.datosReportables) {
         let drPrestacion: any = dtoFacturacion.prestacion.datosReportables.filter((obj: any) => obj !== null).map(obj => obj);
         let drConfigAutomatica: any = dtoFacturacion.configAutomatica.sumar.datosReportables.map(obj => obj);
+        let valida = true;
 
         for (let x = 0; x < drConfigAutomatica.length; x++) {
             for (let z = 0; z < drPrestacion.length; z++) {
                 if (drConfigAutomatica[x].valores[0].conceptId === drPrestacion[z].conceptId) {
                     if (!drPrestacion[z].valor) {
-                        return false;
+                        valida = false;
                     }
                 }
             }
         }
-        return true;
+        return valida;
     } else {
         return false;
     }

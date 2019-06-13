@@ -19,8 +19,6 @@ import async = require('async');
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
-    let esDatosReportables = await validaDatosReportables(dtoFacturacion);
-
     let datoReportable = [];
 
     let facturacion = {
@@ -140,7 +138,10 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                             dr.idDatoReportable = element.idDatoReportable;
                             dr.datoReportable = element.valor;
                         }
-                        datoReportable.push(dr);
+
+                        if (datoReportable) {
+                            datoReportable.push(dr);
+                        }
                     });
 
                     if ((datoReportable && datoReportable[2]) && (datoReportable[2].idDatoReportable === tensionArterial)) {
@@ -188,8 +189,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                         niñoSano = false;
                     }
                 }
-
-                let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+                let datosReportables = validaDatosReportables(dtoFacturacion);
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
@@ -253,7 +253,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
                 mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
                 dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
-                datosReportables: ((main) && (esDatosReportables)) ? main.datosReportables : null
+                datosReportables: (main) ? main.datosReportables : null
             };
 
             await facturaSumar(pool, dtoSumar);
