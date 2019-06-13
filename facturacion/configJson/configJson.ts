@@ -110,6 +110,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                     arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
 
                     let ta = '';
+                    const talla = '2';
                     const tensionArterial = '3';
 
                     await async.forEachOf(arrayPrestacion, async (element: any, cb: any) => {
@@ -129,18 +130,17 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
 
                                 dr.idDatoReportable = element.idDatoReportable;
                                 dr.datoReportable = ta;
-
-                                datoReportable.push(dr);
                             } else {
                                 datoReportable = null;
                             }
+                        } else if (element.idDatoReportable === talla) {
+                            dr.idDatoReportable = element.idDatoReportable;
+                            dr.datoReportable = Math.round(element.valor).toString();
                         } else {
                             dr.idDatoReportable = element.idDatoReportable;
                             dr.datoReportable = element.valor;
-
-                            datoReportable.push(dr);
                         }
-
+                        datoReportable.push(dr);
                     });
 
                     if ((datoReportable && datoReportable[2]) && (datoReportable[2].idDatoReportable === tensionArterial)) {
