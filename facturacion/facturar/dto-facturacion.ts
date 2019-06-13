@@ -160,8 +160,6 @@ async function formatDatosFactura(prestacion: any) {
 
             dtoDatosArray.push(dtoDatos);
         }
-        console.log("Dto Datos Array: ", dtoDatosArray);
-
         return dtoDatosArray;
     } else {
         /* Ningún origen es válido*/
