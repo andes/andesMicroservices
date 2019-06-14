@@ -189,7 +189,9 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                         niñoSano = false;
                     }
                 }
-                let datosReportables = validaDatosReportables(dtoFacturacion);
+                console.log("dtoFacturacion: ", dtoFacturacion);
+                /* Revisar la validacion, no funciona bien*/
+                let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? validaDatosReportables(dtoFacturacion) : true;
 
                 /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
                 prestación no se debería poder facturar */
@@ -234,7 +236,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         /* Paciente NO TIENE OS se factura por Sumar */
         if (facturacion['sumar'].preCondicionSumar()) {
             tipoFacturacion = 'sumar';
-
+            // console.log("Entra a sumar: ", dtoFacturacion);
             let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 
             dtoSumar = {
