@@ -1,3 +1,3 @@
 export const efectores = [
-    'hpn', 'sips', 'junin', 'centenario'
+    'hpn', 'sips', 'junin', 'plottier', 'zapala','centenario'
 ];
