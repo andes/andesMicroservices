@@ -48,7 +48,7 @@ export async function recuperaDatosProf() {
 
     try {
         let conexion = await new sql.ConnectionPool(connectionString).connect();
-        const query = ` SELECT * FROM [PecasSalud4877]`;
+        const query = ` SELECT pe.*, ef.IdArea FROM [PecasSalud4877] as pe INNER JOIN [Efectores] as ef ON ef.IdEfector=pe.idEfector`;
         const result = await conexion.request().query(query);
         if (result && result.recordset) {
             return result.recordset;
