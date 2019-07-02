@@ -7,7 +7,7 @@ import { QuerySumar } from './../facturar/sumar/query-sumar';
 import { IDtoFacturacion } from './../interfaces/IDtoFacturacion';
 import { IDtoSumar } from '../interfaces/IDtoSumar';
 import { IDtoRecupero } from '../interfaces/IDtoRecupero';
-
+import async = require('async');
 /**
  *
  *
@@ -19,8 +19,6 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
-    let esDatosReportables = await validaDatosReportables(dtoFacturacion);
-
     let datoReportable = [];
 
     let facturacion = {
@@ -51,7 +49,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         otoemisiones: {
             term: 'otoemisiones',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                if (arrayPrestacion) {
+                if ((arrayPrestacion) && (arrayPrestacion.length > 0) && (facturacion['sumar'].preCondicionSumar())) {
                     let dr = {
                         idDatoReportable: '',
                         datoReportable: ''
@@ -92,31 +90,61 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         /* TODO: poner la expresión que corresponda */
         niño_sano: {
             term: 'niño sano',
+            validaTA: (tArterial) => {
+                let valida = false;
+                const tsSistolica = '271649006';
+                const taDiastolica = '271650006';
+                if ((tArterial.conceptId === tsSistolica) && (tArterial.valor >= 50) && (tArterial.valor <= 300)) {
+                    valida = true;
+                }
+
+                if ((tArterial.conceptId === taDiastolica) && (tArterial.valor >= 40) && (tArterial.valor <= 150)) {
+                    valida = true;
+                }
+                return (valida);
+            },
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
-                if ((arrayPrestacion) && (arrayPrestacion.length > 0)) {
+                if ((arrayPrestacion) && (arrayPrestacion.length > 0) && (facturacion['sumar'].preCondicionSumar())) {
                     arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
 
                     let ta = '';
+                    const talla = '2';
                     const tensionArterial = '3';
-                    arrayPrestacion.forEach((element: any) => {
+
+                    await async.forEachOf(arrayPrestacion, async (element: any, cb: any) => {
                         let dr = {
                             idDatoReportable: '',
                             datoReportable: ''
                         };
 
                         if (element.idDatoReportable === tensionArterial) {
-                            ta += element.valor + '/';
+                            let taValida = await facturacion.niño_sano.validaTA(element);
+                            if (taValida) {
+                                if (element.valor.toString().length < 3) {
+                                    element.valor = 0 + element.valor.toString();
 
+                                }
+                                ta += element.valor + '/';
+
+                                dr.idDatoReportable = element.idDatoReportable;
+                                dr.datoReportable = ta;
+                            } else {
+                                datoReportable = null;
+                            }
+                        } else if (element.idDatoReportable === talla) {
                             dr.idDatoReportable = element.idDatoReportable;
-                            dr.datoReportable = ta;
+                            dr.datoReportable = Math.round(element.valor).toString();
                         } else {
                             dr.idDatoReportable = element.idDatoReportable;
                             dr.datoReportable = element.valor;
                         }
-                        datoReportable.push(dr);
+
+                        if (datoReportable) {
+                            datoReportable.push(dr);
+                        }
                     });
 
-                    if (((datoReportable[2])) && (datoReportable[2].idDatoReportable === '3')) {
+                    if ((datoReportable && datoReportable[2]) && (datoReportable[2].idDatoReportable === tensionArterial)) {
                         datoReportable.splice(2, 1);
                         datoReportable[2].datoReportable = datoReportable[2].datoReportable.slice(0, -1);
                     }
@@ -162,14 +190,12 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                     }
                 }
 
-                // let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? true : false;//validaDatosReportables(dtoFacturacion, datosConfiguracionAutomatica);
+                let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? validaDatosReportables(dtoFacturacion) : true;
 
-                /* TODO: validar que los DR obligatorios vengan desde RUP. A veces no se completan todos y esa
-                prestación no se debería poder facturar */
                 let conditionsArray = [
                     esAfiliado,
-                    niñoSano
-                    // datosReportables
+                    niñoSano,
+                    datosReportables
                 ];
 
                 if (conditionsArray.indexOf(false) === -1) {
@@ -191,6 +217,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
 
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
+            fechaTurno: dtoFacturacion.turno.fechaTurno,
             idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
             codigo: dtoFacturacion.configAutomatica.recuperoFinanciero.codigo,
             idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,
@@ -204,38 +231,38 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         await facturaRecupero(pool, dtoRecupero);
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
-        if (facturacion['sumar'].preCondicionSumar()) {
-            tipoFacturacion = 'sumar';
+        tipoFacturacion = 'sumar';
+        let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
 
-            let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
+        dtoSumar = {
+            idPrestacion: dtoFacturacion.idPrestacion,
+            idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
+            fechaTurno: dtoFacturacion.turno.fechaTurno,
+            objectId: dtoFacturacion.turno._id,
+            cuie: dtoFacturacion.organizacion.cuie,
+            diagnostico: (main) ? main.diagnostico : null,
+            dniPaciente: dtoFacturacion.paciente.dni,
+            profesional: dtoFacturacion.profesional,
+            claveBeneficiario: afiliadoSumar.clavebeneficiario,
+            idAfiliado: afiliadoSumar.id_smiafiliados,
+            edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
+            sexo: (dtoFacturacion.paciente.sexo === 'masculino') ? 'M' : 'F',
+            fechaNacimiento: dtoFacturacion.paciente.fechaNacimiento,
+            anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
+            mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
+            dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
+            datosReportables: (main) ? main.datosReportables : null
+        };
 
-            dtoSumar = {
-                idPrestacion: dtoFacturacion.idPrestacion,
-                idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
-                fechaTurno: dtoFacturacion.turno.fechaTurno,
-                objectId: dtoFacturacion.turno._id,
-                cuie: dtoFacturacion.organizacion.cuie,
-                diagnostico: (main) ? main.diagnostico : null,
-                dniPaciente: dtoFacturacion.paciente.dni,
-                profesional: dtoFacturacion.profesional,
-                claveBeneficiario: afiliadoSumar.clavebeneficiario,
-                idAfiliado: afiliadoSumar.id_smiafiliados,
-                edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
-                sexo: (dtoFacturacion.paciente.sexo === 'masculino') ? 'M' : 'F',
-                fechaNacimiento: dtoFacturacion.paciente.fechaNacimiento,
-                anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
-                mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
-                dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
-                datosReportables: ((main) && (esDatosReportables)) ? main.datosReportables : null
-            };
-
-            await facturaSumar(pool, dtoSumar);
-        } else {
-            let esBeneficiario = await querySumar.validaBeneficiarioSumar(pool, dtoFacturacion.paciente);
-
-            if (!esBeneficiario) {
-                await querySumar.saveBeneficiario(pool, dtoFacturacion.paciente);
-            }
-        }
+        await facturaSumar(pool, dtoSumar);
     }
+    // TODO: Esto queda deprecated si se consulta directo a PUCO según mail de Sumar
+    // } else {
+    //     // let esBeneficiario = await querySumar.validaBeneficiarioSumar(pool, dtoFacturacion.paciente);
+
+    //     // if (!esBeneficiario) {
+    //     //     await querySumar.saveBeneficiario(pool, dtoFacturacion.paciente);
+    //     // }
+    // }
+
 }

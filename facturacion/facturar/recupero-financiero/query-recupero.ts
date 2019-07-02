@@ -2,6 +2,7 @@ import * as sql from 'mssql';
 import { IDtoRecupero } from '../../interfaces/IDtoRecupero';
 import { fakeRequestSql } from './../../config.private';
 import { log } from '@andes/log';
+import * as moment from 'moment';
 
 export class QueryRecupero {
 
@@ -140,6 +141,7 @@ export class QueryRecupero {
                 ' ,[idFactura]' +
                 ' ,[baja]' +
                 ' ,[monto]' +
+                ' ,[fechaSiniestro]' +
                 ' ,[objectId] ' +
                 ' ,[factAutomatico])' +
                 ' VALUES' +
@@ -160,6 +162,7 @@ export class QueryRecupero {
                 ' ,@idFactura' +
                 ' ,@baja' +
                 ' ,@monto' +
+                ' ,@fechaSiniestro' +
                 ' ,@objectId ' +
                 ' ,@factAutomatico) ' +
                 'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
@@ -183,6 +186,7 @@ export class QueryRecupero {
                 .input('idFactura', sql.Int, dtoOrden.idFactura)
                 .input('baja', sql.Bit, dtoOrden.baja)
                 .input('monto', sql.Decimal(18, 2), dtoOrden.monto)
+                .input('fechaSiniestro', sql.DateTime, new Date('1900-01-01')) /* Modificar cuando se empiecen a cargar siniestros */
                 .input('objectId', sql.VarChar(50), dtoOrden.objectId)
                 .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
                 .query(query);

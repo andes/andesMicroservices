@@ -9,7 +9,6 @@ import { log } from '@andes/log';
 
 export async function facturacionAutomatica(prestacion: any) {
     let datosFactura: any = await formatDatosFactura(prestacion);
-
     let factura = {};
     let facturaArray = [];
 
@@ -84,6 +83,7 @@ async function formatDatosFactura(prestacion: any) {
 
         let dtoDatos = [{
             idTurno: prestacion.id,
+            fechaPrestacion: prestacion.horaInicio,
             organizacion: datos[0].organizacion,
             obraSocial: (datos[1]) ? (datos[1]) : null,
             profesional: datos[2].profesional,
@@ -160,8 +160,6 @@ async function formatDatosFactura(prestacion: any) {
 
             dtoDatosArray.push(dtoDatos);
         }
-        console.log("Dto Datos Array: ", dtoDatosArray);
-
         return dtoDatosArray;
     } else {
         /* Ningún origen es válido*/
@@ -171,7 +169,6 @@ async function formatDatosFactura(prestacion: any) {
 
 async function getDatosReportables(prestacion: any, configAuto: any) {
     if (prestacion.solicitud) {
-        /* TODO: el array de registros hay que iterarlo */
         if ((configAuto) && (configAuto.sumar)) {
             if (configAuto.sumar.datosReportables.length > 0) {
                 let conceptos: any = [];
