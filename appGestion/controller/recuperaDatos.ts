@@ -14,7 +14,7 @@ export async function recuperaDatos() {
         let conexion = await new sql.ConnectionPool(connectionString).connect();
         const query = `SELECT ef.*, app.Periodo
         ,app.Total_TH,app.TH_Oper,app.TH_Tec,app.TH_Prof,app.TH_Asis
-        ,app.TH_Admin,app.TH_Medicos,app.TH_Enf,app.INV_GastoPer
+        ,app.TH_Admin,app.TH_Medicos,app.TH_Ped,app.TH_MG, app.TH_CL,app.TH_Toco, app.TH_Enf,app.INV_GastoPer
         ,app.INV_BienesUso,app.INV_BienesCons,app.INV_ServNoPers
         ,app.RED_Complejidad,app.RED_Centros,app.RED_PuestosSanit
         ,app.RED_Camas,app.Vehiculos,app.OB_Monto,app.OB_Detalle
@@ -48,7 +48,7 @@ export async function recuperaDatosProf() {
 
     try {
         let conexion = await new sql.ConnectionPool(connectionString).connect();
-        const query = ` SELECT pe.*, ef.IdArea FROM [PecasSalud4877] as pe INNER JOIN [Efectores] as ef ON ef.IdEfector=pe.idEfector`;
+        const query = `SELECT pe.*, ef.IdArea, ef.IdEfector FROM [PecasSalud4877] as pe INNER JOIN [Pecas_Efectores] as ef ON ef.LUGARPAGO=pe.LUGARPAGO`;
         const result = await conexion.request().query(query);
         if (result && result.recordset) {
             return result.recordset;
