@@ -10,25 +10,25 @@ router.group('/mobile', (group) => {
     group.get('/migrar', async (_req: any, res) => {
         let lista = [];
         let listaProf = [];
-        let usuario = _req.query.usuario;
-        let login;
+        // let usuario = _req.query.usuario;
+        // let login;
         try {
-            login = usuario ? await postLogin(usuario) : null;
-            if (login && login.estado >= 200 && login.estado < 300) {
-                // migrar datos
-                const registros = await recuperaDatos();
-                const registrosProf = await recuperaDatosProf();
-                if (registros.length > 0) {
-                    registros.map(async registro => {
-                        lista = lista.concat(registro);
-                    });
-                }
-                if (registrosProf.length > 0) {
-                    registrosProf.map(async registroProf => {
-                        listaProf = listaProf.concat(registroProf);
-                    });
-                }
+            //  login = usuario ? await postLogin(usuario) : null;
+            // if (login && login.estado >= 200 && login.estado < 300) {
+            // migrar datos
+            const registros = await recuperaDatos();
+            const registrosProf = await recuperaDatosProf();
+            if (registros.length > 0) {
+                registros.map(async registro => {
+                    lista = lista.concat(registro);
+                });
             }
+            if (registrosProf.length > 0) {
+                registrosProf.map(async registroProf => {
+                    listaProf = listaProf.concat(registroProf);
+                });
+            }
+            //    }
             // devuelve un arreglo vacio en caso que no realizar la migración de datos
             res.json({ lista, listaProf });
         } catch (ex) {
