@@ -257,16 +257,13 @@ export class QuerySumar {
             (async () => {
                 try {
                     let fechaPrestacion = moment(dtoSumar.fechaTurno).format('YYYY-MM-DD');
-                    let query = 'SELECT p.id_prestacion FROM dbo.PN_comprobante c ' +
-                        ' INNER JOIN dbo.PN_prestacion p ON p.id_comprobante = c.id_comprobante ' +
-                        ' WHERE c.id_smiafiliados = @idAfiliado AND p.id_nomenclador = @idNomenclador' +
-                        ' AND cast (p.fecha_prestacion as date) = @fechaPrestacion';
 
-                    let result = await new sql.Request(pool)
+                    let result = await pool.request()
                         .input('idAfiliado', sql.Int, dtoSumar.idAfiliado)
-                        .input('idNomenclador', sql.VarChar(10), dtoSumar.idNomenclador)
+                        .input('idNomenclador', sql.Int, dtoSumar.idNomenclador)
                         .input('fechaPrestacion', sql.Date, fechaPrestacion)
-                        .query(query);
+                        .output('idPrestacion', sql.Int)
+                        .execute('PN_ValidaPrestacionPaciente');
 
                     if (result && result.recordset[0]) {
                         resolve(result.recordset[0].id_prestacion);
