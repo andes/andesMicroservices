@@ -43,13 +43,7 @@ export async function facturacionAutomatica(prestacion: any) {
                 nombre: datosFactura[x].profesional.nombre,
                 apellido: datosFactura[x].profesional.apellido,
                 dni: datosFactura[x].profesional.dni,
-                formacionGrado: (datosFactura[x].profesional.formacionGrado.length > 0) ? datosFactura[x].profesional.formacionGrado.find((element) => {
-                    if (element.profesion.nombre === 'MEDICO') {
-                        return element.profesion.nombre.toLowerCase();
-                    } else {
-                        return null;
-                    }
-                }) : null
+                formacionGrado: (datosFactura[x].profesional.formacionGrado.length > 0) ? datosFactura[x].profesional.formacionGrado.find(f => f.profesion.nombre).profesion.nombre.toLowerCase() : null
             } : null,
             configAutomatica: datosFactura[x].configAutomatica
         };
