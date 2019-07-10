@@ -36,7 +36,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
                 idAfiliado: dtoSumar.idAfiliado,
                 fechaCarga: new Date(),
                 comentario: 'Carga Automática',
-                periodo: moment(new Date, 'YYYY/MM/DD').format('YYYY') + '/' + moment(new Date, 'YYYY/MM/DD').format('MM'),
+                periodo: moment(dtoSumar.fechaTurno, 'YYYY/MM/DD').format('YYYY') + '/' + moment(dtoSumar.fechaTurno, 'YYYY/MM/DD').format('MM'),
                 activo: 'S',
                 idTipoPrestacion: 1,
                 objectId: dtoSumar.objectId
