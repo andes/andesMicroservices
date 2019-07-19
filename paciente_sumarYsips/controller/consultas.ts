@@ -262,7 +262,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
     let nombre_benef = paciente.nombre;
     let tipo_documento = 'DNI';
     let numero_doc = null;
-    let clase_documento_benef = null;
+    let clase_documento_benef = '';
     let tipo_doc_madre = 'DNI';
     let nro_doc_madre = null;
     let apellido_madre = null;
@@ -293,6 +293,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
                 }
             }
         }
+        return; /* Si no tiene documento ni relaciones no sirve para guardarlo en PN_Beneficiarios */
     }
     let tipoCategoria = 0;
     let edad = paciente.edadReal ? paciente.edadReal.valor : moment().diff(paciente.fechaNacimiento, 'years');
@@ -352,6 +353,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
         '\',\'' + nombre_benef + '\',\'' + clase_documento_benef + '\',\'' + tipo_documento + '\',\'' + numero_doc +
         '\',' + id_categoria + ',\'' + sexo + '\',\'' + calle + '\',\'' + fecha_nacimiento_benef + '\',\'' + provincia_nac + '\',\'' + localidad_nac +
         '\',\'' + pais_nac + '\',\'' + indigena + '\',\'' + id_tribu + '\',\'' + id_lengua + '\',\'' + tipo_doc_madre + '\',\'' + nro_doc_madre + '\',\'' + apellido_madre + '\',\'' + nombre_madre + '\',\'' + tipo_doc_padre + '\',\'' + nro_doc_padre + '\',\'' + apellido_padre + '\',\'' + nombre_padre + '\',\'' + cuie_ea + '\',\'' + cuie_ah + '\',\'' + departamento + '\',\'' + localidad_nac + '\',\'' + fecha_inscripcion + '\',\'' + fecha_carga + '\',\'' + usuario_carga + '\',\'' + activo + '\'\) ';
+
     let queryUpdate;
     try {
         let id;
