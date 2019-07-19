@@ -74,9 +74,9 @@ export function getProv(nombreProvincia) {
     });
 }
 
-export function getLocalidad(nombreLocalidad, idProv) {
+export function getLocalidad(idLocalidad) {
     return new Promise((resolve: any, reject: any) => {
-        const url = `${ANDES_HOST}/core/tm/localidades/?nombre=${nombreLocalidad}&provincia=${idProv}`;
+        const url = `${ANDES_HOST}/core/tm/localidades/${idLocalidad}`;
         const options = {
             url,
             method: 'GET',

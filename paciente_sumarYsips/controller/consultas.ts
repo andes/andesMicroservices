@@ -332,12 +332,11 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
 
     let calle = paciente.direccion ? paciente.direccion[0].valor : null;
     let departamento = paciente.localidad ? paciente.localidad.departamento : null;
-    if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-        localidad_nac1 = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.nombre, paciente.direccion[0].ubicacion.provincia.id);
-        localidad_nac = localidad_nac1[0].nombre;
-        let nombreDpto = localidad_nac1 ? localidad_nac1[0].departamento : null;
-        departamento = nombreDpto ? await getDepartamento(nombreDpto, conexion) : 0;
 
+    if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
+        localidad_nac1 = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.id);
+        localidad_nac = localidad_nac1 ? localidad_nac1.nombre : null;
+        departamento = localidad_nac1 ? localidad_nac1.departamento : null;
     }
     let fecha_inscripcion = paciente.createdAt;
     let fecha_carga = fecha_inscripcion;
@@ -347,12 +346,12 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
         ',[clase_documento_benef],[tipo_documento],[numero_doc],[id_categoria],[sexo],[calle],[fecha_nacimiento_benef]' +
         ',[provincia_nac],[localidad_nac],[pais_nac],[indigena],[id_tribu],[id_lengua]' +
         ',[tipo_doc_madre],[nro_doc_madre],[apellido_madre],[nombre_madre],[tipo_doc_padre],[nro_doc_padre],[apellido_padre], [nombre_padre]' +
-        ',[cuie_ea],[cuie_ah],[departamento],[fecha_inscripcion]' +
+        ',[cuie_ea],[cuie_ah],[departamento],[localidad],[fecha_inscripcion]' +
         ',[fecha_carga], [usuario_carga],[activo]) ' +
         'VALUES (\'' + clave_beneficiario + '\',\'' + tipo_transaccion + '\',\'' + apellido_benef +
         '\',\'' + nombre_benef + '\',\'' + clase_documento_benef + '\',\'' + tipo_documento + '\',\'' + numero_doc +
         '\',' + id_categoria + ',\'' + sexo + '\',\'' + calle + '\',\'' + fecha_nacimiento_benef + '\',\'' + provincia_nac + '\',\'' + localidad_nac +
-        '\',\'' + pais_nac + '\',\'' + indigena + '\',\'' + id_tribu + '\',\'' + id_lengua + '\',\'' + tipo_doc_madre + '\',\'' + nro_doc_madre + '\',\'' + apellido_madre + '\',\'' + nombre_madre + '\',\'' + tipo_doc_padre + '\',\'' + nro_doc_padre + '\',\'' + apellido_padre + '\',\'' + nombre_padre + '\',\'' + cuie_ea + '\',\'' + cuie_ah + '\',\'' + departamento + '\',\'' + fecha_inscripcion + '\',\'' + fecha_carga + '\',\'' + usuario_carga + '\',\'' + activo + '\'\) ';
+        '\',\'' + pais_nac + '\',\'' + indigena + '\',\'' + id_tribu + '\',\'' + id_lengua + '\',\'' + tipo_doc_madre + '\',\'' + nro_doc_madre + '\',\'' + apellido_madre + '\',\'' + nombre_madre + '\',\'' + tipo_doc_padre + '\',\'' + nro_doc_padre + '\',\'' + apellido_padre + '\',\'' + nombre_padre + '\',\'' + cuie_ea + '\',\'' + cuie_ah + '\',\'' + departamento + '\',\'' + localidad_nac + '\',\'' + fecha_inscripcion + '\',\'' + fecha_carga + '\',\'' + usuario_carga + '\',\'' + activo + '\'\) ';
     let queryUpdate;
     try {
         let id;
