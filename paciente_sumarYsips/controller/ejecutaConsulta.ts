@@ -1,19 +1,9 @@
-import * as configPrivate from '../config.private';
+import { connectionString } from '../config.private';
 import * as consulta from './consultas';
 import * as sql from 'mssql';
 
 export async function conexionPaciente(paciente) {
     let conexion;
-
-    const connectionString = {
-        user: configPrivate.conSql.auth.user,
-        password: configPrivate.conSql.auth.password,
-        server: configPrivate.conSql.serverSql.server,
-        database: configPrivate.conSql.serverSql.database,
-        databasePuco: configPrivate.conSql.puco.database,
-        connectionTimeout: 10000,
-        requestTimeout: 45000
-    };
 
     conexion = await new sql.ConnectionPool(connectionString).connect();
     const transaction = await new sql.Transaction(conexion);
@@ -28,6 +18,7 @@ export async function conexionPaciente(paciente) {
         console.log("Existe en Puco: ", pacienteExistentePUCO);
         if (!pacienteExistentePUCO) {
             let pacienteSips;
+            
             console.log("Existe en SIPSSSS: ", pacienteExistenteSIPS);
             if (!pacienteExistenteSIPS) {
                 pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);

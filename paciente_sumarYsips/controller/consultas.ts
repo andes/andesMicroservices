@@ -157,9 +157,9 @@ export async function existePacientePUCO(paciente: any, conexion) {
 
 }
 export async function insertarPacienteSIPS(paciente: any, conexion) {
-    console.log("Paciente en sipssss: ", paciente);
-    let organizacion: any = paciente.createdBy.organizacion ? await operaciones.getOrganizacion(paciente.createdBy.organizacion.id) : null;
-    let idEfector: any = organizacion ? await getEfector(organizacion.codigo.cuie, conexion) : null;
+    console.log("Paciente en sipssss: ", paciente.createdBy.organizacion);
+    
+    let idEfector: any = paciente.createdBy.organizacion ? await operaciones.getOrganizacion(paciente.createdBy.organizacion.id) : null;    
     let apellido = paciente.apellido;
     let nombre = paciente.nombre;
     let numeroDocumento = paciente.documento ? paciente.documento : 0;
@@ -226,9 +226,9 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
         ',' + idProvinciaDomicilio + ',' + idObraSocial + ',' + idUsuario +
         ',\'' + fechaAlta + '\',\'' + fechaDefuncion + '\',\'' + calle + '\',\'' + fechaUltimaActualizacion + '\',' + idEstadoCivil + ',' + idEtnia +
         ',' + idPoblacion + ',' + idIdioma + ',\'' + '\',\'' + objectId + '\'\) ';
-    console.log("Despues del queryyy; ", queryInsert);
+    // console.log("Despues del queryyy; ", queryInsert);
     try {
-        console.log("Queryyy sipss: ", queryInsert);
+        // console.log("Queryyy sipss: ", queryInsert);
         let doc;
         queryInsert += ' select SCOPE_IDENTITY() as doc';
         const result = await new sql.Request(conexion).query(queryInsert);

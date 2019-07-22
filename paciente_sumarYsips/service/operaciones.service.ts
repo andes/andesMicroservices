@@ -46,7 +46,10 @@ export function getOrganizacion(idOrg) {
         };
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
-                return resolve(JSON.parse(body));
+                const orgs: any = JSON.parse(body);
+                if (orgs) {
+                    resolve(orgs.codigo.sips);
+                }
             }
             log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getOrganizacion:error', { error, body });
             return resolve(error || body);
