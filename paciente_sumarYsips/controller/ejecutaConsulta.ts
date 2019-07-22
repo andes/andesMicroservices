@@ -1,41 +1,34 @@
 import * as configPrivate from '../config.private';
 import * as consulta from './consultas';
 import * as sql from 'mssql';
-import { log } from '@andes/log';
-
 
 export async function conexionPaciente(paciente) {
     let conexion;
-    let fakeRequest = {
-        user: {
-            usuario: 'sipsYsumar',
-            app: 'integracion-sipsYsumar',
-            organizacion: 'sss'
-        },
-        ip: 'localhost',
-        connection: {
-            localAddress: ''
-        }
-    };
+
     const connectionString = {
         user: configPrivate.conSql.auth.user,
         password: configPrivate.conSql.auth.password,
         server: configPrivate.conSql.serverSql.server,
         database: configPrivate.conSql.serverSql.database,
-        databasePuco: configPrivate.conSql.serverSql.databasePuco,
+        databasePuco: configPrivate.conSql.puco.database,
         connectionTimeout: 10000,
         requestTimeout: 45000
     };
+
+    conexion = await new sql.ConnectionPool(connectionString).connect();
+    const transaction = await new sql.Transaction(conexion);
+
     try {
-        conexion = await new sql.ConnectionPool(connectionString).connect();
-        const transaction = await new sql.Transaction(conexion);
         let _pacienteExistenteSIPS = consulta.existePacienteSIPS(paciente, conexion);
         let _pacienteExistenteSUMAR = consulta.existePacienteSUMAR(paciente, conexion);
         let _pacienteExistentePUCO = consulta.existePacientePUCO(paciente, conexion);
         let [pacienteExistenteSIPS, pacienteExistenteSUMAR, pacienteExistentePUCO] = await Promise.all([_pacienteExistenteSIPS, _pacienteExistenteSUMAR, _pacienteExistentePUCO]);
+
         await transaction.begin();
+        console.log("Existe en Puco: ", pacienteExistentePUCO);
         if (!pacienteExistentePUCO) {
             let pacienteSips;
+            console.log("Existe en SIPSSSS: ", pacienteExistenteSIPS);
             if (!pacienteExistenteSIPS) {
                 pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);
 
@@ -49,6 +42,7 @@ export async function conexionPaciente(paciente) {
             if (!pacienteExistenteParentezco && tutor) {
                 await consulta.insertarParentezco(pacienteSips, tutor, transaction);
             }
+            console.log("Existe en SUmar: ", pacienteExistenteSUMAR);
             if (!pacienteExistenteSUMAR) {
                 await consulta.insertarPacienteSUMAR(paciente, transaction);
             } else {
@@ -57,7 +51,6 @@ export async function conexionPaciente(paciente) {
         }
         await transaction.commit();
     } catch (ex) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', undefined, conexion, ex, null);
-        throw ex;
+        transaction.rollback();
     }
 }
