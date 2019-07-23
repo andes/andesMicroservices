@@ -34,7 +34,7 @@ export function getPaciente(idPaciente) {
     });
 }
 
-export function getOrganizacion(idOrg) {
+export function getOrganizacion(idOrg): any {
     return new Promise((resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrg}`;
         const options = {
@@ -47,8 +47,15 @@ export function getOrganizacion(idOrg) {
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 const orgs: any = JSON.parse(body);
+                const organizacion: any = {};
                 if (orgs) {
-                    resolve(orgs.codigo.sips);
+                    resolve({
+                        organizacion: {
+                            nombre: orgs.nombre,
+                            cuie: orgs.codigo.cuie,
+                            idSips: orgs.codigo.sips
+                        }
+                    });
                 }
             }
             log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getOrganizacion:error', { error, body });
