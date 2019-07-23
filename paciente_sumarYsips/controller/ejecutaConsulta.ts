@@ -15,13 +15,14 @@ export async function conexionPaciente(paciente) {
         let [pacienteExistenteSIPS, pacienteExistenteSUMAR, pacienteExistentePUCO] = await Promise.all([_pacienteExistenteSIPS, _pacienteExistenteSUMAR, _pacienteExistentePUCO]);
 
         await transaction.begin();
-        console.log("Existe en Puco: ", pacienteExistentePUCO);
+        
         if (!pacienteExistentePUCO) {
             let pacienteSips;
-            
-            console.log("Existe en SIPSSSS: ", pacienteExistenteSIPS);
+
+        
             if (!pacienteExistenteSIPS) {
                 pacienteSips = await consulta.insertarPacienteSIPS(paciente, transaction);
+        
 
             } else {
                 await consulta.actualizarPacienteSIPS(paciente, pacienteExistenteSIPS, transaction);
@@ -33,15 +34,17 @@ export async function conexionPaciente(paciente) {
             if (!pacienteExistenteParentezco && tutor) {
                 await consulta.insertarParentezco(pacienteSips, tutor, transaction);
             }
-            console.log("Existe en SUmar: ", pacienteExistenteSUMAR);
-            if (!pacienteExistenteSUMAR) {
-                await consulta.insertarPacienteSUMAR(paciente, transaction);
-            } else {
-                await consulta.actualizarPacienteSUMAR(paciente, pacienteExistenteSUMAR, transaction);
-            }
+            
+            // console.log("Existe en SUmar: ", pacienteExistenteSUMAR);
+            // if (!pacienteExistenteSUMAR) {
+            //     await consulta.insertarPacienteSUMAR(paciente, transaction);
+            // } else {
+            //     await consulta.actualizarPacienteSUMAR(paciente, pacienteExistenteSUMAR, transaction);
+            // }
         }
         await transaction.commit();
     } catch (ex) {
-        transaction.rollback();
+        console.log("Hace rollback: ", ex);
+        // transaction.rollback();
     }
 }

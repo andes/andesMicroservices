@@ -158,28 +158,18 @@ export async function existePacientePUCO(paciente: any, conexion) {
 }
 export async function insertarPacienteSIPS(paciente: any, conexion) {
     console.log("Paciente en sipssss: ", paciente.createdBy.organizacion);
-    
-    let idEfector: any = paciente.createdBy.organizacion ? await operaciones.getOrganizacion(paciente.createdBy.organizacion.id) : null;    
+
+    let idEfector: any = paciente.createdBy.organizacion ? await operaciones.getOrganizacion(paciente.createdBy.organizacion.id) : null;
     let apellido = paciente.apellido;
     let nombre = paciente.nombre;
     let numeroDocumento = paciente.documento ? paciente.documento : 0;
     let idSexo = (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1);
-    let fechaNacimiento = paciente.fechaNacimiento ? paciente.fechaNacimiento : '19000101';
+    let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('MM/DD/YYYY') : moment('19000101').format('MM/DD/YYYY');
+    console.log("Fecha Nacimiento: ", fechaNacimiento);
     let idEstado = (paciente.estado === 'validado' ? 3 : 2);
-    let idPais = 0;
-    console.log("Llega hasta aca: ");
-    if ((paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.pais) && (paciente.direccion[0].ubicacion.pais.nombre === 'Argentina')) {
-        idPais = 54;
-    }
-
+    let idPais = (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.pais) && (paciente.direccion[0].ubicacion.pais.nombre === 'Argentina') ? 54 : 0;
     let idProvincia: any = 0;
-    console.log("Llega hasta aca: ");
-    let calle = paciente.direccion ? paciente.direccion[0].valor : null;
-    // if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.provincia) {
-    //     let prov: any = await operaciones.getProv(paciente.direccion[0].ubicacion.provincia.nombre);
-    //     let codigoindec = prov ? prov[0].codINDEC : null;
-    //     idProvincia = codigoindec ? await getProvincia(codigoindec, conexion) : 0;
-    // }
+    // let calle = paciente.direccion ? paciente.direccion[0].valor : null;
     let idNivelInstruccion = 0;
     let idSituacionLaboral = 0;
     let idProfesion = 0;
@@ -187,63 +177,96 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
     let idBarrio = 0;
     let idLocalidad = 0;
     let idDepartamento: any = 0;
-    // if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-    //     let localidad: any = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.id);
-    //     console.log("Localidad: ", localidad);
-    //     let nombreDpto = localidad.departamento;
-    // }
-    console.log("Llega hasta aca: ");
     let idProvinciaDomicilio = 0;
-    let codigoPuco = paciente.financiador ? paciente.financiador[0].codigoFinanciador : null;
-    let idObraSocial = '';//codigoPuco ? await getObraSocial(codigoPuco, conexion) : 0;
+    // let codigoPuco = paciente.financiador ? paciente.financiador[0].codigoFinanciador : null;
+    let idObraSocial = -1;//codigoPuco ? await getObraSocial(codigoPuco, conexion) : 0;
     let idUsuario = 1486739;
-    let fechaAlta = paciente.createdAt;
-    let fechaDefuncion = paciente.fechaFallecimiento ? paciente.fechaFallecimiento : '1900-01-01 00:00:00.000';
-    let fechaUltimaActualizacion = paciente.updatedAt ? paciente.updatedAt : moment(new Date()).format('YYYY-MM-DD');
+    let fechaAlta = moment(paciente.createdAt).format('MM/DD/YYYY');
+    console.log("Fecha Alta: ", fechaAlta);
+    let fechaDefuncion = paciente.fechaFallecimiento ? moment(paciente.fechaFallecimiento).format('MM/DD/YYYY') : moment(new Date('1900/01/01 03:00:00.000')).format('MM/DD/YYYY');//moment('1900/01/01').format('MM/DD/YYYY');
+    console.log("Fecha Defuncion: ", fechaDefuncion);
+    let fechaUltimaActualizacion = paciente.updatedAt ? moment(paciente.updatedAt).format('MM/DD/YYYY') : moment(new Date()).format('MM/DD/YYYY');
+    console.log("Fecha Actualizacion: ", fechaUltimaActualizacion);
     let idEstadoCivil = 0;
     let idEtnia = 0;
     let idPoblacion = 0;
     let idIdioma = 0;
-    // let telefono = paciente.contacto ? paciente.contacto.map(unContacto => {
-    //     let numero = {
-    //         telefonoCelular: unContacto.tipo === 'celular' ? unContacto.valor : 0,
-    //         telefonoFijo: unContacto.tipo === 'fijo' ? unContacto.valor : 0
-    //     };
-    //     return numero;
-    // }) : null;
-    // let telefonoFijo = telefono[0].telefonoFijo;
-    // let telefonoCelular = telefono[0].telefonoCelular;
     let objectId = paciente.id;
     console.log("Ntes del queryyy");
-    let queryInsert = 'INSERT INTO [dbo].[Sys_Paciente] ([idEfector],[apellido],[nombre],[numeroDocumento],[idSexo]' +
+    // let queryInsert = 'INSERT INTO [dbo].[Sys_Paciente] ([idEfector],[apellido],[nombre],[numeroDocumento],[idSexo]' +
+    //     ',[fechaNacimiento],[idEstado],[idPais],[idProvincia],[idNivelInstruccion],[idSituacionLaboral],[idProfesion]' +
+    //     ',[idOcupacion],[idBarrio],[idLocalidad],[idDepartamento],[idProvinciaDomicilio],[idObraSocial],[idUsuario]' +
+    //     ',[fechaAlta],[fechaDefuncion],[fechaUltimaActualizacion],[idEstadoCivil],[idEtnia],[idPoblacion],[idIdioma],[objectId]) ' +
+    //     'VALUES  (' + idEfector + ',\'' + apellido + '\',\'' + nombre +
+    //     '\',' + numeroDocumento + ',' + idSexo + ',\'' + fechaNacimiento + '\',' + idEstado + ',' + idPais +
+    //     ',' + idProvincia + ',' + idNivelInstruccion + ',' + idSituacionLaboral + ',' + idProfesion +
+    //     ',' + idOcupacion + ',' + idBarrio + ',' + idLocalidad + ',' + idDepartamento +
+    //     ',' + idProvinciaDomicilio + ',' + idObraSocial + ',' + idUsuario +
+    //     ',\'' + fechaAlta + '\',\'' + fechaDefuncion + '\',\'' + fechaUltimaActualizacion + '\',' + idEstadoCivil + ',' + idEtnia +
+    //     ',' + idPoblacion + ',' + idIdioma + ',\'' + '\',\'' + objectId + '\'\) ';
+    let queryInsert = 'INSERT INTO [dbo].[Sys_Paciente] ([idEfector], [apellido], [nombre], [numeroDocumento], [idSexo]' +
         ',[fechaNacimiento],[idEstado],[idPais],[idProvincia],[idNivelInstruccion],[idSituacionLaboral],[idProfesion]' +
         ',[idOcupacion],[idBarrio],[idLocalidad],[idDepartamento],[idProvinciaDomicilio],[idObraSocial],[idUsuario]' +
-        ',[fechaAlta],[fechaDefuncion],[calle],[fechaUltimaActualizacion],[idEstadoCivil],[idEtnia],[idPoblacion],[idIdioma],[objectId]) ' +
-        'VALUES  (' + idEfector + ',\'' + apellido + '\',\'' + nombre +
-        '\',' + numeroDocumento + ',' + idSexo + ',\'' + fechaNacimiento + '\',' + idEstado + ',' + idPais +
-        ',' + idProvincia + ',' + idNivelInstruccion + ',' + idSituacionLaboral + ',' + idProfesion +
-        ',' + idOcupacion + ',' + idBarrio + ',' + idLocalidad + ',' + idDepartamento +
-        ',' + idProvinciaDomicilio + ',' + idObraSocial + ',' + idUsuario +
-        ',\'' + fechaAlta + '\',\'' + fechaDefuncion + '\',\'' + calle + '\',\'' + fechaUltimaActualizacion + '\',' + idEstadoCivil + ',' + idEtnia +
-        ',' + idPoblacion + ',' + idIdioma + ',\'' + '\',\'' + objectId + '\'\) ';
-    // console.log("Despues del queryyy; ", queryInsert);
+        ',[fechaAlta],[fechaDefuncion],[fechaUltimaActualizacion],[idEstadoCivil],[idEtnia],[idPoblacion],[idIdioma],[objectId])' +
+        ' VALUES (@idEfector, @apellido, @nombre, @numeroDocumento, @idSexo' +
+        ',@fechaNacimiento, @idEstado, @idPais, @idProvincia, @idNivelInstruccion, @idSituacionLaboral, @idProfesion' +
+        ',@idOcupacion,@idBarrio, @idLocalidad, @idDepartamento,@idProvinciaDomicilio,@idObraSocial,@idUsuario' +
+        ',@fechaAlta,@fechaDefuncion,@fechaUltimaActualizacion,@idEstadoCivil,@idEtnia,@idPoblacion,@idIdioma,@objectId)' +
+        ' SELECT SCOPE_IDENTITY() AS id';
     try {
-        // console.log("Queryyy sipss: ", queryInsert);
-        let doc;
-        queryInsert += ' select SCOPE_IDENTITY() as doc';
-        const result = await new sql.Request(conexion).query(queryInsert);
-        if (!paciente.documento) {
-            if (result && result.recordset) {
-                doc = result.recordset[0].doc;
-            }
-            let queryUpdate = 'UPDATE  [dbo].[Sys_Paciente] SET numeroDocumento = ' + parseInt(doc) + ' where idPaciente = ' + doc + '  ';
-            return await new sql.Request(conexion).query(queryUpdate);
-        } else {
-            if (result && result.recordset) {
-                log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:exito', null, queryInsert);
-                return result.recordset[0].doc;
-            }
-        }
+        console.log("Queryyy sipss: ", queryInsert);
+
+        // const result = await new sql.Request(conexion);
+        let result = await new sql.Request(conexion)
+            .input('idEfector', sql.Int, idEfector)
+            .input('apellido', sql.VarChar(50), apellido)
+            .input('nombre', sql.VarChar(50), nombre)
+            .input('numeroDocumento', sql.Int, numeroDocumento)
+            .input('idSexo', sql.Int, idSexo)
+            .input('fechaNacimiento', sql.DateTime, new Date(fechaNacimiento))
+            .input('idEstado', sql.Int, idEstado)
+            .input('idPais', sql.Int, idPais)
+            .input('idProvincia', sql.Int, idProvincia)
+            .input('idNivelInstruccion', sql.Int, idNivelInstruccion)
+            .input('idSituacionLaboral', sql.Int, idSituacionLaboral)
+            .input('idProfesion', sql.Int, idProfesion)
+            .input('idOcupacion', sql.Int, idOcupacion)
+            .input('idBarrio', sql.Int, idBarrio)
+            .input('idLocalidad', sql.Int, idLocalidad)
+            .input('idDepartamento', sql.Int, idDepartamento)
+            .input('idProvinciaDomicilio', sql.Int, idProvinciaDomicilio)
+            .input('idObraSocial', sql.Int, idObraSocial)
+            .input('idUsuario', sql.Int, idUsuario)
+            .input('fechaAlta', sql.DateTime, new Date(fechaAlta))
+            .input('fechaDefuncion', sql.DateTime, new Date(fechaDefuncion))
+            .input('fechaUltimaActualizacion', sql.DateTime, new Date(fechaUltimaActualizacion))
+            .input('idEstadoCivil', sql.Int, idEstadoCivil)
+            .input('idEtnia', sql.Int, idEtnia)
+            .input('idPoblacion', sql.Int, idPoblacion)
+            .input('idIdioma', sql.Int, idIdioma)
+            .input('objectId', sql.VarChar(50), objectId)
+            .query(queryInsert);
+        console.log("Rsulta Insert sips: ", result);
+        return result.recordset[0].id;
+
+
+
+
+        // let doc;
+        // queryInsert += ' select SCOPE_IDENTITY() as doc';
+        // const result = await new sql.Request(conexion).query(queryInsert);
+        // if (!paciente.documento) {
+        //     if (result && result.recordset) {
+        //         doc = result.recordset[0].doc;
+        //     }
+        //     let queryUpdate = 'UPDATE  [dbo].[Sys_Paciente] SET numeroDocumento = ' + parseInt(doc) + ' where idPaciente = ' + doc + '  ';
+        //     return await new sql.Request(conexion).query(queryUpdate);
+        // } else {
+        //     if (result && result.recordset) {
+        //         log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:exito', null, queryInsert);
+        //         return result.recordset[0].doc;
+        //     }
+        // }
     } catch (err) {
         console.log("Errorrr: ", err);
         log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Insertar paciente sips:error', err, queryInsert);
@@ -468,6 +491,7 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
         ' where [idPaciente] = ' + idPaciente + '  ';
     try {
         const result = await new sql.Request(conexion).query(query);
+        console.log("Paciente sips actualizado: ", result);
         log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'Actualizar paciente sips:exito', null, query);
 
 
