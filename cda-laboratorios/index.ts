@@ -2,13 +2,17 @@ import { Microservice, Middleware } from '@andes/bootstrap';
 import { importarDatos } from './controller/import-labs';
 const PQueue = require('p-queue');
 let pkg = require('./package.json');
+import { Connections } from '@andes/log';
 
+import { logDatabase } from './config.private';
 let ms = new Microservice(pkg);
 
 const router = ms.router();
 const queue = new PQueue({ concurrency: 5 });
 
 router.group('/cda', (group) => {
+
+    Connections.initialize(logDatabase.log.host, logDatabase.log.options);
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', (req, res) => {
         res.send({ message: 'ok' });
