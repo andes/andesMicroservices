@@ -1,6 +1,17 @@
 import * as ConfigPrivate from './../../config.private';
-
-function make(paciente: any) {
+import { log } from '@andes/log';
+let fakeRequest = {
+    user: {
+        usuario: ConfigPrivate.staticConfiguration.hpn.user,
+        app: 'rup:prestacion:create',
+        organizacion: 'sss'
+    },
+    ip: ConfigPrivate.staticConfiguration.hpn.ip,
+    connection: {
+        localAddress: ''
+    }
+};
+async function make(paciente: any) {
     // Conexión a la base de datos
     const connectionString = {
         user: ConfigPrivate.staticConfiguration.hpn.user,
@@ -10,9 +21,11 @@ function make(paciente: any) {
         requestTimeout: 20000,
         webservice_host: ConfigPrivate.staticConfiguration.hpn.webservice_host
     };
-    const dni = paciente.documento;
+    let query = '';
+    try {
+        const dni = paciente.documento;
 
-    const query = `
+        query = `
     select
     -- Id
     ('P-' + CONVERT(varchar(max), Prestaciones.id)) as id,
@@ -48,10 +61,14 @@ function make(paciente: any) {
     and pacientes.documento = '${dni}'`;
 
 
-    return {
-        connectionString,
-        query
-    };
+        return {
+            connectionString,
+            query
+        };
+    } catch (ex) {
+        await log(fakeRequest, 'microservices:integration:cda-validator', paciente.id, 'make:hpn:error', null, { documento: paciente.documento, query }, ex);
+        throw ex;
+    }
 }
 
 export = make;

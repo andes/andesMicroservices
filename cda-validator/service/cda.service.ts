@@ -1,7 +1,18 @@
 import { ANDES_HOST, ANDES_KEY } from './../config.private';
 const request = require('request');
-
-export function postCDA(data: any) {
+import { log } from '@andes/log';
+let fakeRequest = {
+    user: {
+        usuario: '',
+        app: 'rup:prestacion:create',
+        organizacion: 'sss'
+    },
+    ip: '',
+    connection: {
+        localAddress: ''
+    }
+};
+export function postCDA(data: any, efector) {
     return new Promise((resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/modules/cda/create`;
         const options = {
@@ -13,10 +24,12 @@ export function postCDA(data: any) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        request(options, (error, response, body) => {
+        request(options, async (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
+            await log(fakeRequest, 'microservices:integration:cda-validator', data.paciente.id, 'postCDA:error', null, { datos: data, body, efector }, error);
+
             return resolve(error || body);
         });
     });

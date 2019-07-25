@@ -1,6 +1,17 @@
 import * as ConfigPrivate from './../../config.private';
-
-function make(paciente: any) {
+import { log } from '@andes/log';
+let fakeRequest = {
+    user: {
+        usuario: ConfigPrivate.staticConfiguration.plottier.user,
+        app: 'rup:prestacion:create',
+        organizacion: 'sss'
+    },
+    ip: ConfigPrivate.staticConfiguration.plottier.ip,
+    connection: {
+        localAddress: ''
+    }
+};
+async function make(paciente: any) {
     const connectionString = {
         user: ConfigPrivate.staticConfiguration.plottier.user,
         password: ConfigPrivate.staticConfiguration.plottier.password,
@@ -8,11 +19,12 @@ function make(paciente: any) {
         database: ConfigPrivate.staticConfiguration.plottier.database,
         requestTimeout: 30000
     };
+    let query = '';
+    try {
+        const dni = paciente.documento;
 
-    const dni = paciente.documento;
-
-    const query =
-        `SELECT  consulta.idConsulta AS id ,
+        query =
+            `SELECT  consulta.idConsulta AS id ,
         CASE WHEN e.conceptId_snomed IS NOT NULL THEN e.conceptId_snomed
              ELSE '11429006'
         END AS prestacion ,
@@ -40,10 +52,14 @@ FROM    Sys_Paciente AS pac
         INNER JOIN dbo.Sys_Especialidad AS e ON e.idEspecialidad = consulta.idEspecialidad
 WHERE   pac.numeroDocumento = '${dni}'`;
 
-    return {
-        connectionString,
-        query
-    };
+        return {
+            connectionString,
+            query
+        };
+    } catch (ex) {
+        await log(fakeRequest, 'microservices:integration:cda-validator', paciente.id, 'make:plottier:error', null, { documento: paciente.documento, query }, ex);
+        throw ex;
+    }
 }
 
 export = make;

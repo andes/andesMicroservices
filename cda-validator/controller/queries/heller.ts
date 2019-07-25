@@ -1,6 +1,18 @@
 import * as ConfigPrivate from './../../config.private';
+import { log } from '@andes/log';
 
-function make(paciente: any) {
+let fakeRequest = {
+    user: {
+        usuario: ConfigPrivate.staticConfiguration.heller.user,
+        app: 'rup:prestacion:create',
+        organizacion: 'sss'
+    },
+    ip: ConfigPrivate.staticConfiguration.heller.ip,
+    connection: {
+        localAddress: ''
+    }
+};
+async function make(paciente: any) {
     const connectionString = {
         user: ConfigPrivate.staticConfiguration.heller.user,
         password: ConfigPrivate.staticConfiguration.heller.password,
@@ -10,10 +22,11 @@ function make(paciente: any) {
             tdsVersion: '7_1'
         }
     };
+    let query = '';
+    try {
+        const dni = paciente.documento;
 
-    const dni = paciente.documento;
-
-    const query = `select
+        query = `select
     replace(CNS_TipoConsultorio.Descripcion,' ','') + '-' + rtrim(CNS_Recepcion.Id_recepcion) as id,
     convert(varchar,391000013108) as prestacion,
         999 as idEfector,
@@ -54,10 +67,14 @@ function make(paciente: any) {
         and Pacientes.[Número de Documento] =  '${dni}'
     ORDER BY CNS_Recepcion.Fecha `;
 
-    return {
-        connectionString,
-        query
-    };
+        return {
+            connectionString,
+            query
+        };
+    } catch (ex) {
+        await log(fakeRequest, 'microservices:integration:cda-validator', paciente.id, 'make:heller:error', null, { documento: paciente.documento, query }, ex);
+        throw ex;
+    }
 }
 
 export = make;

@@ -1,36 +1,52 @@
 import { getInforme } from './../service/inform.service';
 import { getOrganizacion } from './../service/organizaciones.service';
 import { Matching } from '@andes/match';
-
+import { log } from '@andes/log';
+let fakeRequest = {
+    user: {
+        usuario: '',
+        app: 'rup:prestacion:create',
+        organizacion: 'sss'
+    },
+    ip: '',
+    connection: {
+        localAddress: ''
+    }
+};
 let moment = require('moment');
 
 
-function vPaciente(registro, pacienteAndes) {
-    const cota = 0.95;
-    function matchPaciente(pacMpi, pac) {
-        const weights = {
-            identity: 0.55,
-            name: 0.10,
-            gender: 0.3,
-            birthDate: 0.05
-        };
+async function vPaciente(registro, pacienteAndes, efector) {
 
-        const pacDto = {
-            documento: pacMpi.documento ? pacMpi.documento.toString() : '',
-            nombre: pacMpi.nombre ? pacMpi.nombre : '',
-            apellido: pacMpi.apellido ? pacMpi.apellido : '',
-            fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
-            sexo: pacMpi.sexo ? pacMpi.sexo : ''
-        };
-        const pacElastic = {
-            documento: pac.documento ? pac.documento.toString() : '',
-            nombre: pac.nombre ? pac.nombre : '',
-            apellido: pac.apellido ? pac.apellido : '',
-            fechaNacimiento: pac.fechaNacimiento ? moment(pac.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
-            sexo: pac.sexo
-        };
-        const match = new Matching();
-        return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
+    const cota = 0.95;
+    async function matchPaciente(pacMpi, pac) {
+        try {
+            const weights = {
+                identity: 0.55,
+                name: 0.10,
+                gender: 0.3,
+                birthDate: 0.05
+            };
+
+            const pacDto = {
+                documento: pacMpi.documento ? pacMpi.documento.toString() : '',
+                nombre: pacMpi.nombre ? pacMpi.nombre : '',
+                apellido: pacMpi.apellido ? pacMpi.apellido : '',
+                fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                sexo: pacMpi.sexo ? pacMpi.sexo : ''
+            };
+            const pacElastic = {
+                documento: pac.documento ? pac.documento.toString() : '',
+                nombre: pac.nombre ? pac.nombre : '',
+                apellido: pac.apellido ? pac.apellido : '',
+                fechaNacimiento: pac.fechaNacimiento ? moment(pac.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+                sexo: pac.sexo
+            };
+            const match = new Matching();
+            return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
+        } catch (e) {
+            await log(fakeRequest, 'microservices:integration:cda-validator', null, 'matchPaciente:error', null, { pacienteElastic: pac, pacienteDTO: pacMpi, efector }, e);
+        }
     }
 
     let paciente = {
@@ -52,18 +68,20 @@ function vPaciente(registro, pacienteAndes) {
                 paciente.sexo = 'otro';
                 break;
         }
-        const value = matchPaciente(pacienteAndes, paciente);
+        const value = await matchPaciente(pacienteAndes, paciente);
         if (value >= cota) {
             return pacienteAndes;
         } else {
+            await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'vPaciente:no macheo', null, { registro, pacienteAndes, paciente, efector }, 'fallo el match');
             return null;
         }
     } else {
+        await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'vPaciente:error', null, { registro, pacienteAndes, paciente, efector }, 'falta algun campo de paciente ');
         return null;
     }
 }
 
-function vProfesional(registro) {
+async function vProfesional(registro, efector) {
     let profesional = {
         documento: registro.profesionalDocumento ? registro.profesionalDocumento.toString() : null,
         nombre: registro.profesionalNombre ? registro.profesionalNombre : null,
@@ -72,6 +90,8 @@ function vProfesional(registro) {
     if (profesional.nombre && profesional.apellido && profesional.documento) {
         return profesional;
     } else {
+        await log(fakeRequest, 'microservices:integration:cda-validator', null, 'vProfesional:error', null, { registro, profesional, efector }, 'falta algun campo del profesional ');
+
         return null;
     }
 }
@@ -95,7 +115,7 @@ function vCie10(cie10) {
     }
 }
 
-export async function verificar(registro, pacienteAndes) {
+export async function verificar(registro, pacienteAndes, efector) {
     let dto = {
         organizacion: null,
         paciente: null,
@@ -109,7 +129,7 @@ export async function verificar(registro, pacienteAndes) {
     };
     let notError = true;
     let msgError = '';
-    let pacienteVerified: any = vPaciente(registro, pacienteAndes);
+    let pacienteVerified: any = await vPaciente(registro, pacienteAndes, efector);
 
     if (pacienteVerified) {
         dto['paciente'] = pacienteVerified;
@@ -123,12 +143,13 @@ export async function verificar(registro, pacienteAndes) {
             dto.organizacion = await getOrganizacion(registro.sisa);
             dto.organizacion = dto.organizacion._id;
         } catch (e) {
+            await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'registro.sisa:error', null, { registro, efector }, 'El código SISA no ha sido verificado correctamente');
             notError = false;
             msgError = msgError + '\n' + 'SISA Code invalido';
         }
     }
 
-    let profesionalVerified = vProfesional(registro);
+    let profesionalVerified = await vProfesional(registro, efector);
     if (profesionalVerified) {
         dto['profesional'] = profesionalVerified;
     } else {
@@ -140,17 +161,20 @@ export async function verificar(registro, pacienteAndes) {
     if (prestacionVerified) {
         dto['tipoPrestacion'] = prestacionVerified;
     } else {
+        await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'prestacionVerified:error', null, { registro, efector }, 'La prestación no ha sido verificada correctamente');
         notError = false;
         msgError = msgError + '\n' + 'La prestación no existe';
     }
     if (!registro.fecha) {
+        await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'fecha:error', null, { registro, efector }, 'El registro no tiene fecha');
         notError = false;
-        msgError = 'El registro no posee fecha de registro o id';
+        msgError = 'El registro no posee fecha de registro';
     }
 
     if (!registro.id) {
+        await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'id:error', null, { registro, efector }, 'El registro no tiene id');
         notError = false;
-        msgError = 'El registro no posee fecha de registro o id';
+        msgError = 'El registro no posee id';
     }
 
     if (notError) {
@@ -166,6 +190,7 @@ export async function verificar(registro, pacienteAndes) {
             }
             dto['cie10'] = registro.cie10;
         } else {
+            await log(fakeRequest, 'microservices:integration:cda-validator', pacienteAndes.id, 'cie10Verified:error', null, { registro, efector }, 'El codigo CIE10 no ha sido verificado correctamente');
             msgError = msgError + '\n' + 'El código CIE10 no es válido';
         }
     }

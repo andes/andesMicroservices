@@ -1,16 +1,17 @@
 import { Microservice } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import { efectores } from './constantes';
-
+import { Connections } from '@andes/log';
+import { logDatabase } from './config.private';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
 
 router.group('/cda', (group) => {
+    Connections.initialize(logDatabase.log.host, logDatabase.log.options);
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', async (req: any, res) => {
         res.send({ message: 'ok' });
-
         const id = req.body.id;
         const webhookId = req.body.subscription;
         const event = req.body.event;
@@ -29,7 +30,7 @@ router.group('/cda', (group) => {
         if (paciente) {
             for (const efector of efectores) {
                 const factory = require('./controller/queries/' + efector);
-                await ejecutaCDA.ejecutar(factory, paciente);
+                await ejecutaCDA.ejecutar(factory, paciente, efector);
             }
         }
     });

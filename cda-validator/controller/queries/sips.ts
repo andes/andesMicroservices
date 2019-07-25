@@ -1,6 +1,17 @@
 import * as ConfigPrivate from './../../config.private';
-
-function make(paciente: any) {
+import { log } from '@andes/log';
+let fakeRequest = {
+    user: {
+        usuario: ConfigPrivate.staticConfiguration.sips.user,
+        app: 'rup:prestacion:create',
+        organizacion: 'sss'
+    },
+    ip: ConfigPrivate.staticConfiguration.sips.ip,
+    connection: {
+        localAddress: ''
+    }
+};
+async function make(paciente: any) {
     const connectionString = {
         user: ConfigPrivate.staticConfiguration.sips.user,
         password: ConfigPrivate.staticConfiguration.sips.password,
@@ -8,11 +19,12 @@ function make(paciente: any) {
         database: ConfigPrivate.staticConfiguration.sips.database,
         requestTimeout: 30000
     };
+    let query = '';
+    try {
 
-    const dni = paciente.documento;
-
-    const query =
-        `select
+        const dni = paciente.documento;
+        query =
+            `select
                 consulta.idConsulta as id,
                 convert(varchar(max),391000013108) as prestacion,
                 efector.idEfector as idEfector,
@@ -31,10 +43,14 @@ function make(paciente: any) {
                 inner join Sys_Efector as efector on consulta.idEfector = efector.idEfector
                 where pac.numeroDocumento = '${dni}'`;
 
-    return {
-        connectionString,
-        query
-    };
+        return {
+            connectionString,
+            query
+        };
+    } catch (ex) {
+        await log(fakeRequest, 'microservices:integration:cda-validator', paciente.id, 'make:sips:error', null, { documento: paciente.documento, query }, ex);
+        throw ex;
+    }
 }
 
 export = make;
