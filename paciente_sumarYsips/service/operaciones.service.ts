@@ -2,17 +2,6 @@ import { ANDES_HOST, ANDES_KEY, fakeRequest } from '../config.private';
 const request = require('request');
 
 import { log } from '@andes/log';
-// let fakeRequest = {
-//     user: {
-//         usuario: 'sipsYsumar',
-//         app: 'integracion-sipsYsumar',
-//         organizacion: 'sss'
-//     },
-//     ip: 'localhost',
-//     connection: {
-//         localAddress: ''
-//     }
-// };
 
 export function getPaciente(idPaciente) {
     return new Promise((resolve: any, reject: any) => {
