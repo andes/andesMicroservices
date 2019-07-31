@@ -1,18 +1,7 @@
-import { ANDES_HOST, ANDES_KEY } from '../config.private';
+import { ANDES_HOST, ANDES_KEY, fakeRequest } from '../config.private';
 const request = require('request');
 
 import { log } from '@andes/log';
-let fakeRequest = {
-    user: {
-        usuario: 'sipsYsumar',
-        app: 'integracion-sipsYsumar',
-        organizacion: 'sss'
-    },
-    ip: 'localhost',
-    connection: {
-        localAddress: ''
-    }
-};
 
 export function getPaciente(idPaciente) {
     return new Promise((resolve: any, reject: any) => {
@@ -34,7 +23,7 @@ export function getPaciente(idPaciente) {
     });
 }
 
-export function getOrganizacion(idOrg) {
+export function getOrganizacion(idOrg): any {
     return new Promise((resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrg}`;
         const options = {
@@ -46,7 +35,17 @@ export function getOrganizacion(idOrg) {
         };
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
-                return resolve(JSON.parse(body));
+                const orgs: any = JSON.parse(body);
+                const organizacion: any = {};
+                if (orgs) {
+                    resolve({
+                        organizacion: {
+                            nombre: orgs.nombre,
+                            cuie: orgs.codigo.cuie,
+                            idSips: orgs.codigo.sips
+                        }
+                    });
+                }
             }
             log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getOrganizacion:error', { error, body });
             return resolve(error || body);
@@ -74,9 +73,9 @@ export function getProv(nombreProvincia) {
     });
 }
 
-export function getLocalidad(nombreLocalidad, idProv) {
+export function getLocalidad(idLocalidad) {
     return new Promise((resolve: any, reject: any) => {
-        const url = `${ANDES_HOST}/core/tm/localidades/?nombre=${nombreLocalidad}&provincia=${idProv}`;
+        const url = `${ANDES_HOST}/core/tm/localidades/${idLocalidad}`;
         const options = {
             url,
             method: 'GET',

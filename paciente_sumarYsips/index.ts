@@ -7,10 +7,10 @@ import * as operaciones from './service/operaciones.service';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
-const PQueue = require('p-queue');
+
 router.group('/pacienteSumar', (group) => {
     Connections.initialize(logDatabase.log.host, logDatabase.log.options);
-    const queue = new PQueue({ concurrency: 1 });
+
     group.post('/create', async (_req: any, res) => {
         res.send({ message: 'ok' });
         const paciente = _req.body.data;
@@ -30,8 +30,6 @@ router.group('/pacienteSumar', (group) => {
             await conexionPaciente(pac);
         }
     });
-
-
 });
 
 ms.add(router);
