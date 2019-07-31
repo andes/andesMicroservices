@@ -59,4 +59,18 @@ export async function recuperaDatosProf() {
         return err;
     }
 }
+export async function recuperaDatosMortalidad() {
+    try {
+        let conexion = await new sql.ConnectionPool(connectionString).connect();
+        const query = `SELECT mort.*, ef.IdArea, ef.IdEfector, ef.IdZona FROM [Efectores] as ef INNER JOIN [App_Mortalidad] as mort ON ef.idEfector=mort.idEfector`;
+        const result = await conexion.request().query(query);
+        if (result && result.recordset) {
+            return result.recordset;
+        } else {
+            return null;
+        }
+    } catch (err) {
+        return err;
+    }
+}
 
