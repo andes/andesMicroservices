@@ -14,7 +14,9 @@ function make(paciente: any) {
     const query =
         `select
                 consulta.idConsulta as id,
-                convert(varchar(max),391000013108) as prestacion,
+                CASE WHEN e.conceptId_snomed IS NOT NULL THEN e.conceptId_snomed
+                ELSE '11429006'
+                END AS prestacion ,
                 efector.idEfector as idEfector,
                 consulta.fecha as fecha,
                 efector.codigoSisa as sisa,
@@ -29,6 +31,7 @@ function make(paciente: any) {
                 inner join Sys_CIE10 as cie on consultaD.CODCIE10 = cie.ID
                 inner join Sys_Profesional as prof on consulta.idProfesional = prof.idProfesional
                 inner join Sys_Efector as efector on consulta.idEfector = efector.idEfector
+                INNER JOIN dbo.Sys_Especialidad AS e ON e.idEspecialidad = consulta.idEspecialidad
                 where pac.numeroDocumento = '${dni}'`;
 
     return {
