@@ -1,11 +1,11 @@
 import * as ConfigPrivate from './../../config.private';
 
-function make(efector: any, paciente: any) {
+export function queryEfector(efector: any, paciente: any) {
     const connectionString = {
-        user: ConfigPrivate.staticConfiguration.plottier.user,
-        password: ConfigPrivate.staticConfiguration.plottier.password,
-        server: ConfigPrivate.staticConfiguration.plottier.ip,
-        database: ConfigPrivate.staticConfiguration.plottier.database,
+        user: ConfigPrivate.staticConfiguration[efector].user,
+        password: ConfigPrivate.staticConfiguration[efector].password,
+        server: ConfigPrivate.staticConfiguration[efector].ip,
+        database: ConfigPrivate.staticConfiguration[efector].database,
         requestTimeout: 30000
     };
 
@@ -45,5 +45,3 @@ WHERE   pac.numeroDocumento = '${dni}'`;
         query
     };
 }
-
-export = make;
