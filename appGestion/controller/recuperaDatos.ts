@@ -12,7 +12,7 @@ let connectionString = {
 export async function recuperaDatos() {
     try {
         let conexion = await new sql.ConnectionPool(connectionString).connect();
-        const query = `SELECT ef.*, app.* FROM [Efectores] as ef INNER JOIN [App_Datos] as app ON ef.idEfector=app.idEfector`;
+        const query = `SELECT ef.Efector, ef.IdEfectorSuperior, ef.IdLocalidad, ef.Localidad, ef.IdArea, ef.Area, ef.IdZona, ef.Zona, ef.NivelComp, app.* FROM [Efectores] as ef INNER JOIN [App_Datos] as app ON ef.idEfector=app.idEfector`;
         const result = await conexion.request().query(query);
         if (result && result.recordset) {
             return result.recordset;
