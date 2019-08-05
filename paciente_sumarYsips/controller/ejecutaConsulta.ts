@@ -1,7 +1,8 @@
-import { connectionString } from '../config.private';
+import { connectionString, fakeRequest } from '../config.private';
 import * as consulta from './consultas';
 import * as sql from 'mssql';
 
+import { log } from '@andes/log';
 export async function conexionPaciente(paciente) {
     let conexion;
 
@@ -24,6 +25,8 @@ export async function conexionPaciente(paciente) {
         }
         await transaction.commit();
     } catch (ex) {
+        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'conexionPaciente:error', { error: ex, paciente: paciente.documento });
+
         transaction.rollback();
     }
 }
@@ -42,15 +45,17 @@ async function setPacienteSIPS(paciente, pacienteExistenteSIPS, conexion) {
         }
 
         // TODO: Revisar, queda comentado para implementarse mas adelante
-        // let pacienteExistenteParentezco = await consulta.existeParentezco(pacienteSips, conexion);        
-        // let relaciones = paciente.relaciones ? paciente.relaciones : [];        
-        // let tutor = (relaciones.length > 0) ? relaciones[0] : null;        
+        // let pacienteExistenteParentezco = await consulta.existeParentezco(pacienteSips, conexion);
+        // let relaciones = paciente.relaciones ? paciente.relaciones : [];
+        // let tutor = (relaciones.length > 0) ? relaciones[0] : null;
         // if (!pacienteExistenteParentezco && tutor) {
         //     await consulta.insertarParentezco(pacienteSips, tutor, transaction);
         // }
 
         await transaction.commit();
     } catch (error) {
+        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'setPacienteSIPS:error', { error, paciente: paciente.documento });
+
         transaction.rollback();
     }
 }
@@ -69,6 +74,7 @@ async function setPacienteSUMAR(paciente, pacienteExistenteSUMAR, conexion) {
         await transaction.commit();
 
     } catch (error) {
+        log(fakeRequest, 'microservices:integration:sipsYsumar', paciente.id, 'setPacienteSUMAR:error', { error, paciente: paciente.documento });
         transaction.rollback();
     }
 }
