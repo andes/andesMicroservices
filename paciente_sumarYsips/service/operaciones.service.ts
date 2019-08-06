@@ -38,7 +38,7 @@ export function getOrganizacion(idOrg): any {
                 const orgs: any = JSON.parse(body);
                 const organizacion: any = {};
                 if (orgs) {
-                    resolve({
+                    return resolve({
                         organizacion: {
                             nombre: orgs.nombre,
                             cuie: orgs.codigo.cuie,
