@@ -30,11 +30,11 @@ router.group('/facturacion', (group) => {
                 case 'facturacion:factura:recupero_financiero':
                     dtoFacturacion = await facturaTurno(data);
                     break;
-                case 'rup:prestacion:validate':
-                    dtoFacturacion = await facturaRup(data);
-                    break;
+                // case 'rup:prestacion:validate':
+                //     dtoFacturacion = await facturaRup(data);
+                //     break;
                 default:
-                    await log(fakeRequestSql, 'microservices:factura:create', null, '/Origen facturación inválido', null, error);
+                    await log(fakeRequestSql, 'microservices:factura:create', null, '/Origen facturación inválido', null);
                     break;
             }
 

@@ -21,6 +21,7 @@ let querySumar = new QuerySumar();
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
+
     try {
         await transaction.begin();
         const request = await new sql.Request(transaction);
