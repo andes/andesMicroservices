@@ -2,6 +2,7 @@ import { ANDES_HOST, ANDES_KEY } from './../config.private';
 const request = require('request');
 
 export async function getProfesional(idProfesional) {
+    console.log("Id Profesionalll: ", idProfesional);
     return new Promise((resolve, reject) => {
         const url = `${ANDES_HOST}/core/tm/profesionales?id=${idProfesional}&token=${ANDES_KEY}`;
         request(url, (error, response, body) => {
