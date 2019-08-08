@@ -1,6 +1,6 @@
 import { logDatabase, SipsDBConfiguration, fakeRequestSql } from './config.private';
 import { Factura } from './factura';
-import { facturaBuscador, facturaTurno } from './facturar/dto-facturacion';
+import { facturaBuscador, facturaTurno, facturaRup } from './facturar/dto-facturacion';
 
 import { Microservice } from '@andes/bootstrap';
 let pkg = require('./package.json');
@@ -9,12 +9,11 @@ import * as sql from 'mssql';
 
 import { Connections, log } from '@andes/log';
 
-// const mongoose = require('mongoose');
 const router = ms.router();
 
 router.group('/facturacion', (group) => {
     Connections.initialize(logDatabase.log.host, logDatabase.log.options);
-    // mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
+
     group.post('/facturar', async (req, res) => {
         try {
             sql.close();
@@ -31,8 +30,11 @@ router.group('/facturacion', (group) => {
                 case 'facturacion:factura:recupero_financiero':
                     dtoFacturacion = await facturaTurno(data);
                     break;
+                case 'rup:prestacion:validate':
+                    dtoFacturacion = await facturaRup(data);
+                    break;
                 default:
-                    dtoFacturacion = data.paciente;
+                    await log(fakeRequestSql, 'microservices:factura:create', null, '/Origen facturación inválido', null, error);
                     break;
             }
 

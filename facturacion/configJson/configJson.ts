@@ -184,11 +184,11 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 let esAfiliado = (afiliadoSumar) ? true : false;
 
                 let niñoSano = true; /* Se valida que si la prestación es niño sano se pueda facturar si fue validada por un médico*/
-                // if ((dtoFacturacion.configAutomatica) && (dtoFacturacion.configAutomatica.sumar.key_datosreportables === 'niño_sano')) {
-                //     if (dtoFacturacion.profesional.formacionGrado !== 'medico') {
-                //         niñoSano = false;
-                //     }
-                // }
+                if ((dtoFacturacion.configAutomatica) && (dtoFacturacion.configAutomatica.sumar.key_datosreportables === 'niño_sano')) {
+                    if (dtoFacturacion.profesional.formacionGrado !== 'medico') {
+                        niñoSano = false;
+                    }
+                }
 
                 let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? validaDatosReportables(dtoFacturacion) : true;
 

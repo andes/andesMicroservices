@@ -64,7 +64,9 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
             await queryRecupero.saveOrdenDetalle(request, dtoOrdendetalle);
 
             transaction.commit(error => {
-                // ... error checks
+                if (error) {
+                    return error;
+                }
             });
 
         } catch {

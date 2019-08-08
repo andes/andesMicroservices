@@ -5,6 +5,8 @@ import { IDtoSumar } from './../../interfaces/IDtoSumar';
 import moment = require('moment');
 import 'moment/locale/es';
 import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno, getDatosTurno } from '../../services/prestaciones.service';
+import { fakeRequestSql } from './../../config.private';
+import { log } from '@andes/log';
 
 let querySumar = new QuerySumar();
 
@@ -110,7 +112,9 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         }
 
     } catch (e) {
-        transaction.rollback();
+        transaction.rollback(error => {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear comprobante sumar', null, error);
+        });
     }
 }
 
