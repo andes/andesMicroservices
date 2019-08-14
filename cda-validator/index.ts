@@ -1,6 +1,7 @@
 import { Microservice } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
 import { efectores } from './constantes';
+import { queries } from './controller/queries/queries';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -28,7 +29,7 @@ router.group('/cda', (group) => {
 
         if (paciente) {
             for (const efector of efectores) {
-                const factory = require('./controller/queries/' + efector);
+                const factory = queries(efector, paciente);
                 await ejecutaCDA.ejecutar(factory, paciente);
             }
         }

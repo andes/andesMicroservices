@@ -4,7 +4,7 @@ import { postCDA } from './../service/cda.service';
 const sql = require('mssql');
 
 export async function ejecutar(factory, paciente) {
-    let data = factory(paciente);
+    let data = factory;
     if (data) {
         sql.close();
         let pool = await sql.connect(data.connectionString);

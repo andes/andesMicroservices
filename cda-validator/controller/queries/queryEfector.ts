@@ -1,11 +1,11 @@
 import * as ConfigPrivate from './../../config.private';
 
-function make(paciente: any) {
+export function queryEfector(efector: any, paciente: any) {
     const connectionString = {
-        user: ConfigPrivate.staticConfiguration.junin.user,
-        password: ConfigPrivate.staticConfiguration.junin.password,
-        server: ConfigPrivate.staticConfiguration.junin.ip,
-        database: ConfigPrivate.staticConfiguration.junin.database,
+        user: ConfigPrivate.staticConfiguration[efector].user,
+        password: ConfigPrivate.staticConfiguration[efector].password,
+        server: ConfigPrivate.staticConfiguration[efector].ip,
+        database: ConfigPrivate.staticConfiguration[efector].database,
         requestTimeout: 30000
     };
 
@@ -45,5 +45,3 @@ WHERE   pac.numeroDocumento = '${dni}'`;
         query
     };
 }
-
-export = make;

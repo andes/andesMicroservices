@@ -1,11 +1,11 @@
 import * as ConfigPrivate from './../../config.private';
 
-function make(paciente: any) {
+export function heller(efector: any, paciente: any) {
     const connectionString = {
-        user: ConfigPrivate.staticConfiguration.heller.user,
-        password: ConfigPrivate.staticConfiguration.heller.password,
-        server: ConfigPrivate.staticConfiguration.heller.ip,
-        database: ConfigPrivate.staticConfiguration.heller.database,
+        user: ConfigPrivate.staticConfiguration[efector].user,
+        password: ConfigPrivate.staticConfiguration[efector].password,
+        server: ConfigPrivate.staticConfiguration[efector].ip,
+        database: ConfigPrivate.staticConfiguration[efector].database,
         options: {
             tdsVersion: '7_1'
         }
@@ -59,5 +59,3 @@ function make(paciente: any) {
         query
     };
 }
-
-export = make;

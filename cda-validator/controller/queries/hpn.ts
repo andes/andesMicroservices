@@ -1,14 +1,14 @@
 import * as ConfigPrivate from './../../config.private';
 
-function make(paciente: any) {
+export function hpn(efector: any, paciente: any) {
     // Conexión a la base de datos
     const connectionString = {
-        user: ConfigPrivate.staticConfiguration.hpn.user,
-        password: ConfigPrivate.staticConfiguration.hpn.password,
-        server: ConfigPrivate.staticConfiguration.hpn.ip,
-        database: ConfigPrivate.staticConfiguration.hpn.database,
+        user: ConfigPrivate.staticConfiguration[efector].user,
+        password: ConfigPrivate.staticConfiguration[efector].password,
+        server: ConfigPrivate.staticConfiguration[efector].ip,
+        database: ConfigPrivate.staticConfiguration[efector].database,
         requestTimeout: 20000,
-        webservice_host: ConfigPrivate.staticConfiguration.hpn.webservice_host
+        webservice_host: ConfigPrivate.staticConfiguration[efector].webservice_host
     };
     const dni = paciente.documento;
 
@@ -53,5 +53,3 @@ function make(paciente: any) {
         query
     };
 }
-
-export = make;
