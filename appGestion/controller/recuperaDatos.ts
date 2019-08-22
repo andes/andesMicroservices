@@ -55,3 +55,19 @@ export async function recuperaDatosMortalidad() {
     }
 }
 
+export async function recuperaDatosAutomotores() {
+    try {
+        let conexion = await new sql.ConnectionPool(connectionString).connect();
+        const query = `SELECT a.*, ef.idEfector, ef.IdArea, ef.IdZona
+        FROM [Aplicacion].[dbo].[Automotores] as a inner join Efectores as ef ON ef.idEfector=a.[Id efector]`;
+        const result = await conexion.request().query(query);
+        if (result && result.recordset) {
+            return result.recordset;
+        } else {
+            return null;
+        }
+    } catch (err) {
+        return err;
+    }
+}
+
