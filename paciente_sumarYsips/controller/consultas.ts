@@ -254,7 +254,9 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
     let departamento = '';
     if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
         let localidad_nac1: any = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.id);
-        departamento = localidad_nac1 ? localidad_nac1.departamento : null;
+        departamento = localidad_nac1 ? localidad_nac1.departamento.normalize('NFD')
+            .replace(/([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi, '$1')
+            .normalize() : null;
     }
     let fecha_inscripcion = moment(paciente.createdAt).format('MM/DD/YYYY');
     let fecha_carga = fecha_inscripcion;
