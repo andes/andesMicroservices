@@ -250,7 +250,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
     let sexo = (paciente.sexo === 'masculino' ? 'M' : paciente.sexo === 'femenino' ? 'F' : 'I');
     let fecha_nacimiento_benef = moment(paciente.fechaNacimiento).format('MM/DD/YYYY');
     let cuie_ah: any = paciente.createdBy.organizacion ? await operaciones.getOrganizacion(paciente.createdBy.organizacion.id) : null;
-    let cuie_ea = cuie_ah.cuie;
+    let cuie_ea = cuie_ah.organizacion.cuie;
     let departamento = '';
     if (paciente.direccion && paciente.direccion[0].ubicacion && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
         let localidad_nac1: any = await operaciones.getLocalidad(paciente.direccion[0].ubicacion.localidad.id);
@@ -291,7 +291,7 @@ export async function insertarPacienteSUMAR(paciente: any, conexion) {
             .input('apellido_padre', sql.VarChar(50), apellido_padre)
             .input('nombre_padre', sql.VarChar(50), nombre_padre)
             .input('cuie_ea', sql.VarChar(10), cuie_ea)
-            .input('cuie_ah', sql.VarChar(10), cuie_ah.cuie)
+            .input('cuie_ah', sql.VarChar(10), cuie_ah.organizacion.cuie)
             .input('departamento', sql.VarChar(50), departamento)
             .input('fecha_inscripcion', sql.DateTime, new Date(fecha_inscripcion))
             .input('fecha_carga', sql.DateTime, new Date(fecha_carga))
