@@ -1,0 +1,19 @@
+{
+  "name": "sms",
+  "version": "1.0.0",
+  "description": "Servicio de mensajería para San Juan",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --project ..",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w"
+  },
+  "author": "Hugo H. Fernández",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "moment": "^2.24.0",
+    "mssql": "^4.1.0",
+    "request": "^2.88.0"
+  }
+}
