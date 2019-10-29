@@ -1,13 +1,14 @@
 import * as moment from 'moment';
-import { facturaSumar, validaDatosReportables } from './../facturar/sumar/factura-sumar';
+import { facturaSumar } from './../facturar/sumar/factura-sumar';
 import { facturaRecupero } from './../facturar/recupero-financiero/factura-recupero';
+import { drNiñoSano, drOtoemisiones } from './datos-reportables';
 
 import { QuerySumar } from './../facturar/sumar/query-sumar';
 
 import { IDtoFacturacion } from './../interfaces/IDtoFacturacion';
 import { IDtoSumar } from '../interfaces/IDtoSumar';
 import { IDtoRecupero } from '../interfaces/IDtoRecupero';
-import async = require('async');
+
 /**
  *
  *
@@ -19,7 +20,6 @@ import async = require('async');
 export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
-    let datoReportable = [];
 
     let facturacion = {
         /* Prestación Odontología */
@@ -49,40 +49,14 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         otoemisiones: {
             term: 'otoemisiones',
             sumar: (arrayPrestacion, arrayConfiguracion) => {
-                if ((arrayPrestacion) && (arrayPrestacion.length > 0) && (facturacion['sumar'].preCondicionSumar())) {
-                    let dr = {
-                        idDatoReportable: '',
-                        datoReportable: ''
-                    };
-
-                    arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
-                    arrayConfiguracion = arrayConfiguracion.map((ac: any) => ac[0]);
-                    let flagDatosReportables = true;
-
-                    arrayPrestacion.forEach((element, index) => {
-                        let oido = arrayConfiguracion.find((obj: any) => obj.conceptId === element.conceptId);
-
-                        if (oido) {
-                            let valor = arrayConfiguracion.find((obj: any) => obj.conceptId === element.valor.conceptId);
-                            if (valor) {
-                                dr.datoReportable += oido.valor + valor.valor + '/';
-                            } else {
-                                flagDatosReportables = false;
-                            }
-                        }
-                    });
-                    if (flagDatosReportables) {
-                        dr.idDatoReportable = dtoFacturacion.configAutomatica.sumar.datosReportables[0].idDatosReportables;
-                        dr.datoReportable = dr.datoReportable.slice(0, -1);
-
-                        datoReportable.push(dr);
-                        return datoReportable;
-                    } else {
-                        return null;
-                    }
-                } else {
-                    return null;
-                }
+                let dto = {
+                    pool: pool,
+                    dtoFacturacion: dtoFacturacion,
+                    arrayPrestacion: arrayPrestacion,
+                    arrayConfiguracion: arrayConfiguracion,
+                    afiliadoSumar: afiliadoSumar
+                };
+                return drOtoemisiones(dto);
             }
         },
 
@@ -90,69 +64,15 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         /* TODO: poner la expresión que corresponda */
         niño_sano: {
             term: 'niño sano',
-            validaTA: (tArterial) => {
-                let valida = false;
-                const tsSistolica = '271649006';
-                const taDiastolica = '271650006';
-                if ((tArterial.conceptId === tsSistolica) && (tArterial.valor >= 50) && (tArterial.valor <= 300)) {
-                    valida = true;
-                }
-
-                if ((tArterial.conceptId === taDiastolica) && (tArterial.valor >= 40) && (tArterial.valor <= 150)) {
-                    valida = true;
-                }
-                return (valida);
-            },
             sumar: async (arrayPrestacion, arrayConfiguracion) => {
-                if ((arrayPrestacion) && (arrayPrestacion.length > 0) && (facturacion['sumar'].preCondicionSumar())) {
-                    arrayPrestacion = arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
-
-                    let ta = '';
-                    const talla = '2';
-                    const tensionArterial = '3';
-
-                    await async.forEachOf(arrayPrestacion, async (element: any, cb: any) => {
-                        let dr = {
-                            idDatoReportable: '',
-                            datoReportable: ''
-                        };
-
-                        if (element.idDatoReportable === tensionArterial) {
-                            let taValida = await facturacion.niño_sano.validaTA(element);
-                            if (taValida) {
-                                if (element.valor.toString().length < 3) {
-                                    element.valor = 0 + element.valor.toString();
-
-                                }
-                                ta += element.valor + '/';
-
-                                dr.idDatoReportable = element.idDatoReportable;
-                                dr.datoReportable = ta;
-                            } else {
-                                datoReportable = null;
-                            }
-                        } else if (element.idDatoReportable === talla) {
-                            dr.idDatoReportable = element.idDatoReportable;
-                            dr.datoReportable = Math.round(element.valor).toString();
-                        } else {
-                            dr.idDatoReportable = element.idDatoReportable;
-                            dr.datoReportable = element.valor;
-                        }
-
-                        if (datoReportable) {
-                            datoReportable.push(dr);
-                        }
-                    });
-
-                    if ((datoReportable && datoReportable[2]) && (datoReportable[2].idDatoReportable === tensionArterial)) {
-                        datoReportable.splice(2, 1);
-                        datoReportable[2].datoReportable = datoReportable[2].datoReportable.slice(0, -1);
-                    }
-
-                    return datoReportable;
-                } else {
-                    return null;
-                }
+                let dto = {
+                    pool: pool,
+                    dtoFacturacion: dtoFacturacion,
+                    arrayPrestacion: arrayPrestacion,
+                    arrayConfiguracion: arrayConfiguracion,
+                    afiliadoSumar: afiliadoSumar
+                };
+                return drNiñoSano(dto);
             },
         },
         main: async (prestacion: any, tipoFacturacion: String) => {
@@ -176,33 +96,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
                 } else {
                     return null;
                 }
-            }
-        },
-        sumar: {
-            preCondicionSumar: () => {
-                let valido = false;
-                let esAfiliado = (afiliadoSumar) ? true : false;
-
-                let niñoSano = true; /* Se valida que si la prestación es niño sano se pueda facturar si fue validada por un médico*/
-                if ((dtoFacturacion.configAutomatica) && (dtoFacturacion.configAutomatica.sumar.key_datosreportables === 'niño_sano')) {
-                    if (dtoFacturacion.profesional.formacionGrado !== 'medico') {
-                        niñoSano = false;
-                    }
-                }
-
-                let datosReportables = (dtoFacturacion.prestacion.datosReportables) ? validaDatosReportables(dtoFacturacion) : true;
-
-                let conditionsArray = [
-                    esAfiliado,
-                    niñoSano,
-                    datosReportables
-                ];
-
-                if (conditionsArray.indexOf(false) === -1) {
-                    valido = true;
-                }
-
-                return valido;
             }
         }
     };
@@ -253,16 +146,6 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
             dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
             datosReportables: (main) ? main.datosReportables : null
         };
-
         await facturaSumar(pool, dtoSumar);
     }
-    // TODO: Esto queda deprecated si se consulta directo a PUCO según mail de Sumar
-    // } else {
-    //     // let esBeneficiario = await querySumar.validaBeneficiarioSumar(pool, dtoFacturacion.paciente);
-
-    //     // if (!esBeneficiario) {
-    //     //     await querySumar.saveBeneficiario(pool, dtoFacturacion.paciente);
-    //     // }
-    // }
-
 }

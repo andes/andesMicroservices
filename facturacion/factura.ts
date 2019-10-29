@@ -1,6 +1,4 @@
-// import { configFacturacionAutomaticaModel } from './schemas/config-prestaciones';
 import { jsonFacturacion } from './configJson/configJson';
-import { getConfigAutomatica } from './services/config-factAutomatica.service';
 import { IDtoFacturacion } from './interfaces/IDtoFacturacion';
 
 export class Factura {

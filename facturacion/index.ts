@@ -1,6 +1,6 @@
-import { logDatabase, mongoDB, SipsDBConfiguration, fakeRequestSql } from './config.private';
+import { logDatabase, SipsDBConfiguration, fakeRequestSql } from './config.private';
 import { Factura } from './factura';
-import { facturacionAutomatica } from './facturar/dto-facturacion';
+import { facturaBuscador, facturaTurno, facturaRup } from './facturar/dto-facturacion';
 
 import { Microservice } from '@andes/bootstrap';
 let pkg = require('./package.json');
@@ -9,19 +9,36 @@ import * as sql from 'mssql';
 
 import { Connections, log } from '@andes/log';
 
-const mongoose = require('mongoose');
 const router = ms.router();
 
 router.group('/facturacion', (group) => {
     Connections.initialize(logDatabase.log.host, logDatabase.log.options);
-    mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
+
     group.post('/facturar', async (req, res) => {
         try {
             sql.close();
             let pool = await sql.connect(SipsDBConfiguration);
-            let dtoFacturacion: any = await facturacionAutomatica(req.body.data);
-            let factura = new Factura();
+            const event = req.body.event;
+            const data = req.body.data;
 
+            let dtoFacturacion: any;
+            switch (event) {
+                case 'facturacion:factura:buscador':
+                    dtoFacturacion = await facturaBuscador(data);
+                    break;
+                case 'facturacion:factura:recupero_financiero':
+                    dtoFacturacion = await facturaTurno(data);
+                    break;
+                /* Queda comentado para cuando se habilite la facturación desde RUP*/
+                // case 'rup:prestacion:validate':
+                //     dtoFacturacion = await facturaRup(data);
+                //     break;
+                default:
+                    await log(fakeRequestSql, 'microservices:factura:create', null, '/Origen facturación inválido', null);
+                    break;
+            }
+
+            let factura = new Factura();
             for (let x = 0; x < dtoFacturacion.length; x++) {
                 await factura.facturar(pool, dtoFacturacion[x]);
             }
