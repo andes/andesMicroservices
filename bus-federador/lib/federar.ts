@@ -1,19 +1,11 @@
-import { DOMINIO, HOST, SECRET } from '../config';
+import { DOMINIO, HOST, SECRET, PAYLOAD } from '../config';
 import { Patient, initialize } from '@andes/fhir';
 import { SaludDigitalClient } from './salud-digital-cliente';
 import moment = require('moment');
 
 export async function login() {
     const saludDigitalClient = new SaludDigitalClient(DOMINIO, HOST, SECRET);
-
-    const payload = {
-        name: 'Andes',
-        role: 'federador',
-        ident: '1',
-        sub: 'Ministerio de Salud'
-    };
-
-    await saludDigitalClient.obtenerToken(payload);
+    await saludDigitalClient.obtenerToken(PAYLOAD);
     return saludDigitalClient;
 }
 
