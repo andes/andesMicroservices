@@ -15,7 +15,7 @@
         "async": "^2.6.1",
         "better-queue": "^3.8.10",
         "html-entities": "^1.2.1",
-        "mongoose": "^5.3.12",
+        "mongoose": "^5.7.5",
         "mssql": "^4.1.0",
         "p-queue": "^3.0.0",
         "request": "^2.88.0",
