@@ -12,10 +12,13 @@
   "license": "ISC",
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
-    "@andes/match": "^1.1.12",
     "@andes/log": "^1.0.11",
+    "@andes/match": "^1.1.12",
+    "csv-writer": "^1.5.0",
     "moment": "^2.22.2",
     "mongoose": "^5.4.6"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/mongoose": "^5.5.34"
+  }
 }
