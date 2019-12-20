@@ -25,7 +25,7 @@ router.group('/queries', (group) => {
                 case 'queries:consultas:getQueries':
                     resQuery = await getAllQueries();
                     break;
-                case 'queries:consultas:obtenerCsv':
+                case 'queries:consultas:getCsv':
                     resQuery = await descargarCSV(data);
                     break;
                 default:
