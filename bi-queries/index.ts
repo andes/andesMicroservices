@@ -34,7 +34,7 @@ router.group('/queries', (group) => {
                     break;
             }
         } catch (error) {
-            console.log("Error");
+            console.log("Error Catch: ", error);
             //await  log(fakeRequestSql, 'queries:consultas:getQueries', null, ' / Origen query inválido', null, error);
         }
         console.log("resQuery: ", resQuery);
