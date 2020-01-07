@@ -12,27 +12,38 @@ const router = ms.router();
 router.group('/queries', (group) => {
     Connections.initialize(logDatabase.log.host, logDatabase.log.options);
     mongoose.connect(mongoDB.mongoDB_main.host, { useNewUrlParser: true });
+    group.post('/obtenerQueries', async (req, res) => {
+        let resQuery: any;
+        try {
+            let event = req.body.event;
+            if (event === 'queries:consultas:getQueries') {
+                resQuery = await getAllQueries();
+            } else {
+                // console.log('Error');
+                // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null);
+            }
+        } catch (error) {
+            // return error;
+            // console.log("Error Catch: ", error);
+            // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null, error);
+        }
+        // console.log("resQuery: ", resQuery);
+        res.json(resQuery);
+    });
     group.post('/descargarCsv', async (req, res) => {
         let resQuery: any;
         try {
             let event = req.body.event;
             const data = req.body.data;
-            switch (event) {
-                case 'queries:consultas:getQueries':
-                    resQuery = await getAllQueries();
-                    break;
-                case 'queries:consultas:getCsv':
-
-                    resQuery = await descargarCSV(data);
-                    break;
-                default:
-                    console.log('Error');
-                    // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null);
-                    break;
+            if (event === 'queries:consultas:getCsv') {
+                resQuery = await descargarCSV(data);
+            } else {
+                // console.log('Error');
+                // await log(logDatabase, 'queries:consultas:getCsv', null, ' / Origen query inválido', null);
             }
         } catch (error) {
-            // return error;// ver error
-            console.log("Error Catch: ", error);
+            // return error;
+            // console.log("Error Catch: ", error);
             // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null, error);
         }
         // console.log("resQuery: ", resQuery);
