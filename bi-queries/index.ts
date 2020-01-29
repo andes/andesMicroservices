@@ -19,17 +19,14 @@ router.group('/queries', (group) => {
             if (event === 'queries:consultas:getQueries') {
                 resQuery = await getAllQueries();
             } else {
-                // console.log('Error');
                 // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null);
             }
         } catch (error) {
-            // return error;
-            // console.log("Error Catch: ", error);
             // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null, error);
         }
-        // console.log("resQuery: ", resQuery);
         res.json(resQuery);
     });
+
     group.post('/descargarCsv', async (req, res) => {
         let resQuery: any;
         try {
@@ -38,15 +35,11 @@ router.group('/queries', (group) => {
             if (event === 'queries:consultas:getCsv') {
                 resQuery = await descargarCSV(data);
             } else {
-                // console.log('Error');
                 // await log(logDatabase, 'queries:consultas:getCsv', null, ' / Origen query inválido', null);
             }
         } catch (error) {
-            // return error;
-            // console.log("Error Catch: ", error);
-            // await log(logDatabase, 'queries:consultas:getQueries', null, ' / Origen query inválido', null, error);
+            // await log(logDatabase, 'queries:consultas:getCsv', null, ' / Origen query inválido', null, error);
         }
-        // console.log("resQuery: ", resQuery);
         res.json(resQuery);
     });
 });

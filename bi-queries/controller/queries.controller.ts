@@ -7,7 +7,6 @@ export async function getAllQueries() {
   let client = await MongoClient.connect(url);
   let cursor = await client.db().collection('queries').find({});
   let queries = await cursor.toArray();
-  
   client.close();
   return queries;
 }
@@ -16,12 +15,10 @@ export async function descargarCSV(unaQuery) {
   let client = await MongoClient.connect(url);
   let db = await client.db();
   var collection = db.collection(unaQuery.coleccion); // nombre de la coleccion
-
   let pipelineSP;
   try {
     pipelineSP = JSON.parse(unaQuery.query);
   } catch (err) {
-    console.log("Errorrrr: ", err);
   }
 
   let datosArgumentos = unaQuery.argumentos;
@@ -36,27 +33,28 @@ export async function descargarCSV(unaQuery) {
 
   let pipe;
   try {
-    var respuesta = await collection.aggregate(pipelineSP);
+    let respuesta = await collection.aggregate(pipelineSP);
     pipe = await respuesta.toArray();
-
   } catch (err) {
-
   }
   client.close();
-  // generamos archivo CSV
-  const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
-  let someObject = pipe[0];
-  let csvHeader = [];
-  for (let key in someObject) { // generamos el contenido del header: clave y nombre de las columnas del CSV
-    csvHeader.push({ id: key, title: key });
+  let ret = null;
+  if (pipelineSP.length > 0) {// generamos archivo CSV
+    const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
+    let someObject = pipe[0];
+    let csvHeader = [];
+    for (let key in someObject) { // generamos el contenido del header: clave y nombre de las columnas del CSV
+      csvHeader.push({ id: key, title: key });
+    }
+    const csvStringifier = createCsvStringifier({ // se crea header
+      header: csvHeader
+    });
+    ret = csvStringifier.getHeaderString() + await csvStringifier.stringifyRecords(pipe);
   }
-  const csvStringifier = createCsvStringifier({ // se crea header
-    header: csvHeader
-  });
-  let ret = csvStringifier.getHeaderString() + await csvStringifier.stringifyRecords(pipe);
 
   return ret;
 }
+
 function parseDate(fecha: any) {
   let x = Date.parse(fecha);
   return new Date(x);
