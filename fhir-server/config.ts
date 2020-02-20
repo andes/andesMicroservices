@@ -15,6 +15,7 @@ function getEnv(key, _default, type = 's') {
 
 // Queda pendiente
 export const VERSION = getEnv('ASYMMETRIK_FHIR_VERSION', '4_0_0');
+export const DOMAIN = getEnv('DOMINIO', 'andes.gob.ar');
 export const ROUTE = getEnv('ASYMMETRIK_SERVER_ROUTE', 'http://localhost:3000/');
 export const HOST = getEnv('ASYMMETRIK_HOST', ROUTE + VERSION);
 export const SECRET = getEnv('JWT_SECRET', '');

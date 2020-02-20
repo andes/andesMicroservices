@@ -1,5 +1,6 @@
 import { Microservice } from '@andes/bootstrap';
 import { federar } from './lib/federar';
+import { DOMAIN } from './config';
 
 const pkg = require('./package.json');
 
@@ -17,7 +18,7 @@ router.post('/asymmetrik', async (req: any, res) => {
         const data = req.body.data;
 
         if (data.active === true) {
-            federar(data);
+            federar(data, DOMAIN);
         }
         res.json({ status: 'OK' });
     } catch (ex) {

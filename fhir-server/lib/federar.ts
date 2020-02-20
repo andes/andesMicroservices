@@ -1,10 +1,9 @@
 import { HOST } from '../config';
 import { FhirServerClass } from './fhir-server-class';
 
-export async function federar(resource) {
+export async function federar(resource, domain) {
     let fhirServer = new FhirServerClass();
     let path;
-    let domain;
     let verb = 'POST';
     switch (resource.resourceType) {
         case 'Practitioner': {
@@ -19,7 +18,7 @@ export async function federar(resource) {
     }
 
     try {
-        let identificador = resource.identifier.find(r => r.system === 'andes.gob.ar').value;
+        let identificador = resource.identifier.find(r => r.system === domain).value;
         if (identificador) {
             let id = '/?identifier[]=' + identificador.toString();
             let registryId = await fhirServer.search(HOST + path + id);
