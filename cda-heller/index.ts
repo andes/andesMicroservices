@@ -1,13 +1,13 @@
 import { Microservice } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
-import { Connections } from '@andes/log';
-import { logDatabase } from './config.private';
+import { Connections } from './connections';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
 
 router.group('/cda', (group) => {
-    Connections.initialize(logDatabase.log.host, logDatabase.log.options);
+    // Connections.initialize(logDatabase.log.host, logDatabase.log.options);
+    Connections.initialize();
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', async (req: any, res) => {
         res.send({ message: 'ok' });

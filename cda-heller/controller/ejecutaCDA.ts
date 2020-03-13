@@ -5,7 +5,11 @@ import * as factory from './queries/heller';
 import * as sql from 'mssql';
 import * as mysql from 'promise-mysql';
 import * as ConfigPrivate from '../config.private';
-import { log } from '@andes/log';
+import { Connections } from '../connections';
+
+import { Logger } from '@andes/log';
+
+const cdaLog = new Logger({ connection: Connections.logs, module: 'microservices', application: 'andes', type: 'msHeller' });
 
 let fakeRequestSql = {
     user: {
@@ -45,7 +49,7 @@ export async function ejecutar(paciente) {
                     }
                 });
                 await Promise.all(ps);
-                log(fakeRequestSql, 'microservices:integration:heller', paciente.id, '/ejecuta CDA exito', null);
+                cdaLog.info('create', paciente.id, fakeRequestSql);
 
                 return true;
             } else {
@@ -67,7 +71,7 @@ export async function ejecutar(paciente) {
                 localAddress: ''
             }
         };
-        log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en /ejecuta', ex);
+        cdaLog.error('create', paciente, ex, fakeRequest);
         throw ex;
     }
 }
@@ -87,7 +91,7 @@ export async function ejecutarMysql(paciente) {
                 });
                 await Promise.all(ps);
                 pool.end();
-                log(fakeRequestMysql, 'microservices:integration:heller', paciente.id, '/ejecutaMysql CDA exito', null);
+                cdaLog.info('create', paciente.id, fakeRequestSql);
 
                 return true;
             } else {
@@ -110,7 +114,7 @@ export async function ejecutarMysql(paciente) {
                 localAddress: ''
             }
         };
-        log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en /ejecutarMysql', ex);
+        cdaLog.error('create', paciente, ex, fakeRequest);
         throw ex;
     }
 }
