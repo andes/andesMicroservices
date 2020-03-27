@@ -1,89 +1,102 @@
-import { mongoDB } from './../config.private';
+import { IQuery, IParams, Query } from '../schemas/query';
+import * as mongoose from 'mongoose';
+import { mappingStream, applyMapping } from './mapping-stream';
+import { createPipeline, createProjectStage, createMappingStage } from './pipeline-builder';
+import { csvTransform } from './csv-stream';
 
-const MongoClient = require('mongodb').MongoClient;
-const url = mongoDB.mongoDB_main.host;
-
-export async function getAllQueries() {
-  let client = await MongoClient.connect(url);
-  let cursor = await client.db().collection('queries').find({});
-  let queries = await cursor.toArray();
-  client.close();
-  return queries;
+function keyvalue(data) {
+    const result = Object.keys(data).map(key => ({ key, valor: data[key] }));
+    return result as any[];
 }
 
-export async function descargarCSV(unaQuery) {
-  let client = await MongoClient.connect(url);
-  let db = await client.db();
-  var collection = db.collection(unaQuery.coleccion); // nombre de la coleccion
-  let pipelineSP;
-  try {
-    pipelineSP = JSON.parse(unaQuery.query);
-  } catch (err) {
-  }
+async function main() {
+    const query = await Query.findById('5e7d2fb18fe0e0cde9ed6076');
 
-  let datosArgumentos = unaQuery.argumentos;
+    const params = {
+        paciente: '5d0be4cf8fc55f15d48e16ff'
+    };
 
-  if (datosArgumentos) {
-    datosArgumentos.forEach((unArg: any) => {
-      let replace = unArg.valor;
-      if (unArg.tipo === 'date') { replace = parseDate(unArg.valor); }
-      findValues(pipelineSP, unArg.key, unArg.param, replace);
+    const datos = execQueryStream(query, keyvalue(params));
+
+    datos.pipe(csvTransform()).pipe(process.stdout).on('end', process.exit);
+
+}
+
+// main();
+
+
+interface IMapping {
+    columnName: string;
+    source: string;
+    target: string;
+}
+
+export function execQueryStream(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    if (!Array.isArray(params)) {
+        params = keyvalue(params);
+    }
+
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    let pipeline = createPipeline(queryData, params);
+
+    mapping = [...queryData.mapping, ...mapping];
+
+    const mapStages = createMappingStage(mapping);
+
+    pipeline = [
+        ...pipeline,
+        ...mapStages
+    ];
+
+    if (fields) {
+        const project = createProjectStage(fields);
+        pipeline.push(project);
+    }
+
+    const stream = collection.aggregate(pipeline);
+
+
+    const Chain = require('stream-chain');
+    const chain = new Chain(mapping.map(m => mappingStream(m.columnName, m.source, m.target)));
+
+    return stream.pipe(chain);
+}
+
+export async function execQuery(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    const pipeline = createPipeline(queryData, params);
+
+    if (fields) {
+        const project = createProjectStage(fields);
+        pipeline.push(project);
+    }
+
+    const datos = await collection.aggregate(pipeline).toArray();
+
+    mapping = [...queryData.mapping, ...mapping];
+
+    for (const map of mapping) {
+        await applyMapping(datos, map.columnName, map.source, map.target);
+    }
+
+    return datos;
+}
+
+export async function execQueryToCollection(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    const pipeline = createPipeline(queryData, params);
+
+    if (fields) {
+        const project = createProjectStage(fields);
+        pipeline.push(project);
+    }
+
+    pipeline.push({
+        $out: queryData.nombre + '_output'
     });
-  }
 
-  let pipe;
-  try {
-    let respuesta = await collection.aggregate(pipelineSP);
-    pipe = await respuesta.toArray();
-  } catch (err) {
-  }
-  client.close();
-  let ret = null;
-  if (pipelineSP.length > 0) {// generamos archivo CSV
-    const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
-    let someObject = pipe[0];
-    let csvHeader = [];
-    for (let key in someObject) { // generamos el contenido del header: clave y nombre de las columnas del CSV
-      csvHeader.push({ id: key, title: key });
-    }
-    const csvStringifier = createCsvStringifier({ // se crea header
-      header: csvHeader
-    });
-    ret = csvStringifier.getHeaderString() + await csvStringifier.stringifyRecords(pipe);
-  }
+    const datos = await collection.aggregate(pipeline).toArray();
 
-  return ret;
-}
-
-function parseDate(fecha: any) {
-  let x = Date.parse(fecha);
-  return new Date(x);
-}
-
-function findValues(obj: any, key: any, valorBusq: any, valorReemp: any) {
-  return findValuesHelper(obj, key, valorBusq, valorReemp);
-}
-
-function findValuesHelper(obj: any, key: any, valorBusq: any, valorReemp: any) {
-  if (!obj) { return; }
-  if (obj instanceof Array) {
-    for (let i in obj) {
-      findValuesHelper(obj[i], key, valorBusq, valorReemp);
-    }
-  }
-  else {
-    if (obj[key] === valorBusq) {
-      obj[key] = valorReemp;
-    }
-    if ((typeof obj === 'object') && (obj !== null)) {
-      let children = Object.keys(obj);
-
-      if (children.length > 0) {
-        for (let i = 0; i < children.length; i++) {
-          findValuesHelper(obj[children[i]], key, valorBusq, valorReemp);
-        }
-      }
-    }
-  }
+    return datos;
 }
 
