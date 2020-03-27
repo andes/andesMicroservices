@@ -90,6 +90,16 @@ export function createProjectStage(fieldText: string) {
     return { $project: project };
 }
 
+export function createDistinctStage(columnName) {
+    const stages = {
+        $group: {
+            _id: `$${columnName}`,
+            [columnName]: { $first: `$${columnName}` }
+        }
+    };
+    return stages;
+}
+
 
 export function createMappingStage(mappings) {
     const lookupStages = [];
@@ -126,23 +136,3 @@ export function createMappingStage(mappings) {
         { $project: removeFieldStage }
     ];
 }
-
-// const _pipeline = [
-//     { $match: { '#profesional': true } }
-// ];
-
-// const query = {
-//     nombre: 'hola',
-//     query: _pipeline,
-//     argumentos: [
-//         { key: 'profesional', tipo: 'string', required: false, subquery: { 'profesional.id': '#profesional' } }
-//     ]
-// };
-
-// const params = [
-//     { key: 'profesional2', valor: '5e7ccf013ee29941e13f678d' }
-// ];
-
-// const final = createPipeline(query, params);
-
-// console.log(JSON.stringify(final));

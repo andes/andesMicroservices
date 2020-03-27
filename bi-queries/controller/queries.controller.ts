@@ -1,29 +1,15 @@
-import { IQuery, IParams, Query } from '../schemas/query';
+import { IQuery, IParams } from '../schemas/query';
 import * as mongoose from 'mongoose';
-import { mappingStream, applyMapping } from './mapping-stream';
-import { createPipeline, createProjectStage, createMappingStage } from './pipeline-builder';
-import { csvTransform } from './csv-stream';
+import { applyMapping } from './mapping-stream';
+import { createPipeline, createProjectStage, createMappingStage, createDistinctStage } from './pipeline-builder';
+import { SQLInsertStream, SQLDeleteStream } from './sql-exporter';
+
+const Chain = require('stream-chain');
 
 function keyvalue(data) {
     const result = Object.keys(data).map(key => ({ key, valor: data[key] }));
     return result as any[];
 }
-
-async function main() {
-    const query = await Query.findById('5e7d2fb18fe0e0cde9ed6076');
-
-    const params = {
-        paciente: '5d0be4cf8fc55f15d48e16ff'
-    };
-
-    const datos = execQueryStream(query, keyvalue(params));
-
-    datos.pipe(csvTransform()).pipe(process.stdout).on('end', process.exit);
-
-}
-
-// main();
-
 
 interface IMapping {
     columnName: string;
@@ -31,12 +17,11 @@ interface IMapping {
     target: string;
 }
 
-export function execQueryStream(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+function buildPipeline(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
     if (!Array.isArray(params)) {
         params = keyvalue(params);
     }
 
-    const collection = mongoose.connection.collection(queryData.coleccion);
     let pipeline = createPipeline(queryData, params);
 
     mapping = [...queryData.mapping, ...mapping];
@@ -53,24 +38,22 @@ export function execQueryStream(queryData: IQuery, params: IParams[], mapping: I
         pipeline.push(project);
     }
 
+    return pipeline;
+}
+
+export function execQueryStream(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    const pipeline = buildPipeline(queryData, params, mapping, fields);
     const stream = collection.aggregate(pipeline);
 
+    // const chain = new Chain(mapping.map(m => mappingStream(m.columnName, m.source, m.target)));
 
-    const Chain = require('stream-chain');
-    const chain = new Chain(mapping.map(m => mappingStream(m.columnName, m.source, m.target)));
-
-    return stream.pipe(chain);
+    return stream;
 }
 
 export async function execQuery(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
     const collection = mongoose.connection.collection(queryData.coleccion);
-    const pipeline = createPipeline(queryData, params);
-
-    if (fields) {
-        const project = createProjectStage(fields);
-        pipeline.push(project);
-    }
-
+    const pipeline = buildPipeline(queryData, params, mapping, fields);
     const datos = await collection.aggregate(pipeline).toArray();
 
     mapping = [...queryData.mapping, ...mapping];
@@ -84,12 +67,7 @@ export async function execQuery(queryData: IQuery, params: IParams[], mapping: I
 
 export async function execQueryToCollection(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
     const collection = mongoose.connection.collection(queryData.coleccion);
-    const pipeline = createPipeline(queryData, params);
-
-    if (fields) {
-        const project = createProjectStage(fields);
-        pipeline.push(project);
-    }
+    const pipeline = buildPipeline(queryData, params, mapping, fields);
 
     pipeline.push({
         $out: queryData.nombre + '_output'
@@ -100,3 +78,30 @@ export async function execQueryToCollection(queryData: IQuery, params: IParams[]
     return datos;
 }
 
+export async function execQueryToExport(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    const pipeline = buildPipeline(queryData, params, mapping, fields);
+
+    const stream = collection.aggregate(pipeline);
+    const chain = new Chain([
+        await SQLInsertStream(queryData)
+    ]);
+
+    return stream.pipe(chain);
+}
+
+export async function execQueryToDelete(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    const pipeline = buildPipeline(queryData, params, mapping, fields);
+
+    pipeline.push(
+        createDistinctStage(queryData.export.deleteColumnKey)
+    );
+
+    const stream = collection.aggregate(pipeline);
+    const chain = new Chain([
+        await SQLDeleteStream(queryData)
+    ]);
+
+    return stream.pipe(chain);
+}

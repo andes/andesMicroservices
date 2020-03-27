@@ -19,6 +19,7 @@
     "moment": "^2.22.2",
     "mongoclient": "^1.0.3",
     "mongoose": "^5.4.6",
+    "mssql": "^6.2.0",
     "stream-chain": "^2.2.1"
   },
   "devDependencies": {

@@ -1,6 +1,30 @@
 import * as mongoose from 'mongoose';
 
-export type IQuery = any;
+export type IQuery = {
+    key: string;
+    nombre: string;
+    descripcion: string;
+    coleccion: string;
+    query: any;
+    argumentos: {
+        key: string;
+        label: string;
+        tipo: string;
+        required: boolean;
+        subquery: any;
+    }[];
+    mapping: {
+        columnName: string;
+        source: string;
+        target: string;
+    }[];
+    export?: {
+        adapter: string,
+        table: string,
+        deleteColumnKey: string,
+        config: any;
+    }
+};
 
 export interface IParams {
     key: string;
@@ -30,7 +54,13 @@ export const QuerySchema = new mongoose.Schema({
         columnName: String,
         source: String,
         target: String
-    }]
+    }],
+    export: {
+        adapter: String,
+        table: String,
+        deleteColumnKey: String,
+        config: mongoose.SchemaTypes.Mixed
+    }
 });
 
 export const Query = mongoose.model('queries', QuerySchema, 'queries');
