@@ -1,6 +1,6 @@
 import { Microservice } from '@andes/bootstrap';
 import * as mongoose from 'mongoose';
-import { execQueryStream, execQueryToExport, execQueryToDelete, execQuery, buildPipeline } from './controller/queries.controller';
+import { execQueryStream, execQueryToExport, execQueryToDelete, execQuery, buildPipeline, execQueryToCreateTable } from './controller/queries.controller';
 import { csvTransform } from './controller/csv-stream';
 
 
@@ -38,6 +38,36 @@ router.get('/queries/:id/plain', async (req, res, next) => {
     try {
         const stream = execQueryStream(queries, params, [], fields);
         stream.pipe(csvTransform()).pipe(res);
+        stream.on('error', (e) => {
+            res.status(400).json({ e });
+        });
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
+
+});
+
+router.get('/queries/:id/create-table', async (req, res, next) => {
+    const Query = mongoose.model('queries');
+    const queries: any = await Query.findById(req.params.id);
+    const params = req.query;
+    const fields = req.query.fields;
+    delete req.query['fields'];
+
+
+    try {
+        const stream = await execQueryToCreateTable(queries, params, [], fields);
+        let modelKey = {};
+        stream.on('data', (data) => modelKey = data);
+        stream.on('end', () => {
+            let createText = `CREATE TABLE ${queries.export.table} (`;
+            for (const key in modelKey) {
+                createText += key + ' ' + (modelKey[key] === 'int' ? 'INT' : 'NVARCHAR(200)') + ',';
+            }
+            createText = createText.substring(0, createText.length - 1);
+            createText += ');';
+            res.json({ model: modelKey, create: createText });
+        });
         stream.on('error', (e) => {
             res.status(400).json({ e });
         });
@@ -148,6 +178,7 @@ router.post('/queries/:id/delete', async (req, res, next) => {
     }
 
 });
+
 
 ms.add(router);
 ms.start();

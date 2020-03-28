@@ -2,7 +2,7 @@ import { IQuery, IParams } from '../schemas/query';
 import * as mongoose from 'mongoose';
 import { applyMapping } from './mapping-stream';
 import { createPipeline, createProjectStage, createMappingStage, createDistinctStage } from './pipeline-builder';
-import { SQLInsertStream, SQLDeleteStream } from './sql-exporter';
+import { SQLInsertStream, SQLDeleteStream, SQLCreateTableStream } from './sql-exporter';
 
 const Chain = require('stream-chain');
 
@@ -101,6 +101,18 @@ export async function execQueryToDelete(queryData: IQuery, params: IParams[], ma
     const stream = collection.aggregate(pipeline);
     const chain = new Chain([
         await SQLDeleteStream(queryData)
+    ]);
+
+    return stream.pipe(chain);
+}
+
+export async function execQueryToCreateTable(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+    const collection = mongoose.connection.collection(queryData.coleccion);
+    const pipeline = buildPipeline(queryData, params, mapping, fields);
+
+    const stream = collection.aggregate(pipeline);
+    const chain = new Chain([
+        await SQLCreateTableStream()
     ]);
 
     return stream.pipe(chain);

@@ -40,6 +40,23 @@ export async function SQLDeleteStream(queryData: IQuery) {
     };
 }
 
+export async function SQLCreateTableStream() {
+    const modelKey = {};
+
+    return async function transform(model) {
+        for (const key in model) {
+            if (!modelKey[key]) {
+                if (!isNaN(parseInt(model[key], 10))) {
+                    modelKey[key] = 'int';
+                } else {
+                    modelKey[key] = 'string';
+                }
+            }
+        }
+        return modelKey;
+    };
+}
+
 function createInstert(pool, table, model) {
     const request = pool.request();
     const cols = [];
