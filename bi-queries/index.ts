@@ -38,6 +38,9 @@ router.get('/queries/:id/plain', async (req, res, next) => {
     try {
         const stream = execQueryStream(queries, params, [], fields);
         stream.pipe(csvTransform()).pipe(res);
+        stream.on('error', (e) => {
+            res.status(400).json({ e });
+        });
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
@@ -71,6 +74,9 @@ router.get('/queries/:id/csv', async (req, res, next) => {
         res.set('Content-Type', 'text/csv');
         res.setHeader(`Content-disposition`, `attachment; filename=${queries.nombre}.csv`);
         stream.pipe(csvTransform()).pipe(res);
+        stream.on('error', (e) => {
+            res.status(400).json({ e });
+        });
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
@@ -89,6 +95,9 @@ router.post('/queries/:id/csv', async (req, res, next) => {
         res.set('Content-Type', 'text/csv');
         res.setHeader(`Content-disposition`, `attachment; filename=${queries.nombre}.csv`);
         stream.pipe(csvTransform()).pipe(res);
+        stream.on('error', (e) => {
+            res.status(400).json({ e });
+        });
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
@@ -110,6 +119,9 @@ router.post('/queries/:id/export', async (req, res, next) => {
         stream.on('end', () => {
             res.json({ status: 'OK' });
         });
+        stream.on('error', (e) => {
+            res.status(400).json({ e });
+        });
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
@@ -127,6 +139,9 @@ router.post('/queries/:id/delete', async (req, res, next) => {
         stream.on('data', () => { });
         stream.on('end', () => {
             res.json({ status: 'OK' });
+        });
+        stream.on('error', (e) => {
+            res.status(400).json({ e });
         });
     } catch (e) {
         res.status(400).json({ error: e.message });
