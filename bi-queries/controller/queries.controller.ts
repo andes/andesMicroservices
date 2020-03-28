@@ -17,7 +17,7 @@ interface IMapping {
     target: string;
 }
 
-function buildPipeline(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+export function buildPipeline(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
     if (!Array.isArray(params)) {
         params = keyvalue(params);
     }
@@ -44,8 +44,8 @@ function buildPipeline(queryData: IQuery, params: IParams[], mapping: IMapping[]
 export function execQueryStream(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
     const collection = mongoose.connection.collection(queryData.coleccion);
     const pipeline = buildPipeline(queryData, params, mapping, fields);
-    const stream = collection.aggregate(pipeline);
 
+    const stream = collection.aggregate(pipeline);
     // const chain = new Chain(mapping.map(m => mappingStream(m.columnName, m.source, m.target)));
 
     return stream;

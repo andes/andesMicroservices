@@ -102,6 +102,7 @@ export function createDistinctStage(columnName) {
 
 
 export function createMappingStage(mappings) {
+    if (mappings.length === 0) { return []; }
     const lookupStages = [];
     const addFieldStage = {};
     const addFieldStage2 = {};
