@@ -1,6 +1,6 @@
 import { Microservice } from '@andes/bootstrap';
 import * as mongoose from 'mongoose';
-import { execQueryStream, execQueryToExport, execQueryToDelete, execQuery, buildPipeline, execQueryToCreateTable } from './controller/queries.controller';
+import { execQueryStream, execQueryToExport, execQueryToDelete, buildPipeline, execQueryToCreateTable } from './controller/queries.controller';
 import { csvTransform } from './controller/csv-stream';
 
 
@@ -29,7 +29,7 @@ router.get('/queries/:id', async (req, res, next) => {
 
 router.get('/queries/:id/plain', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.query;
     const fields = req.query.fields;
     delete req.query['fields'];
@@ -49,7 +49,7 @@ router.get('/queries/:id/plain', async (req, res, next) => {
 
 router.get('/queries/:id/create-table', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.query;
     const fields = req.query.fields;
     delete req.query['fields'];
@@ -79,7 +79,7 @@ router.get('/queries/:id/create-table', async (req, res, next) => {
 
 router.get('/queries/:id/pipeline', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.query;
     const fields = req.query.fields;
     delete req.query['fields'];
@@ -94,11 +94,10 @@ router.get('/queries/:id/pipeline', async (req, res, next) => {
 
 router.get('/queries/:id/csv', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.query;
     const fields = req.query.fields;
     delete req.query['fields'];
-
     try {
         const stream = execQueryStream(queries, params, [], fields);
         res.set('Content-Type', 'text/csv');
@@ -115,7 +114,7 @@ router.get('/queries/:id/csv', async (req, res, next) => {
 
 router.post('/queries/:id/csv', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.body.params;
     const mapping = req.body.mapping || [];
     const fields = req.body.fields;
@@ -137,7 +136,7 @@ router.post('/queries/:id/csv', async (req, res, next) => {
 
 router.post('/queries/:id/export', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.body.params;
     const mapping = req.body.mapping || [];
     const fields = req.body.fields;
@@ -159,7 +158,7 @@ router.post('/queries/:id/export', async (req, res, next) => {
 
 router.post('/queries/:id/delete', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries: any = await Query.findById(req.params.id);
+    const queries: any = await Query.findOne({ nombre: req.params.id });
     const params = req.body.params;
     const mapping = req.body.mapping || [];
     const fields = req.body.fields;

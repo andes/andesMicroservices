@@ -14,8 +14,10 @@ export function createPipeline(queryData: IQuery, params: IParams[]) {
         }
         return v;
     }
-    const query = queryData.query;
-
+    let query = queryData.query;
+    if (typeof query === 'string') {
+        query = JSON.parse(query);
+    }
     let pipeline;
     for (const arg of queryData.argumentos) {
         if (!pipeline) {
@@ -127,7 +129,9 @@ export function createMappingStage(mappings) {
         lookupStages.push(stage);
         removeFieldStage[map.columnName + '_map'] = 0;
         addFieldStage[map.columnName] = { $arrayElemAt: [`$${map.columnName}_map`, 0] };
-        addFieldStage2[map.columnName] = `$${map.columnName}.targetValue`;
+        addFieldStage2[map.columnName] = {
+            $ifNull: [`$${map.columnName}.targetValue`, null]
+        };
     });
 
     return [
