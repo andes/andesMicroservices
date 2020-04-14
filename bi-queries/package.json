@@ -1,0 +1,29 @@
+{
+  "name": "bi-queries",
+  "version": "1.0.0",
+  "description": "Sistema de Consultas",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --project .",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w"
+  },
+  "author": "Celeste Ramos y Luis Parada",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "@andes/log": "^1.0.11",
+    "@andes/match": "^1.1.12",
+    "@fast-csv/format": "^4.1.2",
+    "csv-writer": "^1.5.0",
+    "moment": "^2.22.2",
+    "mongoclient": "^1.0.3",
+    "mongoose": "^5.4.6",
+    "mssql": "^6.2.0",
+    "stream-chain": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.5.34",
+    "typescript": "^3.8.3"
+  }
+}
