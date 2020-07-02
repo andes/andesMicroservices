@@ -7,6 +7,7 @@ const defaultConfig = {
     password: '<YourStrong@Passw0rd>',
     server: '127.0.0.1',
     database: 'TestDB',
+    port: 0,
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
@@ -14,7 +15,6 @@ const defaultConfig = {
 export async function SQLInsertStream(queryData: IQuery) {
     const table = queryData.export.table;
     const config = queryData.export.config;
-
     const pool = await sql.connect(
         { ...defaultConfig, ...config }
     );

@@ -24,6 +24,7 @@ export type IQuery = {
         deleteColumnKey: string,
         config: any;
     }
+    data?: any;
 };
 
 export interface IParams {
@@ -60,7 +61,8 @@ export const QuerySchema = new mongoose.Schema({
         table: String,
         deleteColumnKey: String,
         config: mongoose.SchemaTypes.Mixed
-    }
+    },
+    data: mongoose.SchemaTypes.Mixed
 });
 
 export const Query = mongoose.model('queries', QuerySchema, 'queries');

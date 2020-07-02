@@ -17,7 +17,12 @@ const router = ms.router();
 
 router.get('/queries', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    const queries = await Query.find();
+    let nombre = req.query.nombre;
+    let filters = {};
+    if (nombre) {
+        filters = { nombre };
+    }
+    const queries = await Query.find(filters);
     return res.json(queries);
 });
 
