@@ -23,7 +23,8 @@ export type IQuery = {
         table: string,
         deleteColumnKey: string,
         config: any;
-    }
+    };
+    desdeAndes: boolean;
     data?: any;
 };
 
@@ -62,7 +63,8 @@ export const QuerySchema = new mongoose.Schema({
         deleteColumnKey: String,
         config: mongoose.SchemaTypes.Mixed
     },
-    data: mongoose.SchemaTypes.Mixed
+    data: mongoose.SchemaTypes.Mixed,
+    desdeAndes: Boolean // Para las consultas que se acceden desde la Andes
 });
 
 export const Query = mongoose.model('queries', QuerySchema, 'queries');
