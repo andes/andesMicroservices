@@ -1,6 +1,6 @@
 import { Microservice } from '@andes/bootstrap';
 import * as mongoose from 'mongoose';
-import { execQueryStream, execQueryToExport, execQueryToDelete, buildPipeline, execQueryToCreateTable } from './controller/queries.controller';
+import { execQueryStream, execQueryToExport, execQueryToDelete, buildPipeline, execQueryToCreateTable, execQuery } from './controller/queries.controller';
 import { csvTransform } from './controller/csv-stream';
 
 
@@ -17,12 +17,7 @@ const router = ms.router();
 
 router.get('/queries', async (req, res, next) => {
     const Query = mongoose.model('queries');
-    let nombre = req.query.nombre;
-    let filters = {};
-    if (nombre) {
-        filters = { nombre };
-    }
-    const queries = await Query.find(filters);
+    const queries = await Query.find(req.query);
     return res.json(queries);
 });
 
@@ -46,6 +41,22 @@ router.get('/queries/:id/plain', async (req, res, next) => {
         stream.on('error', (e) => {
             res.status(400).json({ e });
         });
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
+
+});
+
+// Retorna los resultados de la consulta en formato json
+router.get('/queries/:id/json', async (req, res, next) => {
+    const Query = mongoose.model('queries');
+    const queries: any = await Query.findOne({ nombre: req.params.id });
+    const params = req.query;
+    const fields = req.query.fields;
+    delete req.query['fields'];
+    try {
+        const stream = await execQuery(queries, params, [], fields);
+        res.json(stream);
     } catch (e) {
         res.status(400).json({ error: e.message });
     }
