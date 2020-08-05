@@ -78,14 +78,14 @@ export async function updateEstadoFacturacionConTurno(agendaId, bloqueId, turnoI
  * @param {*} idPrestacion
  * @returns
  */
-export async function updateEstadoFacturacionSinTurno(idPrestacion, _estadoFacturacion) {
+export async function updateEstadoFacturacionSinTurno(idPrestacion, estadoFacturacion) {
     return new Promise((resolve, reject) => {
-        const url = `${ANDES_HOST}/modules/rup/codificacion/estadoFacturacion/${idPrestacion}`;
+        const url = `${ANDES_HOST}/modules/rup/prestaciones/${idPrestacion}`;
         const options = {
             url,
             method: 'PATCH',
             json: true,
-            body: { estadoFacturacion: _estadoFacturacion },
+            body: { op: 'estadoFacturacion', estadoFacturacion },
             headers: {
                 Authorization: `JWT ${ANDES_KEY}`
             }
