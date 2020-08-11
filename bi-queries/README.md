@@ -1,5 +1,5 @@
 # Bi-queries
-## Installacion
+## Instalación
 
 ```
 npm install
@@ -10,7 +10,7 @@ tsc .
 
 
 ```bash
-export MONGO_HOST="localhost"
+export MONGO_HOST="mongodb://localhost:27017/andes"
 ```
 
 ## Uso
