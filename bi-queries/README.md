@@ -1,3 +1,26 @@
+# Bi-queries
+## Installacion
+
+```
+npm install
+tsc .
+```
+
+## Variables de entorno
+
+
+```bash
+export MONGO_HOST="localhost"
+```
+
+## Uso
+
+
+```
+Crear una colección queries para almacenar las consultas de mongo que ejecutará el microservicio Bi-query
+```
+
+
 ### Ejemplo de query
 
 ```json
