@@ -1,10 +1,9 @@
 import { ANDES_HOST, ANDES_KEY, fakeRequest } from '../config.private';
-const request = require('request');
 
 import { log } from '@andes/log';
 
 export function getProfesional(idProfesional) {
-    return new Promise((resolve: any, reject: any) => {
+    try {
         const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
         const options = {
             url,
@@ -13,18 +12,20 @@ export function getProfesional(idProfesional) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        request(options, (error, response, body) => {
-            if (response.statusCode >= 200 && response.statusCode < 300) {
-                return resolve(JSON.parse(body));
-            }
-            log(fakeRequest, 'microservices:integration:sipsYsumar', idProfesional, 'getProfesional:error', { error, body });
-            return resolve(error || body);
-        });
-    });
+        let response = await fetch(url, options);
+        const responseJson = await response.json();
+        if (responseJson.statusCode >= 200 && responseJson.statusCode < 300) {
+            return responseJson.body;
+        }
+        return null;
+    }
+    catch (error) {
+        log(fakeRequest, 'microservices:integration:sipsYsumar', idProfesional, 'getProfesional:error', { body);
+    }
 }
 
 export function getOrganizacion(idOrg): any {
-    return new Promise((resolve: any, reject: any) => {
+    try {
         const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrg}`;
         const options = {
             url,
@@ -33,22 +34,22 @@ export function getOrganizacion(idOrg): any {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        request(options, (error, response, body) => {
-            if (response.statusCode >= 200 && response.statusCode < 300) {
-                const orgs: any = JSON.parse(body);
-                const organizacion: any = {};
-                if (orgs) {
-                    return resolve({
-                        organizacion: {
-                            nombre: orgs.nombre,
-                            cuie: orgs.codigo.cuie,
-                            idSips: orgs.codigo.sips
-                        }
-                    });
+        let response = await fetch(url, options);
+        const responseJson = await response.json();
+        if (responseJson.statusCode >= 200 && responseJson.statusCode < 300) {
+            const orgs: any = JSON.parse(responseJson.body);
+            if (orgs) {
+                return {
+                    organizacion: {
+                        nombre: orgs.nombre,
+                        cuie: orgs.codigo.cuie,
+                        idSips: orgs.codigo.sips
+                    }
                 }
             }
-            log(fakeRequest, 'microservices:integration:sipsYsumar', null, 'getOrganizacion:error', { error, body });
-            return resolve(error || body);
-        });
-    });
+        }
+        return null;
+    } catch (error) {
+        log(fakeRequest, 'microservices:integration:sipsYsumar', idOrg, 'getProfesional:error', {});
+    }
 }
