@@ -15,7 +15,7 @@ router.group('/profesionalSips', (group) => {
         res.send({ message: 'ok' });
         const profesional = _req.body.data;
         if (profesional) {
-            let prof = await operaciones.getProfesional(profesional.id);
+            let prof = await operaciones.getProfesional(profesional._id);
             await conexionProfesional(prof);
         }
 

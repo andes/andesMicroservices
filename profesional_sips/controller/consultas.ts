@@ -1,5 +1,4 @@
 import { log } from '@andes/log';
-import * as moment from 'moment';
 import * as sql from 'mssql';
 
 import * as operaciones from '../service/operaciones.service';
@@ -7,7 +6,6 @@ import { fakeRequest } from './../config.private';
 
 export async function existeProfesionalSIPS(profesional: any, conexion) {
     const dni = parseInt(profesional.documento, 10);
-    const idProfesional = profesional.id;
     if (dni) {
         const query = `SELECT TOP 1 *
             FROM [dbo].[Sys_Profesional] where [activo]=1 and [numeroDocumento] = '${dni}'`;
@@ -28,7 +26,11 @@ export async function existeProfesionalSIPS(profesional: any, conexion) {
 }
 
 export async function insertarProfesionalSIPS(profesional: any, conexion) {
-    let idEfector: any = profesional.createdBy.organizacion ? await operaciones.getOrganizacion(profesional.createdBy.organizacion.id) : null;
+    let organizacion;
+    if (profesional.createdBy.organizacion) {
+        organizacion = await operaciones.getOrganizacion(profesional.createdBy.organizacion.id);
+    }
+    let idEfector: any = organizacion;
     let apellido = profesional.apellido;
     let nombre = profesional.nombre;
     let idTipoDocumento = 1;

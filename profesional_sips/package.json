@@ -22,7 +22,8 @@
         "@andes/fhir": "^1.0.1",
         "@andes/log": "^1.0.11",
         "@andes/match": "^1.1.12",
-        "moment": "^2.22.2"
+        "moment": "^2.22.2",
+        "node-fetch": "^2.6.0"
     },
     "devDependencies": {}
 }

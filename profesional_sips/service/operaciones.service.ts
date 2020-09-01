@@ -1,12 +1,13 @@
 import { ANDES_HOST, ANDES_KEY, fakeRequest } from '../config.private';
 
 import { log } from '@andes/log';
+const fetch = require('node-fetch');
 
-export function getProfesional(idProfesional) {
+
+export async function getProfesional(idProfesional) {
     try {
         const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
         const options = {
-            url,
             method: 'GET',
             headers: {
                 Authorization: `JWT ${ANDES_KEY}`
@@ -14,21 +15,21 @@ export function getProfesional(idProfesional) {
         };
         let response = await fetch(url, options);
         const responseJson = await response.json();
-        if (responseJson.statusCode >= 200 && responseJson.statusCode < 300) {
-            return responseJson.body;
+        if (responseJson._id) {
+            return responseJson;
+        } else {
+            return null;
         }
-        return null;
     }
     catch (error) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', idProfesional, 'getProfesional:error', { body);
+        log(fakeRequest, 'microservices:integration:profesional_sips', idProfesional, 'getProfesional:error', error);
     }
 }
 
-export function getOrganizacion(idOrg): any {
+export async function getOrganizacion(idOrg): Promise<any> {
     try {
         const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrg}`;
         const options = {
-            url,
             method: 'GET',
             headers: {
                 Authorization: `JWT ${ANDES_KEY}`
@@ -36,20 +37,20 @@ export function getOrganizacion(idOrg): any {
         };
         let response = await fetch(url, options);
         const responseJson = await response.json();
-        if (responseJson.statusCode >= 200 && responseJson.statusCode < 300) {
-            const orgs: any = JSON.parse(responseJson.body);
-            if (orgs) {
+        if (responseJson._id) {
+            if (responseJson) {
                 return {
                     organizacion: {
-                        nombre: orgs.nombre,
-                        cuie: orgs.codigo.cuie,
-                        idSips: orgs.codigo.sips
+                        nombre: responseJson.nombre,
+                        cuie: responseJson.codigo.cuie,
+                        idSips: responseJson.codigo.sips
                     }
                 }
             }
+        } else {
+            return null;
         }
-        return null;
     } catch (error) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', idOrg, 'getProfesional:error', {});
+        log(fakeRequest, 'microservices:integration:profesional_sips', idOrg, 'getProfesional:error', {});
     }
 }

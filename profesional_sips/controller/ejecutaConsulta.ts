@@ -15,8 +15,7 @@ export async function conexionProfesional(profesional) {
         await Promise.all([_pacienteSIPS]);
         await transaction.commit();
     } catch (ex) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', profesional.id, 'conexionProfesional:error', { error: ex, profesional: profesional.documento });
-
+        log(fakeRequest, 'microservices:integration:profesional_sips', profesional._id, 'conexionProfesional:error', { error: ex, profesional: profesional.documento });
         transaction.rollback();
     }
 }
@@ -31,7 +30,7 @@ async function setProfesionalSIPS(profesional, profesionalExistenteSIPS, conexio
         }
         await transaction.commit();
     } catch (error) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', profesional.id, 'setProfesionalSIPS:error', { error, profesional: profesional.documento });
+        log(fakeRequest, 'microservices:integration:profesional_sips', profesional._id, 'setProfesionalSIPS:error', { error, profesional: profesional.documento });
         transaction.rollback();
     }
 }
