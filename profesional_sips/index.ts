@@ -1,6 +1,6 @@
 import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
-import { logDatabase } from '../config.private';
+import { logDatabase } from './config.private';
 import { conexionProfesional } from './controller/ejecutaConsulta';
 
 import * as operaciones from './service/operaciones.service';

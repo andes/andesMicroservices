@@ -26,20 +26,25 @@ export async function existeProfesionalSIPS(profesional: any, conexion) {
 }
 
 export async function insertarProfesionalSIPS(profesional: any, conexion) {
-    let organizacion;
+    let organizacion, idTipoProfesional = 1;
     if (profesional.createdBy.organizacion) {
         organizacion = await operaciones.getOrganizacion(profesional.createdBy.organizacion.id);
     }
+    if (profesional.formacionGrado && profesional.formacionGrado.length > 0) {
+        const formacionGrado = profesional.formacionGrado[0];
+        if (formacionGrado.profesion._id) {
+            idTipoProfesional = await operaciones.getTipoProfesional(formacionGrado.profesion._id);
+        }
+    }
     let idEfector: any = organizacion;
-    let apellido = profesional.apellido;
-    let nombre = profesional.nombre;
+    let apellido = profesional.apellido.toUpperCase();
+    let nombre = profesional.nombre.toUpperCase();
     let idTipoDocumento = 1;
     let numeroDocumento = profesional.documento ? profesional.documento : 0;
     let matricula = profesional.matricula ? profesional.matricula : '';
     let legajo = profesional.legajo ? profesional.legajo : '0';
     let codigoSISA = profesional.codigoSISA ? profesional.sisa : '0';
     let activo = 1;
-    let idTipoProfesional = 1;
     let idUsuario = 1486739;
     let contactos = profesional.contactos;
     let mail;

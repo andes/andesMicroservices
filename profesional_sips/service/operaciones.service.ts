@@ -26,9 +26,9 @@ export async function getProfesional(idProfesional) {
     }
 }
 
-export async function getOrganizacion(idOrg): Promise<any> {
+export async function getOrganizacion(idOrganizacion): Promise<any> {
     try {
-        const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrg}`;
+        const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrganizacion}`;
         const options = {
             method: 'GET',
             headers: {
@@ -51,6 +51,30 @@ export async function getOrganizacion(idOrg): Promise<any> {
             return null;
         }
     } catch (error) {
-        log(fakeRequest, 'microservices:integration:profesional_sips', idOrg, 'getProfesional:error', {});
+        log(fakeRequest, 'microservices:integration:profesional_sips', idOrganizacion, 'getOrganizacion:error', {});
+    }
+}
+
+export async function getTipoProfesional(idProfesion): Promise<any> {
+    try {
+        const url = `${ANDES_HOST}/core/tm/profesiones/${idProfesion}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                Authorization: `JWT ${ANDES_KEY}`
+            }
+        };
+        let response = await fetch(url, options);
+        const responseJson = await response.json();
+        if (responseJson && responseJson._id) {
+            if (responseJson) {
+                let codigo = responseJson.identificadores.find(codigo => codigo.entidad === 'SIPS');
+                return codigo ? codigo.valor : 1;
+            }
+        } else {
+            return 1;
+        }
+    } catch (error) {
+        log(fakeRequest, 'microservices:integration:profesional_sips', idProfesion, 'getProfesion:error', {});
     }
 }
