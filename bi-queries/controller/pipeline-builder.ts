@@ -40,6 +40,9 @@ export function createPipeline(queryData: IQuery, params: IParams[]) {
 function replaceQuery(pipeline, argumento, valor, innerQuery = false) {
     if (Array.isArray(pipeline)) {
         return pipeline.map(item => replaceQuery(item, argumento, valor, innerQuery));
+    } else if (pipeline instanceof Types.ObjectId) {
+        return pipeline;
+
     } else if (typeof pipeline === 'object') {
         for (const key in pipeline) {
             if (argumento.subquery && key === '#' + argumento.key && !innerQuery) {
