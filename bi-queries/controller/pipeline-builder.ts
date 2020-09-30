@@ -18,19 +18,19 @@ export function createPipeline(queryData: IQuery, params: IParams[]) {
     if (typeof query === 'string') {
         query = JSON.parse(query);
     }
-    let pipeline;
-    for (const arg of queryData.argumentos) {
-        if (!pipeline) {
-            pipeline = queryData.query;
+    let pipeline = queryData.query;
+    if (queryData.argumentos && queryData.argumentos.length) {
+        for (const arg of queryData.argumentos) {
+            const valor = getValue(arg);
+
+            if (arg.required && !valor) {
+                throw new Error('falta paramentro ' + arg.key);
+            }
+
+            pipeline = replaceQuery(pipeline, arg, valor);
         }
-
-        const valor = getValue(arg);
-
-        if (arg.required && !valor) {
-            throw new Error('falta paramentro ' + arg.key);
-        }
-
-        pipeline = replaceQuery(pipeline, arg, valor);
+    } else {
+        pipeline = replaceQuery(pipeline, null, null);
     }
 
     return pipeline;
@@ -45,7 +45,7 @@ function replaceQuery(pipeline, argumento, valor, innerQuery = false) {
 
     } else if (typeof pipeline === 'object') {
         for (const key in pipeline) {
-            if (argumento.subquery && key === '#' + argumento.key && !innerQuery) {
+            if (argumento && argumento.subquery && key === '#' + argumento.key && !innerQuery) {
                 delete pipeline[key];
                 if (valor !== undefined && valor !== null) {
                     const q = replaceQuery(argumento.subquery, argumento, valor, true);
@@ -67,7 +67,7 @@ function replaceQuery(pipeline, argumento, valor, innerQuery = false) {
 
         return pipeline;
 
-    } else if (typeof pipeline === 'string') {
+    } else if (argumento && (typeof pipeline === 'string')) {
         if (pipeline === '#' + argumento.key) {
             if (argumento.subquery && !innerQuery) {
                 return replaceQuery(argumento.subquery, argumento, valor, true);
