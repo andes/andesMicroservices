@@ -1,4 +1,4 @@
-# pdf-tp-dicom
+# pdf-to-dicom
 
 Microservicio para transformar un archivo pdf y metadata en un DICOM. Util para agrear el informe de la placa hecha por el médico al PACS.
 
