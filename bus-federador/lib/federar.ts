@@ -16,19 +16,10 @@ export async function federar(paciente) {
     delete paciente.direccion;
     delete paciente.relaciones;
     delete paciente.estadoCivil;
-
     paciente.fechaNacimiento = moment(paciente.fechaNacimiento);
-
     initialize({ dominio: DOMINIO });
-
     const saludDigitalClient = await login();
-
     const patientFhir = Patient.encode(paciente);
-
-
     const status = await saludDigitalClient.federar(patientFhir);
-
-
     return status;
-
 }

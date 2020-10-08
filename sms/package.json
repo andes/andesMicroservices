@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
+    "aws-sdk": "^2.766.0",
     "moment": "^2.24.0",
     "mssql": "^4.1.0",
     "request": "^2.88.0"
