@@ -28,9 +28,10 @@ router.group('/cda', (group) => {
         }
 
         if (paciente) {
+            const invalidarCache = event === 'monitoreo:cda:create'; // un hack por ahora
             for (const efector of efectores) {
                 const factory = queries(efector, paciente);
-                await ejecutaCDA.ejecutar(factory, paciente);
+                await ejecutaCDA.ejecutar(factory, paciente, invalidarCache);
             }
         }
     });
