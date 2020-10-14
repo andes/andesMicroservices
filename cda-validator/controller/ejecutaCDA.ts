@@ -4,24 +4,26 @@ import { postCDA } from './../service/cda.service';
 const sql = require('mssql');
 let moment = require('moment');
 
-export async function ejecutar(factory, paciente, cleanCache) {
+export async function ejecutar(efector: string, factory, paciente, cleanCache) {
     let data = factory;
     if (data) {
         sql.close();
         let pool = await sql.connect(data.connectionString);
         let resultado = await getData(pool, data.query);
         const registros = resultado.recordset;
+        console.log(efector, cachePacienteFecha[efector + '-' + paciente.id]);
         if (registros.length > 0) {
             let ps = registros.map(async registro => {
                 let dto = await Verificator.verificar(registro, paciente);
-                if (dto && (checkCache(paciente, dto.fecha) || cleanCache)) {
+                if (dto && (checkCache(efector, paciente, dto.fecha) || cleanCache)) {
+                    console.log('HAGO POST');
                     await postCDA(dto);
                 }
             });
             await Promise.all(ps);
 
             const maxDate = registros.reduce((acc, current) => acc.getTime() < moment(current.fecha).toDate().getTime() ? moment(current.fecha).toDate() : acc, new Date(1900, 1, 1));
-            setCache(paciente, maxDate);
+            setCache(efector, paciente, maxDate);
 
             return true;
         } else {
@@ -34,14 +36,14 @@ export async function ejecutar(factory, paciente, cleanCache) {
 
 const cachePacienteFecha: { [key: string]: Date } = {};
 
-function setCache(paciente, fecha: Date) {
-    cachePacienteFecha[paciente.id] = fecha;
+function setCache(efector: string, paciente, fecha: Date) {
+    cachePacienteFecha[efector + '-' + paciente.id] = fecha;
 }
 
-function checkCache(paciente, fecha: Date) {
-    if (!cachePacienteFecha[paciente.id]) {
+function checkCache(efector: string, paciente, fecha: Date) {
+    if (!cachePacienteFecha[efector + '-' + paciente.id]) {
         return true;
-    } else if (cachePacienteFecha[paciente.id].getTime() < fecha.getTime()) {
+    } else if (cachePacienteFecha[efector + '-' + paciente.id].getTime() < fecha.getTime()) {
         return true;
     }
     return false;
