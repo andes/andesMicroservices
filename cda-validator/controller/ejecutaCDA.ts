@@ -11,12 +11,10 @@ export async function ejecutar(efector: string, factory, paciente, cleanCache) {
         let pool = await sql.connect(data.connectionString);
         let resultado = await getData(pool, data.query);
         const registros = resultado.recordset;
-        console.log(efector, cachePacienteFecha[efector + '-' + paciente.id]);
         if (registros.length > 0) {
             let ps = registros.map(async registro => {
                 let dto = await Verificator.verificar(registro, paciente);
                 if (dto && (checkCache(efector, paciente, dto.fecha) || cleanCache)) {
-                    console.log('HAGO POST');
                     await postCDA(dto);
                 }
             });
