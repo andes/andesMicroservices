@@ -14,7 +14,8 @@ function getEnv(key, _default, type = 's') {
 }
 
 
-export const DOMINIO = getEnv('IPS_DOMINIO', 'https://app.andes.gob.ar');
+// export const DOMINIO = getEnv('IPS_DOMINIO', 'https://app.andes.gob.ar');
+export const DOMINIO = getEnv('IPS_DOMINIO', 'https://conn24dummy.org.ar');
 export const HOST = getEnv('IPS_HOST', 'https://testapp.hospitalitaliano.org.ar');
 export const SECRET = getEnv('JWT_SECRET', 'federar');
 export const NAME = getEnv('IPS_NAME', 'Andes');
