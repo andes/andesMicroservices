@@ -1,4 +1,4 @@
-import {SNS, config} from 'aws-sdk';
+import { SNS, config } from 'aws-sdk';
 
 export interface SmsOptions {
     prefijo: string;
@@ -9,7 +9,7 @@ export interface SmsOptions {
 
 export function isPhoneValid(phone) {
     const regExp = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
-    return phone.match(regExp)
+    return phone.match(regExp);
 }
 
 export async function sendSms(smsOptions: SmsOptions) {
@@ -21,7 +21,7 @@ export async function sendSms(smsOptions: SmsOptions) {
         config.region = 'us-east-1';
         config.update({
             accessKeyId: process.env.ST_AWS_ACCESS_KEY,
-            secretAccessKey: process.env.ST_AWS_SECRET_ACCESS_KEY
+            secretAccessKey: process.env.ST_AWS_SECRET_ACCESS_KEY,
         });
         const sms: SNS = new SNS();
         const params: any = {
@@ -34,4 +34,19 @@ export async function sendSms(smsOptions: SmsOptions) {
     } catch (error) {
         return error;
     }
+}
+
+export function getData(body) {
+    if (body.event === 'mpi:pacientes:create' ||
+        body.event === 'mpi:pacientes:update') {
+        const paciente = body.data;
+        const celulares = paciente.contacto.filter(c => c && c.tipo && (c.tipo === 'celular'));
+        if (celulares.length > 0) {
+            const telefono = celulares[celulares.length - 1].valor || null;
+            const subject = 'ANDES';
+            const mensaje = 'El resultado de tu análisis de laboratorio está disponible. Podes visualizarlo en la aplicación móvil de ANDES.';
+            return { subject, telefono, mensaje };
+        }
+    }
+    return body;
 }
