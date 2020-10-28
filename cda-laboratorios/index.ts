@@ -22,6 +22,12 @@ router.group('/cda', (group) => {
             case 'mobile:patient:login':
                 paciente = data.pacientes[0];
                 break;
+            case 'mpi:patient:update':
+            case 'mpi:patient:create':
+            case 'mpi:pacientes:update':
+            case 'mpi:pacientes:create':
+                paciente = data;
+                break;
             default:
                 paciente = data.paciente;
                 break;
