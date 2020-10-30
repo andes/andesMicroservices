@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
-    "@andes/fhir": "^2.0.0",
+    "@andes/fhir": "^1.4.1",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.24.0",
     "mssql": "^4.1.0",
