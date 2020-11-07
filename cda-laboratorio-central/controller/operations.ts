@@ -1,8 +1,7 @@
 
 import * as sql from 'mssql';
-import { ANDES_HOST, ANDES_KEY, IP_LABCENTRAL } from '../config.private';
+import { ANDES_HOST, ANDES_KEY, IP_LABCENTRAL, SISA_LAB } from './config.private';
 import { log } from '@andes/log';
-import * as pdf from 'html-pdf';
 const got = require('got');
 const cache = {};
 
@@ -43,28 +42,30 @@ export async function organizacionBySisaCode(sisa) {
 }
 
 
+// hardcodear el codigo sisa
+
 export async function getEncabezados(pool, documento) {
-    const query = `select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, paciente.apellido as pacienteApellido, paciente.nombre as pacienteNombre, FORMAT(paciente.fechaNacimiento, 'dd/MM/yyyy') as fechaNacimiento, encabezado.sexo,  
+    const query = `select ${SISA_LAB} as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, paciente.apellido as pacienteApellido, paciente.nombre as pacienteNombre, FORMAT(paciente.fechaNacimiento, 'dd/MM/yyyy') as fechaNacimiento, encabezado.sexo,  
         paciente.numeroDocumento as numeroDocumento, FORMAT(encabezado.fechaTomaMuestra, 'dd/MM/yyyy') as fecha, encabezado.idProtocolo , solicitante.nombre as solicitante from LAB_Protocolo as encabezado  
-        inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector 
-        inner join Sys_Efector as solicitante on encabezado.idEfectorSolicitante = solicitante.idEfector 
-        inner join Sys_Paciente as paciente on encabezado.idPaciente = paciente.idPaciente 
-        where fechaRegistro > '2020-01-01' 
+        inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector
+        inner join Sys_Efector as solicitante on encabezado.idEfectorSolicitante = solicitante.idEfector
+        inner join Sys_Paciente as paciente on encabezado.idPaciente = paciente.idPaciente
+        where fechaRegistro > '2020-01-01'
         AND paciente.numeroDocumento = ${documento}`;
     try {
         return await new sql.Request(pool).query(query);
     } catch (error) {
         log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'getEncabezados:error', { error, query });
         return error;
-    } 
+    }
 }
 
 export async function getDetalles(pool, idProtocolo, idEfector) {
     const query = `select _item.nombre, resultadoCar  as resultado, observaciones, FORMAT(detalle.fechaValida, 'dd/MM/yyyy') as fecha_validacion, usuarioValida.apellido as profesional_validacion
-        from LAB_DetalleProtocolo as detalle 
+        from LAB_DetalleProtocolo as detalle
         inner join LAB_Item as _item on _item.idItem = detalle.idItem
         inner join Sys_Usuario as usuarioValida on usuarioValida.idUsuario = detalle.idUsuarioValida
-        where (detalle.idItem = 3174 or detalle.idItem = 3172) 
+        where (detalle.idItem = 3174 or detalle.idItem = 3172)
         and detalle.idUsuarioValida <> 0
         and detalle.idProtocolo = ${idProtocolo}`;
     try {
@@ -72,7 +73,7 @@ export async function getDetalles(pool, idProtocolo, idEfector) {
     } catch (error) {
         log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'getDetalles:error', { error, query });
         return error;
-    } 
+    }
 }
 
 export function postCDA(data: any) {
@@ -93,48 +94,5 @@ export function postCDA(data: any) {
             return resolve(body);
         }
         return resolve(error || body);
-    });
-}
-
-export async function generarAdjunto(cabecera, detalle) {
-    let html = `<!DOCTYPE html>
-        <html>
-            <head>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body>
-                <header>    
-                    ${detalle.nombre}
-                </header>
-                <section>
-                    <br/><br/>
-                    <label>Analizado por:</label> ${cabecera.efector}
-                    <br/><br/>
-                    <label>Solicitante:</label> ${cabecera.solicitante}
-                    <br/><br/>
-                    <label>Fecha toma muestra:</label> ${cabecera.fecha}
-                    <br/><br/>
-                    <label>Fecha validación resultado:</label> ${detalle.fecha_validacion}
-                    <br/><br/>
-                    <label>Paciente:</label> ${cabecera.pacienteApellido}, ${cabecera.pacienteNombre}
-                    <br/><br/>
-                    <label>DNI:</label> ${cabecera.numeroDocumento}
-                    <br/><br/>
-                    <label>Resultado:</label> ${detalle.resultado}
-                </section>
-                <footer></footer>
-            </body>
-        </html>`;
-
-    return new Promise((resolve, reject) => {
-        const options = { format: 'Letter', header: '3cm' };
-        pdf.create(html, options).toFile((error, file) => {
-            if (error) {
-                log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'postCDA:error', { error });
-                return error;
-            }
-            resolve(file.filename);
-        });
     });
 }

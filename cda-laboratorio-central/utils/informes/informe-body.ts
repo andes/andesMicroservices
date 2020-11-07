@@ -1,0 +1,46 @@
+import { HTMLComponent } from '../model/html-component.class';
+import * as moment from 'moment';
+
+export class InformeLabBody extends HTMLComponent {
+    template = `
+        <main>
+            <section class="contenedor-informe">
+                <article class="cabezal-conceptos horizontal">
+                    <div class="contenedor-bloque-texto w-3/4" >
+                        <div class="tipo-prestacion">
+                            Informe de resultado: {{ titulo }}
+                        </div>
+                    </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Estado
+                        </h6>
+                        <h6>
+                            Validada
+                        </h6>
+                    </div>
+                </article>
+                <hr>
+                <div class="registros">
+                    {{resultado}}
+                </div>
+            </section>
+        </main>
+    `;
+
+    constructor(public detalle) {
+        super();
+    }
+
+    public async process() {
+
+        this.data = {
+            titulo: 'COVID19',
+            esValidada: true,
+            resultado: this.detalle.resultado
+
+        };
+    }
+
+
+}

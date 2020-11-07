@@ -1,9 +1,10 @@
-import { conSql } from '../config.private';
+import { conSql } from './config.private';
 import { log } from '@andes/log';
 import * as moment from 'moment';
 import * as sql from 'mssql';
 import * as operations from './operations';
-import * as fs from 'fs'
+import { InformeLAB } from '../utils/informes/informe-lab';
+import * as fs from 'fs';
 
 const cota = 0.95;
 
@@ -24,18 +25,17 @@ export async function importarDatos(paciente) {
         for (const lab of laboratorios.recordset) {
             try {
                 const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
-                const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
-
-                if (details.recordset) {
+                if (details.recordset && details.recordset.length > 0 ) {
                     const fecha = moment(lab.fecha, 'DD/MM/YYYY');
-
+                    const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
                     const profesional = {
                         nombre: lab.solicitante,
                         apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                     };
-
-                    fs.readFile((await operations.generarAdjunto(lab, details.recordset[0]) as string), async (err, data) => {
-                        if (err) throw err;
+                    const informe = new InformeLAB(lab, details.recordset[0], 'Laboratorio Central');
+                    // const adjunto = await informe.informe();
+                    fs.readFile((await informe.informe() as string), async (err, data) => {
+                        if (err) {throw err; }
                         const adjunto64 = 'data:application/pdf;base64,' + data.toString('base64');
                         const dto = {
                             id: lab.idProtocolo,
@@ -51,6 +51,8 @@ export async function importarDatos(paciente) {
                         };
                         await operations.postCDA(dto);
                     });
+                } else {
+                    return null; // NO se encontraron registros en la consulta
                 }
             } catch (error) {
                 log(operations.fakeRequest, 'microservices:integration:cda-labcentral', null, 'importarDatos:error', { error });
