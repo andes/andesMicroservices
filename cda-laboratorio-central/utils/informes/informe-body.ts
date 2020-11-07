@@ -13,6 +13,14 @@ export class InformeLabBody extends HTMLComponent {
                     </div>
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">
+                            Método empleado
+                        </h6>
+                        <h6>
+                            {{metodo}}
+                        </h6>
+                    </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
                             Estado
                         </h6>
                         <h6>
@@ -37,8 +45,8 @@ export class InformeLabBody extends HTMLComponent {
         this.data = {
             titulo: 'COVID19',
             esValidada: true,
-            resultado: this.detalle.resultado
-
+            resultado: this.detalle.resultado,
+            metodo: this.detalle.metodo
         };
     }
 

@@ -61,7 +61,7 @@ export async function getEncabezados(pool, documento) {
 }
 
 export async function getDetalles(pool, idProtocolo, idEfector) {
-    const query = `select _item.nombre, resultadoCar  as resultado, observaciones, FORMAT(detalle.fechaValida, 'dd/MM/yyyy') as fecha_validacion, usuarioValida.apellido as profesional_validacion
+    const query = `select _item.nombre, resultadoCar  as resultado,detalle.metodo as metodo, observaciones, FORMAT(detalle.fechaValida, 'dd/MM/yyyy') as fecha_validacion, usuarioValida.apellido as profesional_validacion
         from LAB_DetalleProtocolo as detalle
         inner join LAB_Item as _item on _item.idItem = detalle.idItem
         inner join Sys_Usuario as usuarioValida on usuarioValida.idUsuario = detalle.idUsuarioValida

@@ -33,7 +33,6 @@ export async function importarDatos(paciente) {
                         apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                     };
                     const informe = new InformeLAB(lab, details.recordset[0], 'Laboratorio Central');
-                    // const adjunto = await informe.informe();
                     fs.readFile((await informe.informe() as string), async (err, data) => {
                         if (err) {throw err; }
                         const adjunto64 = 'data:application/pdf;base64,' + data.toString('base64');
