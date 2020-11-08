@@ -76,23 +76,21 @@ export async function getDetalles(pool, idProtocolo, idEfector) {
     }
 }
 
-export function postCDA(data: any) {
-    return new Promise( async (resolve: any, reject: any) => {
-        const url = `${ANDES_HOST}/modules/cda/create`;
-        const options = {
-            json: data,
-            headers: {
-                Authorization: `JWT ${ANDES_KEY}`
-            },
-            responseType: 'json'
-        };
-        const { error, statusCode, body } = await got.post(url, options);
-        if (error) {
-            log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'postCDA:error', { error });
-        }
-        if (statusCode >= 200 && statusCode < 300) {
-            return resolve(body);
-        }
-        return resolve(error || body);
-    });
+export async function postCDA(data: any) {
+    const url = `${ANDES_HOST}/modules/cda/create`;
+    const options = {
+        json: data,
+        headers: {
+            Authorization: `JWT ${ANDES_KEY}`
+        },
+        responseType: 'json'
+    };
+    const { error, statusCode, body } = await got.post(url, options);
+    if (error) {
+        log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'postCDA:error', { error });
+    }
+    if (statusCode >= 200 && statusCode < 300) {
+        return body;
+    }
+    return (error || body);
 }
