@@ -1,4 +1,4 @@
-import { conSql } from './config.private';
+import { conSql } from '../config.private';
 import { log } from '@andes/log';
 import * as moment from 'moment';
 import * as sql from 'mssql';
