@@ -1,6 +1,6 @@
 
 import * as sql from 'mssql';
-import { ANDES_HOST, ANDES_KEY, IP_LABCENTRAL, SISA_LAB } from './config.private';
+import { ANDES_HOST, ANDES_KEY, IP_LABCENTRAL, SISA_LAB } from '../config.private';
 import { log } from '@andes/log';
 const got = require('got');
 const cache = {};

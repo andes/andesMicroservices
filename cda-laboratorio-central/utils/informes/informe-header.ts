@@ -1,6 +1,6 @@
 import { HTMLComponent } from '../model/html-component.class';
 import { loadImage } from '../model/informe.class';
-import { PROVINCIA } from '../../controller/config.private';
+import { PROVINCIA } from '../../config.private';
 
 export class InformeLabHeader extends HTMLComponent {
     template = `

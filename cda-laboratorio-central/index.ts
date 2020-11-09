@@ -1,7 +1,7 @@
 import { Microservice } from '@andes/bootstrap';
 import { importarDatos } from './controller/import-labs';
 import { Connections } from '@andes/log';
-import { logDatabase } from './controller/config.private';
+import { logDatabase } from './config.private';
 
 const PQueue = require('p-queue');
 let pkg = require('./package.json');
