@@ -18,7 +18,7 @@ export async function sendSms(smsOptions: SmsOptions) {
         const argsOperador = {
             telefono: prefix + smsOptions.telefono
         };
-        config.region = 'us-east-1';
+        config.region = process.env.AWS_REGION;
         config.update({
             accessKeyId: process.env.ST_AWS_ACCESS_KEY,
             secretAccessKey: process.env.ST_AWS_SECRET_ACCESS_KEY,
