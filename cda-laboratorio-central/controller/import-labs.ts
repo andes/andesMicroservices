@@ -26,7 +26,7 @@ export async function importarDatos(paciente) {
             try {
                 const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
                 if (details.recordset && details.recordset.length > 0 ) {
-                    const fecha = moment(lab.fecha, 'DD/MM/YYYY');
+                    const fecha = moment(lab.fecha).toDate();
                     const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
                     const profesional = {
                         nombre: lab.solicitante,
@@ -39,7 +39,7 @@ export async function importarDatos(paciente) {
                         const dto = {
                             id: lab.idProtocolo,
                             organizacion: organizacion._id,
-                            fecha: fecha.toDate().toString(),
+                            fecha,
                             tipoPrestacion: '4241000179101',
                             paciente,
                             confidencialidad: 'N',
