@@ -13,12 +13,26 @@ const queue = new PQueue({ concurrency: 5 });
 
 router.group('/cda', (group) => {
     Connections.initialize(logDatabase.log.host, logDatabase.log.options);
-
     group.post('/labcentral/ejecutar', (req, res) => {
         res.send({ message: 'ok' });
-
+        const event = req.body.event;
         const data = req.body.data;
-        const paciente = data.paciente;
+
+        let paciente;
+        switch (event) {
+            case 'mobile:patient:login':
+                paciente = data.pacientes[0];
+                break;
+            case 'mpi:patient:update':
+            case 'mpi:patient:create':
+            case 'mpi:pacientes:update':
+            case 'mpi:pacientes:create':
+                paciente = data;
+                break;
+            default:
+                paciente = data.paciente;
+                break;
+        }
         if (paciente) {
             queue.add(() => {
                 return importarDatos(paciente);
