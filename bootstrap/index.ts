@@ -1,4 +1,5 @@
 import * as bodyParser from 'body-parser';
+import * as boolParser from 'express-query-boolean';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
 import * as express from 'express';
@@ -58,6 +59,7 @@ export class Microservice {
 
         // Configura Express
         app.use(bodyParser.json({ limit: '150mb' }));
+        app.use(boolParser());
         app.use(bodyParser.urlencoded({
             extended: true
         }));

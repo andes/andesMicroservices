@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import * as moment from 'moment';
 
 export function createPipeline(queryData: IQuery, params: IParams[]) {
+    const totalOrganizaciones = params.find(item => item.key === 'totalOrganizaciones');
     function getValue(arg) {
         const v = params.find(item => item.key === arg.key);
         if (v) {
@@ -22,7 +23,13 @@ export function createPipeline(queryData: IQuery, params: IParams[]) {
     if (queryData.argumentos && queryData.argumentos.length) {
         for (const arg of queryData.argumentos) {
             const valor = getValue(arg);
-
+            if (arg.key === 'organizacion') {
+                // Saco el required o no dependiendo si el usuario tiene permiso para todas las organizaciones
+                const setRequired = totalOrganizaciones ? totalOrganizaciones.valor : false; // Esta comprobacion es por si la consulta viene de monitoreo
+                if (setRequired) { // Si tiene permiso para todas las organizacions cambio el requerido a false, caso contrario lo dejo como esta
+                    arg.required = false;
+                }
+            }
             if (arg.required && !valor) {
                 throw new Error('falta paramentro ' + arg.key);
             }
