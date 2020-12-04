@@ -5,7 +5,7 @@ import { log } from '@andes/log';
 
 export function getPaciente(idPaciente) {
     return new Promise((resolve: any, reject: any) => {
-        const url = `${ANDES_HOST}/core/mpi/pacientes/${idPaciente}`;
+        const url = `${ANDES_HOST}/core-v2/mpi/pacientes/${idPaciente}`;
         const options = {
             url,
             method: 'GET',
