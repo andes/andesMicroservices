@@ -2,7 +2,6 @@ import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
 import { logDatabase, database } from './config.private';
 import { getVacunas } from './controller/sisa';
-import * as Fhir from '@andes/fhir';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -15,7 +14,6 @@ router.group('/cda', (group) => {
     group.post('/nomivac', async (req: any, res) => {
         res.send({ message: 'ok' });
         try {
-
             const id = req.body.id;
             const webhookId = req.body.subscription;
             const event = req.body.event;
@@ -28,10 +26,6 @@ router.group('/cda', (group) => {
                     break;
                 default:
                     paciente = data.paciente;
-                    // let paciente = Fhir.Patient.decode(data);
-                    // if (paciente) {
-                    //     await getVacunas(paciente);
-                    // }
                     break;
             }
 
@@ -39,17 +33,14 @@ router.group('/cda', (group) => {
             if (paciente) {
                 getVacunas(paciente);
             }
-
-
-            // console.log('data paciente', data);
-            // let paciente = Fhir.Patient.decode(data);
-            // if (paciente) {
-            //     await getVacunas(paciente);
-            // }
         } catch (e) {
             throw e;
         }
     });
+
+    // router.group('/cda/rest', (group) => {
+
+    // });
 });
 ms.add(router);
 ms.start();
