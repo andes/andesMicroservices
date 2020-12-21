@@ -1,9 +1,7 @@
 import { log } from '@andes/log';
-import { getVacunasNomivac } from '../service/nomivacSQL';
 import * as operations from '../service/nomivacCDA';
-import { organizacionId, SIPS_SQL } from '../config.private';
-import * as sql from 'mssql';
-
+import { organizacionId } from '../config.private';
+import { sisaVacunas } from '../service/nomivacWSsisa';
 /**
  * Actualiza las vacunas de un paciente de ANDES usando el webservice de NOMIVAC
  *
@@ -11,49 +9,47 @@ import * as sql from 'mssql';
  * @returns resultado
  */
 export async function getVacunas(paciente) {
-    let vacunas;
     if (paciente && paciente.documento) {
         try {
-            let pool = await new sql.ConnectionPool(SIPS_SQL).connect();
-            let query = `select * from Nomivac where NroDocumento = ${paciente.documento} order by FechaAplicacion desc`;
-
-            let r = await getVacunasNomivac(pool, query);
-            vacunas = r.recordset;
+            const vacunas = await sisaVacunas(paciente);
             let promesas = [];
             for (let i = 0; i < vacunas.length; i++) {
-                let texto = vacunas[i].Establecimiento ? `Organización:  ${vacunas[i].Establecimiento} / ` : '';
+                let texto = vacunas[i].origenNombre ? `Organización:  ${vacunas[i].origenNombre} / ` : '';
                 const dto = {
-                    id: vacunas[i].ID.toString(), // El id de la vacuna NOMIVAC
+                    id: vacunas[i].idSniAplicacion.toString(), // codigo SISA de la vacuna
                     organizacion: organizacionId,
-                    fecha: vacunas[i].FechaAplicacion,
+                    fecha: vacunas[i].fechaAplicacion,  // Fecha de aplicación de la dosis de vacuna.
                     tipoPrestacion: '33879002', // aplicación de una vacuna para producir inmunidad activa o pasiva
                     paciente,
                     confidencialidad: 'N',
                     profesional: {
-                        nombre: vacunas[i].Vacunador ? vacunas[i].Vacunador : '-',
+                        nombre: '-',
                         apellido: '-'
                     },
                     cie10: 'Z26.9', // CIE10: Vacunación profilactica
                     file: null,
-                    texto: texto + `Vacuna: ${vacunas[i].Vacuna} Dosis: ${vacunas[i].Dosis} Esquema: ${vacunas[i].Esquema} pertenece al lote: ${vacunas[i].Lote}`
+                    texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisNombre || ''} Esquema: ${vacunas[i].sniVacunaEsquemaNombre} pertenece al lote: ${vacunas[i].Lote}`
                 };
                 promesas.push(operations.postCDA(dto));
 
                 const dtoMongoDB = {
-                    idvacuna: vacunas[i].ID.toString(),
-                    documento: vacunas[i].NroDocumento,
-                    apellido: vacunas[i].Apellido,
-                    nombre: vacunas[i].Nombre,
-                    fechaNacimiento: vacunas[i].FechaNacimiento,
-                    sexo: vacunas[i].Sexo === 'M' ? 'masculino' : 'femenino',
-                    vacuna: vacunas[i].Vacuna,
-                    dosis: vacunas[i].Dosis,
-                    fechaAplicacion: vacunas[i].FechaAplicacion,
-                    efector: vacunas[i].Establecimiento
+                    idvacuna: vacunas[i].idSniAplicacion.toString(),
+                    codigo: vacunas[i].idSniVacuna.toString() || '',
+                    documento: vacunas[i].nrodoc,
+                    apellido: vacunas[i].apellido,
+                    nombre: vacunas[i].nombre,
+                    fechaNacimiento: vacunas[i].fechaNacimiento,
+                    sexo: vacunas[i].sexo === 'M' ? 'masculino' : 'femenino',
+                    vacuna: vacunas[i].sniVacunaNombre,
+                    dosis: vacunas[i].sniDosisNombre,
+                    fechaAplicacion: vacunas[i].fechaAplicacion,
+                    efector: vacunas[i].origenNombre,
+                    esquema: vacunas[i].sniVacunaEsquemaNombre || '',
+                    condicion: vacunas[i].sniAplicacionCondicionNombre
                 };
                 promesas.push(operations.postMongoDB(dtoMongoDB));
             }
-            let data = await Promise.all(promesas);
+            await Promise.all(promesas);
         } catch (e) {
             let fakeRequest = {
                 user: {
