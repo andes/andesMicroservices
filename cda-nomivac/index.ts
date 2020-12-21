@@ -31,7 +31,7 @@ router.group('/cda', (group) => {
 
             // Esperamos el paciente desde una prestación.
             if (paciente) {
-                getVacunas(paciente);
+                await getVacunas(paciente);
             }
         } catch (e) {
             throw e;
