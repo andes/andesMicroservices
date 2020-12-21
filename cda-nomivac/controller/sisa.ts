@@ -16,7 +16,7 @@ export async function getVacunas(paciente) {
             for (let i = 0; i < vacunas.length; i++) {
                 let texto = vacunas[i].origenNombre ? `Organización:  ${vacunas[i].origenNombre} / ` : '';
                 const dto = {
-                    id: vacunas[i].idSniVacuna.toString(), // codigo SISA de la vacuna
+                    id: vacunas[i].idSniAplicacion.toString(), // codigo SISA de la vacuna
                     organizacion: organizacionId,
                     fecha: vacunas[i].fechaAplicacion,  // Fecha de aplicación de la dosis de vacuna.
                     tipoPrestacion: '33879002', // aplicación de una vacuna para producir inmunidad activa o pasiva
@@ -28,12 +28,13 @@ export async function getVacunas(paciente) {
                     },
                     cie10: 'Z26.9', // CIE10: Vacunación profilactica
                     file: null,
-                    texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisOrden} Esquema: ${vacunas[i].sniVacunaEsquemaNombre} pertenece al lote: ${vacunas[i].Lote}`
+                    texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisNombre || ''} Esquema: ${vacunas[i].sniVacunaEsquemaNombre} pertenece al lote: ${vacunas[i].Lote}`
                 };
                 promesas.push(operations.postCDA(dto));
 
                 const dtoMongoDB = {
-                    idvacuna: vacunas[i].idSniVacuna.toString(),
+                    idvacuna: vacunas[i].idSniAplicacion.toString(),
+                    codigo: vacunas[i].idSniVacuna.toString() || '',
                     documento: vacunas[i].nrodoc,
                     apellido: vacunas[i].apellido,
                     nombre: vacunas[i].nombre,
@@ -42,7 +43,9 @@ export async function getVacunas(paciente) {
                     vacuna: vacunas[i].sniVacunaNombre,
                     dosis: vacunas[i].sniDosisNombre,
                     fechaAplicacion: vacunas[i].fechaAplicacion,
-                    efector: vacunas[i].origenNombre
+                    efector: vacunas[i].origenNombre,
+                    esquema: vacunas[i].sniVacunaEsquemaNombre || '',
+                    condicion: vacunas[i].sniAplicacionCondicionNombre
                 };
                 promesas.push(operations.postMongoDB(dtoMongoDB));
             }
