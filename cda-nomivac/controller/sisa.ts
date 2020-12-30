@@ -11,7 +11,8 @@ import { sisaVacunas } from '../service/nomivacWSsisa';
 export async function getVacunas(paciente) {
     if (paciente && paciente.documento) {
         try {
-            const vacunas = await sisaVacunas(paciente);
+            const vacunas: any = await sisaVacunas(paciente);
+
             let promesas = [];
             for (let i = 0; i < vacunas.length; i++) {
                 let texto = vacunas[i].origenNombre ? `Organización:  ${vacunas[i].origenNombre} / ` : '';
@@ -28,23 +29,23 @@ export async function getVacunas(paciente) {
                     },
                     cie10: 'Z26.9', // CIE10: Vacunación profilactica
                     file: null,
-                    texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisNombre || ''} Esquema: ${vacunas[i].sniVacunaEsquemaNombre} pertenece al lote: ${vacunas[i].Lote}`
+                    texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisNombre || ''} Esquema: ${vacunas[i].vacunaEsquemaNombre} pertenece al lote: ${vacunas[i].lote}`
                 };
                 promesas.push(operations.postCDA(dto));
 
                 const dtoMongoDB = {
                     idvacuna: vacunas[i].idSniAplicacion.toString(),
                     codigo: vacunas[i].idSniVacuna.toString() || '',
-                    documento: vacunas[i].nrodoc,
+                    documento: vacunas[i].nroDoc,
                     apellido: vacunas[i].apellido,
                     nombre: vacunas[i].nombre,
                     fechaNacimiento: vacunas[i].fechaNacimiento,
-                    sexo: vacunas[i].sexo === 'M' ? 'masculino' : 'femenino',
+                    sexo: paciente.sexo,
                     vacuna: vacunas[i].sniVacunaNombre,
                     dosis: vacunas[i].sniDosisNombre,
                     fechaAplicacion: vacunas[i].fechaAplicacion,
                     efector: vacunas[i].origenNombre,
-                    esquema: vacunas[i].sniVacunaEsquemaNombre || '',
+                    esquema: vacunas[i].vacunaEsquemaNombre || '',
                     condicion: vacunas[i].sniAplicacionCondicionNombre
                 };
                 promesas.push(operations.postMongoDB(dtoMongoDB));

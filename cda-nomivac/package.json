@@ -20,7 +20,6 @@
         "moment": "^2.22.0",
         "mongoose": "^5.3.12",
         "mssql": "^5.0.0-alpha.1",
-        "node-fetch": "^2.6.0",
         "request": "^2.88.0"
     }
 }
