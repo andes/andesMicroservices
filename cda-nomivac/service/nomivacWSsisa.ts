@@ -1,33 +1,33 @@
 import { sisaDev } from '../config.private';
-const fetch = require('node-fetch');
+const request = require('request');
 
 export async function sisaVacunas(paciente: any) {
     const sexoPaciente = paciente.sexo === 'masculino' ? 'M' : 'F';
     const url = sisaDev.url;
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-        },
-        body: JSON.stringify({
-            username: sisaDev.username,
-            password: sisaDev.password,
-            idTipoDoc: '1',
-            nroDoc: paciente.documento,
-            sexo: sexoPaciente
-        })
-    };
-    try {
-        let response = await fetch(url, options);
-        if (response.status === 200) {
-            const respJSON = await response.json();
-            const { resultado } = respJSON;
-            if (resultado === 'OK') {
-                return respJSON.aplicacionesVacunasCiudadano.aplicacionVacunaCiudadano;
-            }
-        }
-    } catch (error) {
+    const data = {
+        idTipodoc: '1',
+        numeroDocumento: paciente.documento,
+        sexo: sexoPaciente
     }
-    return [];
+
+    return new Promise((resolve: any, reject: any) => {
+        const options = {
+            url,
+            method: 'GET',
+            json: true,
+            body: data,
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                app_id: sisaDev.app_id,
+                app_key: sisaDev.app_key
+            }
+        };
+        request(options, (error, response, body) => {
+            if (response.statusCode >= 200 && response.statusCode < 300) {
+                return resolve(body);
+            }
+            return resolve([]);
+        });
+    });
 }
