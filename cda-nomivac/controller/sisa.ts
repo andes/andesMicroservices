@@ -13,15 +13,15 @@ export async function getVacunas(paciente) {
     if (paciente && paciente.documento) {
         try {
             const listado_vacunas: any = await sisaVacunas(paciente);
-            if (listado_vacunas && listado_vacunas.length > 0) {
+            if (listado_vacunas && listado_vacunas.aplicacionesVacunasCiudadano) {
                 let promesas = [];
-                const vacunas = listado_vacunas[0].listado;
+                const vacunas = listado_vacunas.aplicacionesVacunasCiudadano.aplicacionVacunaCiudadano;
                 for (let i = 0; i < vacunas.length; i++) {
                     let texto = vacunas[i].origenNombre ? `Organización:  ${vacunas[i].origenNombre} / ` : '';
                     const dto = {
                         id: vacunas[i].idSniAplicacion.toString(), // codigo SISA de la vacuna
                         organizacion: organizacionId,
-                        fecha: moment(vacunas[i].fechaAplicacion).startOf('day').toDate(),  // Fecha de aplicación de la dosis de vacuna.
+                        fecha: moment(vacunas[i].fechaAplicacion, 'DD/MM/YYYY'),  // Fecha de aplicación de la dosis de vacuna.
                         tipoPrestacion: '33879002', // aplicación de una vacuna para producir inmunidad activa o pasiva
                         paciente,
                         confidencialidad: 'N',
