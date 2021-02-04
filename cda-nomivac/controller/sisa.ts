@@ -21,7 +21,7 @@ export async function getVacunas(paciente) {
                     const dto = {
                         id: vacunas[i].idSniAplicacion.toString(), // codigo SISA de la vacuna
                         organizacion: organizacionId,
-                        fecha: moment(vacunas[i].fechaAplicacion, 'DD/MM/YYYY'),  // Fecha de aplicación de la dosis de vacuna.
+                        fecha: vacunas[i].fechaAplicacion,  // Fecha de aplicación de la dosis de vacuna.
                         tipoPrestacion: '33879002', // aplicación de una vacuna para producir inmunidad activa o pasiva
                         paciente,
                         confidencialidad: 'N',
