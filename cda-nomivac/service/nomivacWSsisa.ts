@@ -5,15 +5,15 @@ export async function sisaVacunas(paciente: any) {
     const sexoPaciente = paciente.sexo === 'masculino' ? 'M' : 'F';
     const url = sisaDev.url;
     const data = {
-        idTipodoc: '1',
-        numeroDocumento: paciente.documento,
+        idTipoDoc: '1',
+        nroDoc: paciente.documento,
         sexo: sexoPaciente
     }
 
     return new Promise((resolve: any, reject: any) => {
         const options = {
             url,
-            method: 'GET',
+            method: 'POST',
             json: true,
             body: data,
             headers: {
