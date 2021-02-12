@@ -38,7 +38,7 @@ export async function getVacunas(paciente) {
                     const dtoMongoDB = {
                         idvacuna: vacunas[i].idSniAplicacion.toString(),
                         codigo: vacunas[i].idSniVacuna.toString() || '',
-                        documento: vacunas[i].nroDoc,
+                        documento: vacunas[i].nrodoc,
                         apellido: vacunas[i].apellido,
                         nombre: vacunas[i].nombre,
                         fechaNacimiento: vacunas[i].fechaNacimiento,
