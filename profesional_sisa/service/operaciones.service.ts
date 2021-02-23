@@ -16,11 +16,11 @@ export async function postProfesionalSISA(profesional: any) {
         json: true,
         body: data
     };
-    const { error, statusCode, body } = await fetch(url, options);
+    const { error, status, body } = await fetch(url, options);
     if (error) {
         log(fakeRequest, 'microservices:integration:profesional-sisa', null, 'postProfesionalSISA:error', { error });
     }
-    if (statusCode >= 200 && statusCode < 300) {
+    if (status >= 200 && status < 300) {
         return body;
     }
     return (error || body);
@@ -78,7 +78,7 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['ID_TIPODOC'] = 1;
     profesionalSisa['NRODOC'] = profesional.documento;
     profesionalSisa['SEXO'] = (profesional.sexo === 'femenino' || profesional.sexo === 'Femenino') ? 'F' : 'M';
-    profesionalSisa['FECHA_NACIMIENTO'] = moment(profesional.fechaNacimiento).format('DD/MM/YYYY');
+    profesionalSisa['FECHA_NACIMIENTO'] = moment(profesional.fechaNacimiento).format('DD-MM-YYYY');
     profesionalSisa['ID_PAIS_NACIMIENTO'] = '0';
     profesionalSisa['ID_LOC_NACIMIENTO'] = '0';
     profesionalSisa['ID_PAIS'] = '0';
@@ -91,7 +91,7 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['TITULO'] = formacionGrado ? formacionGrado.titulo : '';
     let codigoInstitucion = formacionGrado ? formacionGrado.entidadFormadora.codigo : '0';
     profesionalSisa['ID_INSTITUCION_FORMADORA'] = codigoInstitucion;
-    profesionalSisa['FECHA_TITULO'] = moment(formacionGrado.fechaEgreso).format('DD/MM/YYYY');
+    profesionalSisa['FECHA_TITULO'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
     let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
     profesionalSisa['ID_PROFESION_REFERENCIA'] = (profesionDeReferencia && profesionDeReferencia.profesionCodigoRef) ? profesionDeReferencia.profesionCodigoRef : '';
     profesionalSisa['ID_INSTITUCION_SEDE'] = '';
@@ -103,7 +103,7 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['ID_PROFESION'] = (formacionGrado && formacionGrado.profesion) ? formacionGrado.profesion.codigo : '';
     profesionalSisa['ID_PROVINCIA_MATRICULA'] = '15';
     profesionalSisa['MATRICULA'] = (formacionGrado && formacionGrado.matriculacion) ? formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].matriculaNumero : '';
-    profesionalSisa['FECHA_MATRICULA'] = moment(formacionGrado.fechaDeInscripcion).format('DD/MM/YYYY');
+    profesionalSisa['FECHA_MATRICULA'] = moment(formacionGrado.fechaDeInscripcion).format('DD-MM-YYYY');
     profesionalSisa['ID_SITUACION_MATRICULA'] = '1';
     profesionalSisa['LIBRO'] = '';
     profesionalSisa['FOLIO'] = '';
