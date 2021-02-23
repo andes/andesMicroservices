@@ -1,0 +1,18 @@
+{
+  "name": "profesional_sisa",
+  "version": "1.0.0",
+  "description": "microservicio para exportart profesional matriculados a SISA",
+  "main": "index.js",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "@andes/log": "^1.0.11",
+    "moment": "^2.22.2",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
