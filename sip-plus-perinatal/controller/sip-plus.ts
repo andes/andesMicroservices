@@ -1,20 +1,7 @@
 import { getPacienteSP, postPacienteSP } from '../service/sip-plus';
 import * as moment from 'moment';
-import { datosPaciente, pregnaciesMatchSnomed } from './match';
-
-
-
-interface IPaciente {
-    documento: string,
-    nombre: string,
-    apellido: string,
-    fechaNacimiento: string,
-    gestas?: any,
-    domicilio?: string,
-    localidad?: string,
-    telefono?: string,
-    edad?: number
-}
+import { IPaciente } from '../schemas/paciente';
+import { getMatching } from '../service/matchPerinatal';
 
 /**
  * Obtiene el paciente de Sip Plus
@@ -24,7 +11,7 @@ interface IPaciente {
  */
 export async function getPaciente(pacienteAndes: any) {
     if (pacienteAndes && pacienteAndes.documento) {
-        const paciente: IPaciente = await formatPacienteAndes(pacienteAndes)
+        const paciente: IPaciente = formatPacienteAndes(pacienteAndes)
         let result = await getPacienteSP(paciente);
         if (paciente.edad && result && result.paciente) {
             result.paciente = await formatPacienteSP(result.paciente);
@@ -36,8 +23,7 @@ export async function getPaciente(pacienteAndes: any) {
 
 }
 
-
-async function formatPacienteAndes(pacienteAndes: any) {
+function formatPacienteAndes(pacienteAndes: any) {
     let paciente = pacienteAndes;
     if (pacienteAndes.direccion && pacienteAndes.direccion[0]) {
         const ubicacion = pacienteAndes.direccion[0].ubicacion;
@@ -49,7 +35,7 @@ async function formatPacienteAndes(pacienteAndes: any) {
         }
     }
     if (pacienteAndes.contacto) {
-        const contacto = await pacienteAndes.contacto.find(c => (c.valor && c.activo && ['fijo', 'celular'].includes(c.tipo)));
+        const contacto = pacienteAndes.contacto.find(c => (c.valor && c.activo && ['fijo', 'celular'].includes(c.tipo)));
         if (contacto) {
             paciente.telefono = contacto.valor;
         }
@@ -63,7 +49,8 @@ async function formatPacienteAndes(pacienteAndes: any) {
 async function formatPacienteSP(pacienteSP: any) {
     let paciente = {};
     const keysSP = Object.keys(pacienteSP);
-    datosPaciente.paciente.forEach(p => {
+    const datosPaciente = await getMatching('paciente');
+    datosPaciente.forEach(p => {
         if (keysSP.includes(p.sipPlus.code)) {
             paciente[p.key] = pacienteSP[p.sipPlus.code];
         }
@@ -74,9 +61,12 @@ async function formatPacienteSP(pacienteSP: any) {
     return paciente
 }
 
-
+/**
+ * se crea al paciente junto con la gesta actual obtenida de los registros
+ * @param paciente 
+ * @param registros obtenidos de la prestación que se inició en Andes
+ */
 export async function savePaciente(paciente, registros) {
-    //se crea al paciente junto con la gesta actual
     if (paciente.documento) {
         const nuevoPacienteSP: any = {};
         let newPaciente = await completePacienteSP(nuevoPacienteSP, paciente, registros);
@@ -85,6 +75,12 @@ export async function savePaciente(paciente, registros) {
     }
 }
 
+/**
+ * se actualiza al paciente junto con su gesta
+ * @param pacienteSP 
+ * @param paciente 
+ * @param registros obtenidos de la prestación que se inició en Andes
+ */
 export async function updatePaciente(pacienteSP: IPaciente, paciente: IPaciente, registros) {
     let newPaciente = await completePacienteSP(pacienteSP, paciente, registros);
     if (newPaciente && Object.keys(newPaciente).length) {
@@ -94,18 +90,17 @@ export async function updatePaciente(pacienteSP: IPaciente, paciente: IPaciente,
 
 
 export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPaciente, registros) {
-    // se actualizan las gestas del paciente
+    // se crea/actualizan las gestas del paciente
     let newPaciente;
     try {
-        // cargamos nuevos datos actuales de la madre al embarazo
-
-        newPaciente = await completePaciente(pacienteSP, paciente, datosPaciente.paciente);
+        // cargamos datos actuales de la madre al embarazo
+        newPaciente = await completePaciente(pacienteSP, paciente);
 
         let embActivo: any = await ultimoEmbActivo(pacienteSP);
         let embActual = embActivo ? embActivo.valor : {};
 
         // completamos el embarazo actual con datos del paciente
-        let newDatosEmb = await datosEmbarazo(paciente, embActual, datosPaciente.gesta);
+        let newDatosEmb = await datosEmbarazo(paciente, embActual);
 
         // completamos el embarazo actual con datos de las prestaciones
         newDatosEmb = await createMatchSnomedSP(registros, embActual, newDatosEmb);
@@ -139,18 +134,22 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
 }
 
 
+/**
+ *  Filtramos las gestas con última fecha probable de parto
+ *  y que no tenga fecha de finalizacion del embarazo (activa)
+ * @param paciente 
+ */
 async function ultimoEmbActivo(paciente: IPaciente) { //embarazoAcual o ultimoEmbarazo
-    //filtramos las gestas con última fecha probable de parto (0192)
-    // y que no tenga fecha de finalizacion del embarazo (activa)
+
     let ultimoActivo = null;
     let diasParto = 0; // cantidad de días que faltan para el parto
     try {
         if (paciente.gestas) {
-            // const gestaActiva = pregnaciesMatchSnomed.filter(emb => emb.gestaActiva);
+            const pregnaciesMatchSnomed = await getMatching('snomed');
 
-            // defino las key a buscar en el embarazo para determinarsi está activo
+            // defino las key a buscar en el embarazo para determinar si está activo
             const FPP = 'FPP'; // fecha posible de parto,
-            const FFE = 'FFE'; // fecha fin embarazo (determina que em embarazo ya finalizó)
+            const FFE = 'FFE'; // fecha fin embarazo (determina que el embarazo ya finalizó)
             let fechaPP = null;
             let fechaFinE = null;
             const arrayGestas = keyValor(paciente.gestas);
@@ -160,7 +159,7 @@ async function ultimoEmbActivo(paciente: IPaciente) { //embarazoAcual o ultimoEm
 
                 const keysEmb = Object.keys(gesta); // código de Sip+
                 keysEmb.forEach(key => {
-                    // obtengo el "code" de la gesta del array de matchSnom y pregunto si es FPP o FFE
+                    // obtengo el "code" de la gesta del array de matchSnomed y pregunto si es FPP o FFE
                     const regMatch = pregnaciesMatchSnomed.find(match => match.sipPlus.code === key);
                     if (regMatch && regMatch.key === FPP) {
                         fechaPP = moment(gesta[key], 'DD/MM/YY');
@@ -198,15 +197,18 @@ const keyValor = (data: any) => {
 };
 
 
-async function completePaciente(pacienteSP: any, paciente: IPaciente, datos) {
-    let datosPaciente: any;
-    // obtengo todas las key del pacienteSP que no se encuetren en paciente
+async function completePaciente(pacienteSP: any, paciente: IPaciente) {
+
+    let datosPaciente: any = (!pacienteSP) ?
+        {
+            "1018": "AR",
+            "1019": "DNI"
+        } : {};
     try {
-        datosPaciente = (!pacienteSP) ?
-            {
-                "1018": "AR",
-                "1019": "DNI"
-            } : {};
+        // obtengo los datos del paciente a ser mapeados
+        const datos = await getMatching('paciente');
+
+        // obtengo todas las key del pacienteSP que no se encuetren en paciente
         const keys = Object.keys(pacienteSP);
         const newData = pacienteSP ? datos.filter(d => (!keys.includes(d.key)) || (!pacienteSP[d.key] && keys.includes(d.key))) : datos;
 
@@ -254,7 +256,9 @@ async function completeData(allData, dataInit = {}, newData) {
  * @param embActual 
  * @param datosEmb 
  */
-async function datosEmbarazo(paciente, embActual, datosEmb) {
+async function datosEmbarazo(paciente, embActual) {
+    // obtengo los datos del paciente durante el embarazo a ser mapeados
+    const datosEmb = await getMatching('gesta');
 
     // obtengo todas las key del datosEmb que no se encuetren en embActual
     const keysEmb = Object.keys(embActual);
@@ -265,7 +269,7 @@ async function datosEmbarazo(paciente, embActual, datosEmb) {
 
 
 /**
- *  cargamos en el embarazo actual los codigos de sip+ que matcheen con los conceptId recibidos
+ * cargamos en el embarazo actual los codigos de sip+ que son mapeados a los conceptId recibidos
  * solo se concidenran los que aún no estén cargados en el embarazo
  * @param registros 
  * @param embActual 
@@ -275,7 +279,7 @@ async function createMatchSnomedSP(registros: any[], embActual, newDatosEmb) {
     if (registros) {
         const arrayId = registros.map(cId => cId.concepto.conceptId);
         const arrayCode = Object.keys(embActual);
-        const matchEmbarazo = pregnaciesMatchSnomed;
+        const matchEmbarazo = await getMatching('snomed');
         // obtengo todos los conceptos definidos por BD que matchean con los recibidos de la prestación
         // y que no se encuntren ya cargados en el embarazo
         const idsMatched = matchEmbarazo.filter(cId => (arrayId.includes(cId.concepto.conceptId) &&
