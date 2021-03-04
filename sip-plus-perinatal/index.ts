@@ -15,9 +15,11 @@ router.group('/perinatal', (group) => {
         res.send({ message: 'ok' });
         try {
             const event = req.body.event;
+            const prestacion = req.body.data[0];
             const registros = req.body.data[1];
             let paciente = req.body.data[2] || null;
-            if (event === 'rup:perinatal:register') {
+            // verificamos si la prestacion es "Consulta de control de embarazo"
+            if (prestacion.solicitud.tipoPrestacion.conceptId === '1191000013107') {
                 if (paciente) {
                     // Obtenemos el paciente y sus gestas cargadas en sip plus
                     const resultSP = await getPaciente(paciente);
