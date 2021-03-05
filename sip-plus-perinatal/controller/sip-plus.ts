@@ -3,6 +3,24 @@ import * as moment from 'moment';
 import { IPaciente } from '../schemas/paciente';
 import { getMatching } from '../service/matchPerinatal';
 
+
+/**
+ * Obtenemos todos los registros de la prestación
+ * @param registros de la prestación
+ */
+export function getRegistros(registros: any[] = []) {
+    let allRegistros = [];
+    registros.forEach(reg => {
+        allRegistros = [...allRegistros, reg];
+        if (reg.registros && reg.registros.length) {
+            const rs = getRegistros(reg.registros);
+            allRegistros = [...allRegistros, ...rs];
+        }
+    });
+
+    return allRegistros;
+}
+
 /**
  * Obtiene el paciente de Sip Plus
  *
@@ -123,7 +141,6 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
         if (Object.keys(newPaciente).length || Object.keys(newDatosEmb).length) {
             newPaciente["pregnancies"] = {};
             newPaciente["pregnancies"][keyActual] = newDatosEmb;
-            return newPaciente;
         }
     } catch (error) {
 

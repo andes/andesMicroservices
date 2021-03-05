@@ -1,7 +1,7 @@
 import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
 import { logDatabase } from './config.private';
-import { getPaciente, savePaciente, updatePaciente } from './controller/sip-plus';
+import { getRegistros, getPaciente, savePaciente, updatePaciente } from './controller/sip-plus';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -14,12 +14,12 @@ router.group('/perinatal', (group) => {
     group.post('/register', async (req: any, res) => {
         res.send({ message: 'ok' });
         try {
-            const event = req.body.event;
             const prestacion = req.body.data[0];
-            const registros = req.body.data[1];
             let paciente = req.body.data[2] || null;
             // verificamos si la prestacion es "Consulta de control de embarazo"
             if (prestacion.solicitud.tipoPrestacion.conceptId === '1191000013107') {
+
+                const registros = getRegistros(prestacion.ejecucion.registros);
                 if (paciente) {
                     // Obtenemos el paciente y sus gestas cargadas en sip plus
                     const resultSP = await getPaciente(paciente);
