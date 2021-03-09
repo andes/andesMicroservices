@@ -59,7 +59,7 @@ function formatPacienteAndes(pacienteAndes: any) {
         }
     }
     if (pacienteAndes.edadReal && pacienteAndes.edadReal.valor) {
-        paciente.edad = parseInt(pacienteAndes.edadReal.valor);
+        paciente.edad = parseInt(pacienteAndes.edad);
     }
     return paciente
 }
