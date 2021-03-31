@@ -103,49 +103,59 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let dtoSumar: IDtoSumar;
     let dtoRecupero: IDtoRecupero;
     let tipoFacturacion: String = '';
-    if (dtoFacturacion.obraSocial.financiador !== 'SUMAR') {
-        /* Paciente tiene OS Se factura por Recupero */
-        /* TODO: Verificar si hay precondición para facturar por Recupero*/
-        let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
 
-        dtoRecupero = {
-            objectId: dtoFacturacion.turno._id,
-            fechaTurno: dtoFacturacion.turno.fechaTurno,
-            idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
-            codigo: dtoFacturacion.configAutomatica.recuperoFinanciero.codigo,
-            idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,
-            dniPaciente: dtoFacturacion.paciente.dni,
-            dniProfesional: dtoFacturacion.profesional.dni,
-            codigoFinanciador: os,
-            idEfector: dtoFacturacion.organizacion.idSips,
-            motivoDeConsulta: dtoFacturacion.motivoConsulta,
-            prepaga: dtoFacturacion.obraSocial.prepaga,
-        };
-        await facturaRecupero(pool, dtoRecupero);
-    } else {
-        /* Paciente NO TIENE OS se factura por Sumar */
-        tipoFacturacion = 'sumar';
-        let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
+    if (dtoFacturacion.obraSocial) {
+        if (dtoFacturacion.obraSocial.financiador !== 'SUMAR') {
+            /* Paciente tiene OS Se factura por Recupero */
+            /* TODO: Verificar si hay precondición para facturar por Recupero*/
+            let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
 
-        dtoSumar = {
-            idPrestacion: dtoFacturacion.idPrestacion,
-            idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
-            fechaTurno: dtoFacturacion.turno.fechaTurno,
-            objectId: dtoFacturacion.turno._id,
-            cuie: dtoFacturacion.organizacion.cuie,
-            diagnostico: (main) ? main.diagnostico : null,
-            dniPaciente: dtoFacturacion.paciente.dni,
-            profesional: dtoFacturacion.profesional,
-            claveBeneficiario: afiliadoSumar.clavebeneficiario,
-            idAfiliado: afiliadoSumar.id_smiafiliados,
-            edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
-            sexo: (dtoFacturacion.paciente.sexo === 'masculino') ? 'M' : 'F',
-            fechaNacimiento: dtoFacturacion.paciente.fechaNacimiento,
-            anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
-            mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
-            dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
-            datosReportables: (main) ? main.datosReportables : null
-        };
-        await facturaSumar(pool, dtoSumar);
+            dtoRecupero = {
+                objectId: dtoFacturacion.turno._id,
+                fechaTurno: dtoFacturacion.turno.fechaTurno,
+                idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
+                codigo: dtoFacturacion.configAutomatica.recuperoFinanciero.codigo,
+                idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,
+                dniPaciente: dtoFacturacion.paciente.dni,
+                dniProfesional: dtoFacturacion.profesional.dni,
+                codigoFinanciador: os,
+                idEfector: dtoFacturacion.organizacion.idSips,
+                motivoDeConsulta: dtoFacturacion.motivoConsulta,
+                prepaga: dtoFacturacion.obraSocial.prepaga,
+            };
+            await facturaRecupero(pool, dtoRecupero);
+        } else {
+            /* Paciente NO TIENE OS se factura por Sumar */
+            tipoFacturacion = 'sumar';
+            let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
+
+            dtoSumar = {
+                idPrestacion: dtoFacturacion.idPrestacion,
+                idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
+                fechaTurno: dtoFacturacion.turno.fechaTurno,
+                objectId: dtoFacturacion.turno._id,
+                cuie: dtoFacturacion.organizacion.cuie,
+                diagnostico: (main) ? main.diagnostico : null,
+                dniPaciente: dtoFacturacion.paciente.dni,
+                profesional: dtoFacturacion.profesional,
+                claveBeneficiario: afiliadoSumar.clavebeneficiario,
+                idAfiliado: afiliadoSumar.id_smiafiliados,
+                edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
+                sexo: (dtoFacturacion.paciente.sexo === 'masculino') ? 'M' : 'F',
+                fechaNacimiento: dtoFacturacion.paciente.fechaNacimiento,
+                anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
+                mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
+                dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
+                datosReportables: (main) ? main.datosReportables : null
+            };
+            // Si es control embarazo
+            // se cambia id nomenclador que puede ser 2473 (CTC005), 2474(CTC006), 2753 (CTC007), 2760 (NTN004)
+            // revisar ya que la eleccion del nomenclador en sips perinatal la realiza el usuario
+            if (dtoFacturacion.prestacion.conceptId === '1191000013107') {
+                dtoSumar.idNomenclador = 2474; // (IDNOMENCLADOR_CTC005 / IDNOMENCLADOR_CTC006 dependiendo si es primer control o los posteriores)
+
+            }
+            await facturaSumar(pool, dtoSumar);
+        }
     }
 }

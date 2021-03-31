@@ -16,7 +16,6 @@ router.group('/facturacion', (group) => {
 
     group.post('/facturar', async (req, res) => {
         try {
-            console.log("Entra a facturar");
             sql.close();
             let pool = await sql.connect(SipsDBConfiguration);
             const event = req.body.event;

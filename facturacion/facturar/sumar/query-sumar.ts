@@ -17,8 +17,8 @@ export class QuerySumar {
      */
     async saveComprobanteSumar(request: any, dtoComprobante: any) {
         try {
-            let query = 'INSERT INTO dbo.PN_comprobante (cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion,objectId,factAutomatico) ' +
-                ' values (@cuie, NULL, NULL, @fechaComprobante, @claveBeneficiario, @idAfiliado, @fechaCarga, @comentario, @marca, @periodo, @activo, @idTipoPrestacion, @objectId, @factAutomatico)' +
+            let query = 'INSERT INTO dbo.PN_comprobante (cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, fecha_carga, comentario, marca, periodo, activo, alta_comp, idTipoDePrestacion,objectId,factAutomatico) ' +
+                ' values (@cuie, NULL, NULL, @fechaComprobante, @claveBeneficiario, @idAfiliado, @fechaCarga, @comentario, @marca, @periodo, @activo,@alta_comp, @idTipoPrestacion, @objectId, @factAutomatico)' +
                 ' SELECT SCOPE_IDENTITY() AS id';
 
             const result = await request
@@ -31,6 +31,7 @@ export class QuerySumar {
                 .input('marca', sql.VarChar(10), dtoComprobante.marca)
                 .input('periodo', sql.VarChar(7), dtoComprobante.periodo)
                 .input('activo', sql.VarChar(1), dtoComprobante.activo)
+                .input('alta_comp', sql.VarChar(1), dtoComprobante.alta_comp)
                 .input('idTipoPrestacion', sql.Int, dtoComprobante.idTipoPrestacion)
                 .input('objectId', sql.VarChar(50), dtoComprobante.objectId)
                 .input('factAutomatico', sql.VarChar(50), 'prestacion')
