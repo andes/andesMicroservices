@@ -1,4 +1,4 @@
-import { SNS, config } from 'aws-sdk';
+import { config, SNS } from 'aws-sdk';
 
 export interface SmsOptions {
     prefijo: string;
@@ -37,14 +37,13 @@ export async function sendSms(smsOptions: SmsOptions) {
 }
 
 export function getData(body) {
-    if (body.event === 'mpi:pacientes:create' ||
-        body.event === 'mpi:pacientes:update') {
+    if (body.event === 'notification:patient:laboratory') {
         const paciente = body.data;
         const celulares = paciente.contacto.filter(c => c && c.tipo && (c.tipo === 'celular'));
         if (celulares.length > 0) {
             const telefono = celulares[celulares.length - 1].valor || null;
             const subject = 'ANDES';
-            const mensaje = 'El resultado de tu análisis de laboratorio está disponible. Podes visualizarlo en la aplicación móvil de ANDES.';
+            const mensaje = 'El resultado de tu laboratorio está disponible. Podes visualizarlo en la aplicación móvil de ANDES.';
             return { subject, telefono, mensaje };
         }
     }
