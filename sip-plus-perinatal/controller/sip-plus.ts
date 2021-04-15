@@ -28,10 +28,12 @@ export function getRegistros(registros: any[] = []) {
  * @returns paciente
  */
 export async function getPaciente(pacienteAndes: any) {
+
     if (pacienteAndes && pacienteAndes.documento) {
         const paciente: IPaciente = formatPacienteAndes(pacienteAndes)
-        let result = await getPacienteSP(paciente);
-        if (paciente.edad && result && result.paciente) {
+        let result: any = await getPacienteSP(paciente);
+        if (paciente.edad && result && result.paciente && Object.keys(result.paciente).length) {
+
             result.paciente = await formatPacienteSP(result.paciente);
             result.paciente.edad = paciente.edad;
         }
@@ -80,132 +82,73 @@ async function formatPacienteSP(pacienteSP: any) {
 }
 
 /**
- * se crea al paciente junto con la gesta actual obtenida de los registros
- * @param paciente 
- * @param registros obtenidos de la prestación que se inició en Andes
- */
-export async function savePaciente(paciente, registros) {
-    if (paciente.documento) {
-        const nuevoPacienteSP: any = {};
-        let newPaciente = await completePacienteSP(nuevoPacienteSP, paciente, registros);
-        await postPacienteSP(paciente.documento, newPaciente);
-
-    }
-}
-
-/**
- * se actualiza al paciente junto con su gesta
+ * se crea al paciente/actualiza paciente
  * @param pacienteSP 
  * @param paciente 
  * @param registros obtenidos de la prestación que se inició en Andes
  */
-export async function updatePaciente(pacienteSP: IPaciente, paciente: IPaciente, registros) {
+export async function postPaciente(paciente: IPaciente, registros, pacienteSP: any = {}) {
     let newPaciente = await completePacienteSP(pacienteSP, paciente, registros);
     if (newPaciente && Object.keys(newPaciente).length) {
         await postPacienteSP(paciente.documento, newPaciente);
     }
 }
 
-
+/**
+ * se crea al paciente/actualiza al paciente junto con su gesta obtenida de los registros
+ * @param pacienteSP 
+ * @param paciente 
+ * @param registros 
+ * @returns 
+ */
 export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPaciente, registros) {
-    // se crea/actualizan las gestas del paciente
     let newPaciente;
     try {
-        // cargamos datos actuales de la madre al embarazo
-        newPaciente = await completePaciente(pacienteSP, paciente);
+        // obtenemos el número de embarazo por el que se generó la prestación
+        let emb = registros.find(reg => reg.concepto.conceptId === '366321006');
+        if (emb && emb.valor) {
+            const numEmbarazo = emb.valor.toString();
+            // cargamos datos actuales de la madre al embarazo
+            newPaciente = await completePaciente(pacienteSP, paciente);
+            let embActivo: any = await embarazoActual(pacienteSP, numEmbarazo);
+            let embActual = embActivo ? embActivo.valor : {};
 
-        let embActivo: any = await ultimoEmbActivo(pacienteSP);
-        let embActual = embActivo ? embActivo.valor : {};
+            // completamos el embarazo actual con datos del paciente
+            let newDatosEmb = await datosEmbarazo(paciente, embActual);
 
-        // completamos el embarazo actual con datos del paciente
-        let newDatosEmb = await datosEmbarazo(paciente, embActual);
+            // completamos el embarazo actual con datos de las prestaciones
+            newDatosEmb = await createMatchSnomedSP(registros, embActual, newDatosEmb);
 
-        // completamos el embarazo actual con datos de las prestaciones
-        newDatosEmb = await createMatchSnomedSP(registros, embActual, newDatosEmb);
-
-        // calculamos el numero (key) de embarazo
-        let keyActual: string;
-        if (embActivo && Object.keys(embActual).length) {
-            keyActual = embActivo.key;
-        }
-        else {
-            // si no existe embarazo activo creamos nueva key
-            if (pacienteSP.gestas) {
-                let arrayKey = (Object.keys(pacienteSP.gestas)).map(key => { return parseInt(key, 10) });
-                keyActual = (Math.max.apply(null, arrayKey) + 1).toString();
+            if (Object.keys(newPaciente).length || Object.keys(newDatosEmb).length) {
+                newPaciente["pregnancies"] = {};
+                newPaciente["pregnancies"][numEmbarazo] = newDatosEmb;
             }
-            else {
-                keyActual = '1';
-            }
-        }
-        if (Object.keys(newPaciente).length || Object.keys(newDatosEmb).length) {
-            newPaciente["pregnancies"] = {};
-            newPaciente["pregnancies"][keyActual] = newDatosEmb;
         }
     } catch (error) {
 
     }
-
     return newPaciente;
 
 }
 
 
 /**
- *  Filtramos las gestas con última fecha probable de parto
- *  y que no tenga fecha de finalizacion del embarazo (activa)
+ *  Obtenemos el embarazo de sipplus, de acuerdo a lo que se cargó en la prestación
  * @param paciente 
+ * @param numEmbarazo número de embarazo obtenido desde la prestación
  */
-async function ultimoEmbActivo(paciente: IPaciente) { //embarazoAcual o ultimoEmbarazo
-
-    let ultimoActivo = null;
-    let diasParto = 0; // cantidad de días que faltan para el parto
+async function embarazoActual(paciente: IPaciente, numEmb) {
+    let embActual = null;
     try {
-        if (paciente.gestas) {
-            const pregnaciesMatchSnomed = await getMatching('snomed');
-
-            // defino las key a buscar en el embarazo para determinar si está activo
-            const FPP = 'FPP'; // fecha posible de parto,
-            const FFE = 'FFE'; // fecha fin embarazo (determina que el embarazo ya finalizó)
-            let fechaPP = null;
-            let fechaFinE = null;
+        if (paciente.gestas && paciente.gestas[numEmb]) {
             const arrayGestas = keyValor(paciente.gestas);
-            arrayGestas.forEach(g => {
-                let gesta = g.valor;
-                gesta = JSON.parse(JSON.stringify(gesta));
-
-                const keysEmb = Object.keys(gesta); // código de Sip+
-                keysEmb.forEach(key => {
-                    // obtengo el "code" de la gesta del array de matchSnomed y pregunto si es FPP o FFE
-                    const regMatch = pregnaciesMatchSnomed.find(match => match.sipPlus.code === key);
-                    if (regMatch && regMatch.key === FPP) {
-                        fechaPP = moment(gesta[key], 'DD/MM/YY');
-                    }
-                    if (regMatch && regMatch.key === FFE) {
-                        fechaFinE = moment(gesta[key], 'DD/MM/YY');
-                    }
-                });
-                // se considera embarazo activo cuando
-                // la FPP aún no ocurrió y no tiene cargada FFE
-                if (fechaPP && !fechaFinE) {
-                    const fechaActual = moment(new Date(), 'DD/MM/YY');
-                    const difDias = fechaPP.diff(fechaActual, 'day');
-
-                    // y si hubiera más de uno obtenemos el de fechaPP menos próxima
-                    if (difDias > 0 && difDias > diasParto) {
-                        // embarazo activo
-                        ultimoActivo = g;
-                        diasParto = difDias;
-                    }
-                }
-
-            });
-
+            embActual = arrayGestas.find(emb => emb.key === numEmb);
         }
     } catch (error) {
+        return null;
     }
 
-    return ultimoActivo;
+    return embActual;
 }
 
 const keyValor = (data: any) => {
