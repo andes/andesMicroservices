@@ -15,21 +15,27 @@ mongoose.connect(MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true }
 
 
 export async function getMatching(tipoMatch = null) {
-    const tipo = tipoMatch || 'paciente';
+    const tipo: string = tipoMatch || 'paciente';
     const source = `andes:${tipo}`;
     try {
         const dataMapped = await QueryMapping.find({ source, target: "sip+" });
 
         return dataMapped.map(elemMap => {
 
-            const sipPlus = {
+            let sipPlus = {
                 code: elemMap['targetValue']['code'],
                 type: elemMap['targetValue']['type']
             }
-            const key = (tipo === 'snomed') ? elemMap['sourceValue']['key'] : elemMap['sourceValue'];
+            const key = (tipo.includes('snomed')) ? elemMap['sourceValue']['key'] : elemMap['sourceValue'];
 
             let dataMap: IPerinatal = { key, sipPlus, tipoMatch };
-            if (tipo === 'snomed') { dataMap.concepto = elemMap['sourceValue']['concepto'] }
+            // si el tipo de mapeo contiene conceptos Snomed, entonces se obtienen sus datos
+            if (tipo.includes('snomed')) {
+                dataMap.concepto = elemMap['sourceValue']['concepto'];
+                if (elemMap['sourceValue']['valor']) {
+                    dataMap.sipPlus.valor = elemMap['targetValue']['valor'];
+                }
+            }
             return dataMap;
         });
 

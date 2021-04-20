@@ -10,7 +10,8 @@ export type IPerinatal = {
     key: string,
     sipPlus: {
         code: string,
-        type: string
+        type: string,
+        valor?: any
     },
     concepto?: ISnomedConcept,
     tipoMatch: String,
