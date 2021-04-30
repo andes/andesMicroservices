@@ -1,0 +1,29 @@
+{
+  "name": "facturacion-perinatal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
+    "lint": "tslint --project .",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w",
+    "node": "nodemon -q ./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "@andes/log": "^1.0.11",
+    "@andes/match": "^1.1.12",
+    "async": "^2.6.3",
+    "moment": "^2.29.1",
+    "mongoose": "^5.11.14",
+    "mssql": "^6.3.1",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  }
+}
