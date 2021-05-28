@@ -41,7 +41,14 @@ export async function insertarProfesionalSIPS(profesional: any, conexion) {
     let nombre = profesional.nombre.toUpperCase();
     let idTipoDocumento = 1;
     let numeroDocumento = profesional.documento ? profesional.documento : 0;
-    let matricula = profesional.matricula ? profesional.matricula : '';
+    let matricula = '';
+    if (profesional.profesionalMatriculado && profesional.formacionGrado.length > 0) {
+        matricula = profesional.formacionGrado?.matriculacion[0]?.matriculaNumero;
+    } else {
+        if (profesional.matriculaExterna) {
+            matricula = profesional.matriculaExterna;
+        }
+    }
     let legajo = profesional.legajo ? profesional.legajo : '0';
     let codigoSISA = profesional.codigoSISA ? profesional.sisa : '0';
     let activo = 1;
@@ -93,7 +100,7 @@ export async function insertarProfesionalSIPS(profesional: any, conexion) {
             }
         }
     } catch (err) {
-        log(fakeRequest, 'microservices:integration:sipsYsumar', profesional.id, 'insertarProfesionalSIPS:error', { error: err, queryInsert, profesional: profesional.documento });
+        log(fakeRequest, 'microservices:integration:profesional_sips', profesional.id, 'insertarProfesionalSIPS:error', { error: err, queryInsert, profesional: profesional.documento });
         return err;
     }
 }
