@@ -1,11 +1,10 @@
 import { IPerinatal } from '../schemas/perinatal';
 import { QueryMapping } from '../schemas/query_mapping';
 
-import { fakeRequest } from '../config.private';
+import { fakeRequest, MONGO_HOST } from '../config.private';
 import { log } from '@andes/log';
 
 import * as mongoose from 'mongoose';
-const MONGO_HOST = process.env.MONGO_HOST || 'mongodb://localhost:27017/andes';
 
 mongoose.connect(MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true }).
     then(() => console.log('Conexion Exitosa BD Mongo'))
