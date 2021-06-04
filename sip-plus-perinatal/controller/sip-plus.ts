@@ -313,7 +313,7 @@ async function createMatchControl(registros: any[], embActual, newDatosEmb, fech
         if (fecha) {
             const fechaControl = moment(fecha.toString()).format('DD/MM/YY');
             const arrayId = registros.map(cId => cId.concepto.conceptId);
-            let existeCtrl;
+            let existeCtrl = null;
             if (embActual['prenatal']) {
                 // verificamos si ya existe el control de embarazo en sip-plus
                 const controlesEmb = keyValor(embActual['prenatal']);
@@ -322,7 +322,11 @@ async function createMatchControl(registros: any[], embActual, newDatosEmb, fech
             }
             // si el control de embarazo no existe
             if (!existeCtrl) {
-                const arrayKeys = Object.keys(embActual['prenatal']).map(key => { return parseInt(key, 10) });
+                let arrayKeys = [];
+                if (embActual['prenatal']) {
+                    arrayKeys = Object.keys(embActual['prenatal']).map(key => { return parseInt(key, 10) });
+                }
+
                 const numCtrl = (arrayKeys.length) ? (Math.max.apply(null, arrayKeys) + 1).toString() : '1';
                 // obtengo todos los conceptos definidos por BD que matchean con los recibidos de la prestación
                 let matchPrenatal: IPerinatal[] = await getMatching('snomed-prenatal');
