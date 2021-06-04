@@ -126,6 +126,7 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
     let idSituacionLaboral = 0;
     let idProfesion = 0;
     let idOcupacion = 0;
+    let calle = paciente.direccion ? paciente.direccion[0].valor : "";
     let idBarrio = 0;
     let idLocalidad = 0;
     let idDepartamento: any = 0;
@@ -139,16 +140,33 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
     let idEtnia = 0;
     let idPoblacion = 0;
     let idIdioma = 0;
+
+    let telefonoCelular = 0;
+    let telefonoFijo = 0;
+    let email = "";
+
+    if (paciente.contacto) {
+        const contactoCelular = paciente.contacto.find(c => c.tipo === 'celular');
+        telefonoCelular = contactoCelular ? contactoCelular.valor : 0;
+
+        const contactoFijo = paciente.contacto.find(c => c.tipo === 'fijo');
+        telefonoFijo = contactoFijo ? contactoFijo.valor : 0;
+
+        const contactoEmail = paciente.contacto.find(c => c.tipo === 'email');
+        email = contactoEmail ? contactoEmail.valor : "";
+    } 
     let objectId = paciente.id;
 
     let queryInsert = 'INSERT INTO [dbo].[Sys_Paciente] ([idEfector], [apellido], [nombre], [numeroDocumento], [idSexo]' +
         ',[fechaNacimiento],[idEstado],[idPais],[idProvincia],[idNivelInstruccion],[idSituacionLaboral],[idProfesion]' +
-        ',[idOcupacion],[idBarrio],[idLocalidad],[idDepartamento],[idProvinciaDomicilio],[idObraSocial],[idUsuario]' +
-        ',[fechaAlta],[fechaDefuncion],[fechaUltimaActualizacion],[idEstadoCivil],[idEtnia],[idPoblacion],[idIdioma],[objectId])' +
+        ',[idOcupacion],[calle],[idBarrio],[idLocalidad],[idDepartamento],[idProvinciaDomicilio],[idObraSocial],[idUsuario]' +
+        ',[fechaAlta],[fechaDefuncion],[fechaUltimaActualizacion],[idEstadoCivil],[idEtnia],[idPoblacion],[idIdioma],[objectId]' +
+        ',[telefonoFijo],[telefonoCelular],[email])' +
         ' VALUES (@idEfector, @apellido, @nombre, @numeroDocumento, @idSexo' +
         ',@fechaNacimiento, @idEstado, @idPais, @idProvincia, @idNivelInstruccion, @idSituacionLaboral, @idProfesion' +
-        ',@idOcupacion,@idBarrio, @idLocalidad, @idDepartamento,@idProvinciaDomicilio,@idObraSocial,@idUsuario' +
-        ',@fechaAlta,@fechaDefuncion,@fechaUltimaActualizacion,@idEstadoCivil,@idEtnia,@idPoblacion,@idIdioma,@objectId)' +
+        ',@idOcupacion, @calle, @idBarrio, @idLocalidad, @idDepartamento,@idProvinciaDomicilio,@idObraSocial,@idUsuario' +
+        ',@fechaAlta,@fechaDefuncion,@fechaUltimaActualizacion,@idEstadoCivil,@idEtnia,@idPoblacion,@idIdioma,@objectId' +
+        ',@telefonoFijo,@telefonoCelular,@email)' +
         ' SELECT SCOPE_IDENTITY() AS id';
     try {
         let result = await new sql.Request(conexion)
@@ -165,6 +183,7 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
             .input('idSituacionLaboral', sql.Int, idSituacionLaboral)
             .input('idProfesion', sql.Int, idProfesion)
             .input('idOcupacion', sql.Int, idOcupacion)
+            .input('calle', sql.VarChar(50), calle)
             .input('idBarrio', sql.Int, idBarrio)
             .input('idLocalidad', sql.Int, idLocalidad)
             .input('idDepartamento', sql.Int, idDepartamento)
@@ -179,6 +198,9 @@ export async function insertarPacienteSIPS(paciente: any, conexion) {
             .input('idPoblacion', sql.Int, idPoblacion)
             .input('idIdioma', sql.Int, idIdioma)
             .input('objectId', sql.VarChar(50), objectId)
+            .input('telefonoFijo', sql.VarChar(50), telefonoFijo)
+            .input('telefonoCelular', sql.VarChar(50), telefonoCelular)
+            .input('email', sql.VarChar(50), email)
             .query(queryInsert);
 
         let doc;
@@ -373,22 +395,29 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
     let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('MM/DD/YYYY') : moment(new Date('1900/01/01 00:00:00.000')).format('MM/DD/YYYY');
     let idEstado = (paciente.estado === 'validado' ? 3 : 2);
     let idProvincia: any = 0;
-    let calle = paciente.direccion ? paciente.direccion[0].valor : null;
+    let calle = paciente.direccion ? paciente.direccion[0].valor : "";
     let fechaUltimaActualizacion = paciente.updatedAt ? moment(paciente.updatedAt).format('MM/DD/YYYY') : moment(new Date()).format('MM/DD/YYYY');
-    let telefono = paciente.contacto ? paciente.contacto.map(unContacto => {
-        let numero = {
-            telefonoCelular: unContacto.tipo === 'celular' ? unContacto.valor : 0,
-            telefonoFijo: unContacto.tipo === 'fijo' ? unContacto.valor : 0
-        };
-        return numero;
-    }) : null;
-    let telefonoFijo = telefono[0].telefonoFijo;
-    let telefonoCelular = telefono[0].telefonoCelular;
+
+    let telefonoCelular = 0;
+    let telefonoFijo = 0;
+    let email = "";
+
+    if (paciente.contacto) {
+        const contactoCelular = paciente.contacto.find(c => c.tipo === 'celular');
+        telefonoCelular = contactoCelular ? contactoCelular.valor : 0;
+
+        const contactoFijo = paciente.contacto.find(c => c.tipo === 'fijo');
+        telefonoFijo = contactoFijo ? contactoFijo.valor : 0;
+
+        const contactoEmail = paciente.contacto.find(c => c.tipo === 'email');
+        email = contactoEmail ? contactoEmail.valor : "";
+    }
+    
     let objectId = paciente.id;
 
     let query = 'UPDATE [dbo].[Sys_Paciente] SET apellido = @apellido, nombre = @nombre, numeroDocumento = @numeroDocumento, idSexo = @idSexo ' +
         ', fechaNacimiento = @fechaNacimiento, idEstado = @idEstado, idProvincia = @idProvincia, calle = @calle, fechaUltimaActualizacion = @fechaUltimaActualizacion ' +
-        ', telefonoFijo = @telefonoFijo, objectId = @objectId, telefonoCelular = @telefonoCelular where idPaciente = @idPaciente ';
+        ', telefonoFijo = @telefonoFijo, objectId = @objectId, telefonoCelular = @telefonoCelular, email = @email where idPaciente = @idPaciente ';
 
     try {
         let result = await new sql.Request(conexion)
@@ -404,6 +433,7 @@ export async function actualizarPacienteSIPS(paciente: any, pacienteExistente: a
             .input('telefonoFijo', sql.VarChar(50), telefonoFijo)
             .input('objectId', sql.VarChar(50), objectId)
             .input('telefonoCelular', sql.VarChar(50), telefonoCelular)
+            .input('email', sql.VarChar(50), email)
             .input('idPaciente', sql.Int, idPaciente)
             .query(query);
     } catch (err) {
