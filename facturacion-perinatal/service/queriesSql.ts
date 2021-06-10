@@ -90,14 +90,14 @@ export async function insertConsultaSIPS(consulta: any, conexion) {
 
     if (consulta) {
 
-        let queryInsert = 'INSERT INTO [dbo].[CON_Consulta] ( [idEfector], [fecha], [hora], [idPaciente], [idEspecialidad],' +
-            ' [idProfesional], [motivoConsulta], [informeConsulta], [idDerivadoPor], [idDerivadoHacia], [idTipoPrestacion],' +
-            '[idObraSocial], [idUsuarioRegistro], [fechaRegistro], [idTurno], [peso], [talla], [tAS], [tAD], [imc],' +
-            '[perimetroCefalico], [riesgoCardiovascular], [idProgramaOdontologia], [primerConsultaOdontologia])' +
-            ' VALUES (@idEfector, @fecha, @hora, @idPaciente, @idEspecialidad, @idProfesional, @motivoConsulta, @informeConsulta, ' +
-            '@idDerivadoPor, @idDerivadoHacia, @idTipoPrestacion, @idObraSocial, @idUsuarioRegistro, @fechaRegistro,  @idTurno, @peso,' +
-            ' @talla, @tAS, @tAD,@imc,@perimetroCefalico, @riesgoCardiovascular, @idProgramaOdontologia, @primerConsultaOdontologia)' +
-            ' SELECT SCOPE_IDENTITY() AS id';
+        let queryInsert = `INSERT INTO [dbo].[CON_Consulta] ( [idEfector], [fecha], [hora], [idPaciente], [idEspecialidad],
+             [idProfesional], [motivoConsulta], [informeConsulta], [idDerivadoPor], [idDerivadoHacia], [idTipoPrestacion],
+            [idObraSocial], [idUsuarioRegistro], [fechaRegistro], [idTurno], [peso], [talla], [tAS], [tAD], [imc],
+            [perimetroCefalico], [riesgoCardiovascular], [idProgramaOdontologia], [primerConsultaOdontologia])
+             VALUES (@idEfector, @fecha, @hora, @idPaciente, @idEspecialidad, @idProfesional, @motivoConsulta, @informeConsulta, 
+            @idDerivadoPor, @idDerivadoHacia, @idTipoPrestacion, @idObraSocial, @idUsuarioRegistro, @fechaRegistro,  @idTurno, @peso,
+            @talla, @tAS, @tAD,@imc,@perimetroCefalico, @riesgoCardiovascular, @idProgramaOdontologia, @primerConsultaOdontologia)
+             SELECT SCOPE_IDENTITY() AS id`;
         try {
             const idTurno = consulta.idTurno ? consulta.idTurno : 0;
             const idProgramaOdontologia = consulta.idProgramaOdontologia ? consulta.idProgramaOdontologia : 0;
@@ -176,31 +176,32 @@ export async function updateConsulta(consulta, conexion) {
 
 export async function insertHCPerinatalSIPS(hcp: any, conexion) {
     if (hcp) {
-        let queryInsert = 'INSERT INTO [SIPS].[dbo].[APR_HistoriaClinicaPerinatal] ( ' +
-            ' [idEfector]' +
-            ', [idPaciente]' +
-            ', [Nombre]' +
-            ', [Apellido]' +
-            ', [Domicilio]' +
-            ', [DNI]' +
-            ', [Localidad]' +
-            ', [Telefono]' +
-            ', [FechaNacimiento]' +
-            ', [Edad]' +
-            ', [DatosDeContacto]' +
-            ', [EdadMenor15Mayor35]' +
-            ', [PesoAnterior]' +
-            ', [Talla]' +
-            ', [FUM]' +
-            ', [FPP]' +
-            ', [activa]' +
-            ', [observaciones]' +
-            ', [anulada]' +
-            ', [motivoAnulacion] ' +
-            ', [numeroEmbarazo])' +
-            ' VALUES (@idEfector, @idPaciente, @nombre, @apellido, @domicilio, @dni, @localidad, @telefono, @fechaNacimiento, @edad, @contacto,' +
-            ' @edadMenor15Mayor35, @pesoAnterior, @talla, @fum, @fpp, @activa,  @observaciones, @anulada, @motivoAnulacion, @numeroEmbarazo)' +
-            ' SELECT SCOPE_IDENTITY() AS id';
+        let queryInsert = `INSERT INTO [SIPS].[dbo].[APR_HistoriaClinicaPerinatal] ( 
+             [idEfector]
+            , [idPaciente]
+            , [Nombre]
+            , [Apellido]
+            , [Domicilio]
+            , [DNI]
+            , [Localidad]
+            , [Telefono]
+            , [FechaNacimiento]
+            , [Edad]
+            , [DatosDeContacto]
+            , [EdadMenor15Mayor35]
+            , [PesoAnterior]
+            , [Talla]
+            , [FUM]
+            , [FPP]
+            , [activa]
+            , [observaciones]
+            , [anulada]
+            , [motivoAnulacion] 
+            , [numeroEmbarazo]
+            , [CreatedOn])
+             VALUES (@idEfector, @idPaciente, @nombre, @apellido, @domicilio, @dni, @localidad, @telefono, @fechaNacimiento, @edad, @contacto,
+             @edadMenor15Mayor35, @pesoAnterior, @talla, @fum, @fpp, @activa,  @observaciones, @anulada, @motivoAnulacion, @numeroEmbarazo, @CreatedOn)
+             SELECT SCOPE_IDENTITY() AS id`;
         try {
             const edadMenor15Mayor35 = (hcp.edad && (hcp.edad < 15 || hcp.edad > 35)) ? 1 : 0;
             const result = await new sql.Request(conexion)
@@ -225,12 +226,12 @@ export async function insertHCPerinatalSIPS(hcp: any, conexion) {
                 .input('anulada', sql.Bit, hcp.anulada)
                 .input('motivoAnulacion', sql.VarChar(sql.MAX), hcp.motivoAnulacion)
                 .input('numeroEmbarazo', sql.Int, hcp.numeroEmbarazo)
+                .input('CreatedOn', sql.DateTime, new Date())
                 .query(queryInsert);
 
             return (result && result.recordset) ? result.recordset[0].id : null;
 
         } catch (err) {
-
             log(fakeRequest, 'microservices:integration:facturacion-perinatal', null, 'insertHCPerinatalSIPS:error', { error: err, queryInsert });
             return err;
         }

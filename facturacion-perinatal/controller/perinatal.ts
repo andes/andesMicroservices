@@ -77,10 +77,7 @@ export async function createFacturarPerinatal(prestacion: any) {
             const idEfectorSips = efectorSips.idEfector;
 
             if (paciente && paciente.idSips && registros.numGesta) {
-
-
                 let hcp = await getHCPerinatalSIPS(paciente.idSips, registros.numGesta, conexion);
-
                 if (!hcp || !hcp.idHistoriaClinicaPerinatal) {
                     // guardamos en la tabla HCP
                     hcp = await saveHCPerinatal(paciente, idEfectorSips, registros, conexion);
@@ -113,7 +110,7 @@ export async function createFacturarPerinatal(prestacion: any) {
 
 export async function updateFacturarPerinatal(prestacion) {
 
-    let conexion = await new sql.ConnectionPool(connectionString).connect();
+    const conexion = await new sql.ConnectionPool(connectionString).connect();
     const transaction = await new sql.Transaction(conexion);
 
     const pacientePrest = prestacion.paciente;
@@ -157,19 +154,13 @@ export async function updateFacturarPerinatal(prestacion) {
 
 
 async function obtenerRegistros(registrosPrestacion) {
-
     const registrosRUP = getRegistros(registrosPrestacion);
-
     return await filtrarRegistros(registrosRUP);
-
 }
 
 async function updateHCPerinatal(hcp, paciente, registros, conexion) {
-
     hcp = await loadDatosHCPerinatal(paciente, registros, hcp);
-
     await updateHCPerinatalSIPS(hcp, conexion);
-
 }
 
 
@@ -300,36 +291,22 @@ async function loadHCPDetalle(hcpd, registros) {
 
 async function filtrarRegistros(registros) {
     let registrosCtrol: any = {};
-
+    const mapeoRegistros = {
+        '371531000': 'informe', '248351003': 'pesoAnterior', '366321006': 'numGesta',
+        '14456009': 'talla', '21840007': 'fum', '161714006': 'fpp', '27113001': 'peso',
+        '271649006': 'paSistolica', '271650006': 'paDiastolica', '390840006': 'proxTurno',
+        '57036006': 'edadGestacional', '60621009': 'imc'
+    };
     registros.forEach(reg => {
-
         const conceptId = reg.concepto.conceptId;
         const valor = reg.valor || null;
-
-        if (conceptId === '371531000') { registrosCtrol.informe = valor; }
-
-        else if (conceptId === '248351003') { registrosCtrol.pesoAnterior = Number(valor) || null; }
-
-        else if (conceptId === '366321006') { registrosCtrol.numGesta = getNumGesta(valor) || null; }
-
-        else if (conceptId === '14456009') { registrosCtrol.talla = Number(valor); }
-
-        else if (conceptId === '21840007') { registrosCtrol.fum = valor; }
-
-        else if (conceptId === '161714006') { registrosCtrol.fpp = valor; }
-
-        else if (conceptId === '27113001') { registrosCtrol.peso = Number(valor); }
-
-        else if (conceptId === '271649006') { registrosCtrol.paSistolica = valor; }
-
-        else if (conceptId === '271650006') { registrosCtrol.paDiastolica = valor; }
-
-        else if (conceptId === '390840006') { registrosCtrol.proxTurno = valor; }
-
-        else if (conceptId === '57036006') { registrosCtrol.edadGestacional = valor; }
-
-        else if (conceptId === '60621009') { registrosCtrol.imc = Number(valor); }
-
+        registrosCtrol[mapeoRegistros[conceptId]] = valor;
+        if (conceptId in ['248351003', '14456009', '27113001', '60621009']) {
+            registrosCtrol[mapeoRegistros[conceptId]] = Number(valor);
+        }
+        if (conceptId === '366321006') {
+            registrosCtrol.numGesta = getNumGesta(valor) || null
+        }
         else if (conceptId === '289434000') {
             registrosCtrol.movimientosFetales =
                 (valor && valor.id === '10828004') ? '+' :
@@ -343,39 +320,20 @@ async function filtrarRegistros(registros) {
 
 function getNumGesta(valor) {
     const conceptId = valor.conceptId;
-    const conceptIdPrimerGesta = ['29399001', '199719009', '127364007', '53881005'];
-    let numGesta = null;
-    if (conceptIdPrimerGesta.includes(conceptId)) {
-        numGesta = 1;
+    const gestas = {
+        '29399001': 1, '199719009': 1, '127364007': 1, '53881005': 1,
+        '127365008': 2, '127366009': 3, '127367000': 4, '127368005': 5,
+        '127369002': 6, '127370001': 7, '127371002': 8, '127372009': 9,
+        '127373004': 10
     }
-    else {
-        switch (conceptId) {
-            case '127365008': numGesta = 2; break;
-
-            case '127366009': numGesta = 3; break;
-
-            case '127367000': numGesta = 4; break;
-
-            case '127368005': numGesta = 5; break;
-
-            case '127369002': numGesta = 6; break;
-
-            case '127370001': numGesta = 7; break;
-
-            case '127371002': numGesta = 8; break;
-
-            case '127372009': numGesta = 9; break;
-
-            case '127373004': numGesta = 10; break;
-        }
-    }
+    const numGesta = gestas[conceptId] || null;
     return numGesta;
 }
 
 
 async function getPaciente(paciente: any, conexion: any) {
 
-    let pacienteSIPS = await getPacienteSIPS(paciente, conexion);
+    const pacienteSIPS = await getPacienteSIPS(paciente, conexion);
 
     let dataPaciente: IPaciente = paciente;
     dataPaciente.idSips = (dataPaciente && pacienteSIPS.idPaciente) ? pacienteSIPS.idPaciente : null;
@@ -387,7 +345,7 @@ async function getPaciente(paciente: any, conexion: any) {
             dataPaciente.domicilio = (pacienteAndes.direccion[0].valor) ? pacienteAndes.direccion[0].valor : null;
 
             const ubicacion = pacienteAndes.direccion[0].ubicacion;
-            dataPaciente.localidad = (ubicacion && ubicacion.localidad && ubicacion.localidad.nombre) ? pacienteAndes.direccion[0].ubicacion.localidad.nombre : null;
+            dataPaciente.localidad = (ubicacion && ubicacion.localidad && ubicacion.localidad.nombre) ? ubicacion.localidad.nombre : null;
         }
         if (pacienteAndes.contacto) {
             const contacto = pacienteAndes.contacto.find(c => (c.valor && c.activo && ['fijo', 'celular'].includes(c.tipo)));
@@ -400,7 +358,9 @@ async function getPaciente(paciente: any, conexion: any) {
         }
 
     }
-    paciente.fechaNacimiento = (!paciente.fechaNacimiento) ? (pacienteAndes.fechaNacimiento || pacienteSIPS.fechaNacimiento) : null;
+    if (!paciente.fechaNacimiento) {
+        paciente.fechaNacimiento = pacienteAndes.fechaNacimiento || pacienteSIPS.fechaNacimiento;
+    }
 
     if (!dataPaciente.edad && paciente.fechaNacimiento) {
         dataPaciente.edad = moment(new Date()).diff(paciente.fechaNacimiento, 'years');
