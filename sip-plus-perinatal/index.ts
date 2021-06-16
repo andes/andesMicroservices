@@ -16,10 +16,12 @@ router.group('/perinatal', (group) => {
         res.send({ message: 'ok' });
         try {
             const prestacion = req.body.data;
-
             // verificamos si la prestacion es "Consulta de control de embarazo"
-            if (prestacion.solicitud.tipoPrestacion.conceptId === '1191000013107') {
+            // "consulta de ginecología", "Consulta de obstetricia" o "Consulta de tocoginecología"
+            const conceptConsultaEmbarazo = ['1191000013107', '721000013105', '1181000013109', '1141000013103'];
+            const conceptId = prestacion.solicitud.tipoPrestacion.conceptId;
 
+            if (conceptConsultaEmbarazo.includes(conceptId)) {
                 let paciente: any = await getPacienteAndes(prestacion.paciente.id);
                 if (paciente) {
                     // Obtenemos el paciente y sus gestas cargadas en sip plus
