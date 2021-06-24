@@ -27,6 +27,22 @@ export class InformeLabBody extends HTMLComponent {
                             Validada
                         </h6>
                     </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Fecha Validación
+                        </h6>
+                        <h6>
+                            {{ fecha_validacion }}
+                        </h6>
+                    </div>
+                    <div class="contenedor-bloque-texto">
+                        <h6 class="bolder">
+                            Profesional Validador
+                        </h6>
+                        <h6>
+                            {{ profesional_firma }}
+                        </h6>
+                    </div>
                 </article>
                 <hr>
                 <div class="registros">
