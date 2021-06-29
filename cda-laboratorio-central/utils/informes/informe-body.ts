@@ -62,7 +62,10 @@ export class InformeLabBody extends HTMLComponent {
             titulo: 'COVID19',
             esValidada: true,
             resultado: this.detalle.resultado,
-            metodo: this.detalle.metodo
+            metodo: this.detalle.metodo,
+            fecha_validacion: this.detalle.fecha_validacion,
+            profesional_firma: this.detalle.profesional_firma
+
         };
     }
 
