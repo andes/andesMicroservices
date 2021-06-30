@@ -34,6 +34,9 @@ export async function getMatching(tipoMatch = null) {
                 if (elemMap['sourceValue']['valor']) {
                     dataMap.sipPlus.valor = elemMap['targetValue']['valor'];
                 }
+                if (elemMap['targetValue']['extra']) {
+                    dataMap.sipPlus.extra = elemMap['targetValue']['extra'];
+                }
             }
             return dataMap;
         });

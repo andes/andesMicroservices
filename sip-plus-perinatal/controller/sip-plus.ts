@@ -360,8 +360,10 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
         const reg = registros.find(reg => reg.concepto.conceptId === idMatch.concepto.conceptId);
         if (reg && reg.valor) {
             const type = idMatch.sipPlus.type.toUpperCase();
-            let valorSP = (type === 'DATE') ? moment(reg.valor.toString()).format('DD/MM/YY') :
-                (type === 'NUMERIC') ? parseInt(reg.valor, 10) : null;
+            let valorSP =
+                (type === 'DATE') ? moment(reg.valor.toString()).format('DD/MM/YY') :
+                    (type === 'NUMERIC') ? mappingNumeric(reg.valor, idMatch) :
+                        null;
             if (type === 'TEXT') {
                 let arrayKeyValor = Object.keys(reg.valor);
                 if (arrayKeyValor.length) {
@@ -378,4 +380,26 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
         }
     });
     return newData;
+}
+
+function mappingNumeric(valor: any, match: IPerinatal) {
+    let valorSP = null;
+    if (match.sipPlus.extra) {
+        let valorCast = parseFloat(valor);
+        // aplicamos operaciones en los datos numericos
+        const operation = match.sipPlus.extra.operation;
+        if (operation && operation.toString().toLowerCase() === 'cast-unidad') {
+            // modificamos la unidad de medida del valor (ejemplo kg en gr)
+            const potencia = match.sipPlus.extra.potency || 1;
+            const base = match.sipPlus.extra.floor || 1;
+            const unidad = match.sipPlus.extra.unidad || 1;
+            valorCast = valorCast * parseFloat(unidad) * Math.pow(parseInt(base, 10), parseInt(potencia, 10));
+
+        }
+        valorSP = parseInt(valorCast.toString(), 10);
+    }
+    else {
+        valorSP = parseInt(valor.toString(), 10);
+    }
+    return valorSP;
 }

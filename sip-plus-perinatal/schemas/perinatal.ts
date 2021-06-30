@@ -11,6 +11,7 @@ export type IPerinatal = {
     sipPlus: {
         code: string,
         type: string,
+        extra?: any,
         valor?: any
     },
     concepto?: ISnomedConcept,
