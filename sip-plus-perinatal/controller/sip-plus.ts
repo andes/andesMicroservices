@@ -2,6 +2,7 @@ import { getPacienteSP, postPacienteSP } from '../service/sip-plus';
 import * as moment from 'moment';
 import { IPaciente } from '../schemas/paciente';
 import { getMatching } from '../service/matchPerinatal';
+import { getOrganizacionAndes } from '../service/organizacion';
 import { IPerinatal, ISnomedConcept } from 'sip-plus-perinatal/schemas/perinatal';
 
 
@@ -92,8 +93,8 @@ async function formatPacienteSP(pacienteSP: any) {
 export async function postPaciente(paciente: IPaciente, prestacion, pacienteSP: any = {}) {
 
     const registros = getRegistros(prestacion.ejecucion.registros);
-
-    let newPaciente = await completePacienteSP(pacienteSP, paciente, registros, prestacion.ejecucion.fecha);
+    const organizacion = prestacion.ejecucion.organizacion;
+    let newPaciente = await completePacienteSP(pacienteSP, paciente, registros, prestacion.ejecucion.fecha, organizacion);
 
     if (newPaciente && Object.keys(newPaciente).length) {
         await postPacienteSP(paciente.documento, newPaciente);
@@ -108,7 +109,7 @@ export async function postPaciente(paciente: IPaciente, prestacion, pacienteSP: 
  * @param registros 
  * @returns 
  */
-export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPaciente, registros, fecha) {
+export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPaciente, registros, fecha, organizacion) {
     let newPaciente;
     try {
         // obtenemos el número de embarazo por el que se generó la prestación
@@ -122,7 +123,7 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
             let embActual = embActivo ? embActivo.valor : {};
 
             // completamos la ficha (embarazo) con datos del paciente
-            let newDatosEmb = await datosEmbarazo(paciente, embActual);
+            let newDatosEmb = await datosEmbarazo(paciente, embActual, organizacion);
 
             // completamos ficha con datos de la prestación
             newDatosEmb = await createMatchSnomed(registros, embActual, newDatosEmb);
@@ -267,15 +268,30 @@ async function completeData(allData, dataInit = {}, newData) {
  * @param embActual 
  * @param datosEmb 
  */
-async function datosEmbarazo(paciente, embActual) {
+async function datosEmbarazo(paciente, embActual, organizacion) {
+    const keysEmb = Object.keys(embActual);
+    let newEmb = {};
+    // cargamos datos de la organización al abrir la ficha en sipPlus
+    if (!keysEmb.length && organizacion && organizacion.id) {
+        const orgAndes = await getOrganizacionAndes(organizacion.id);
+        const codigoSisa: string = orgAndes.codigo.sisa ? orgAndes.codigo.sisa.toString() : '';
+        if (codigoSisa) {
+            newEmb['0017'] = {
+                countryId: "AR",
+                divisionId: "58",
+                subdivisionId: codigoSisa.substring(4, 7),
+                code: codigoSisa.substring(2, 4) + codigoSisa.substring(9)
+            }
+        }
+
+    }
     // obtengo los datos del paciente durante el embarazo a ser mapeados
     const datosEmb = await getMatching('gesta');
 
     // obtengo todas las key del datosEmb que no se encuetren en embActual
-    const keysEmb = Object.keys(embActual);
     const newData = embActual ? datosEmb.filter(d => !keysEmb.includes(d.sipPlus.code)) : datosEmb;
 
-    return await completeData(paciente, {}, newData);
+    return await completeData(paciente, newEmb, newData);
 }
 
 
