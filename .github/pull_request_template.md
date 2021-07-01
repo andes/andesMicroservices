@@ -13,7 +13,7 @@ _____________________________________________
 
 -->
 ### Requerimiento
-* URL de la User Story, referencia al issue (#1111) o breve descripcion del requerimiento
+<!-- * URL de la User Story, referencia al issue (#1111) o breve descripcion del requerimiento -->
 
 ### Funcionalidad desarrollada 
 <!-- Describir que se desarrollo -->

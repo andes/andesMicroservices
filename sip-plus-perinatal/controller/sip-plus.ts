@@ -291,7 +291,7 @@ async function createMatchSnomed(registros: any[], embActual, newDatosEmb) {
         const arrayId = registros.map(cId => cId.concepto.conceptId);
         const arrayCode = Object.keys(embActual);
         const matchEmbarazo = await getMatching('snomed');
-        // obtengo todos los conceptos definidos por BD que matchean con los recibidos de la prestación
+        // obtengo todos los conceptos definidos por BD que coincidan con los recibidos de la prestación
         // y que no se encuentren ya cargados en el embarazo
         const idsMatched = matchEmbarazo.filter(cId => (arrayId.includes(cId.concepto.conceptId) &&
             (!arrayCode.includes(cId.sipPlus.code))));
@@ -360,10 +360,13 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
         const reg = registros.find(reg => reg.concepto.conceptId === idMatch.concepto.conceptId);
         if (reg && reg.valor) {
             const type = idMatch.sipPlus.type.toUpperCase();
-            let valorSP =
-                (type === 'DATE') ? moment(reg.valor.toString()).format('DD/MM/YY') :
-                    (type === 'NUMERIC') ? mappingNumeric(reg.valor, idMatch) :
-                        null;
+            let valorSP = null;
+            if (type === 'DATE') {
+                valorSP = moment(reg.valor.toString()).format('DD/MM/YY');
+            }
+            if (type === 'NUMERIC') {
+                valorSP = mappingNumeric(reg.valor, idMatch);
+            }
             if (type === 'TEXT') {
                 let arrayKeyValor = Object.keys(reg.valor);
                 if (arrayKeyValor.length) {
@@ -395,6 +398,11 @@ function mappingNumeric(valor: any, match: IPerinatal) {
             const unidad = match.sipPlus.extra.unidad || 1;
             valorCast = valorCast * parseFloat(unidad) * Math.pow(parseInt(base, 10), parseInt(potencia, 10));
 
+        }
+        //ver para que funcione con la talla de replicar esto para el otro mapping de NUMERIC asi todos usan esta función
+        if (operation && operation.toString().toLowerCase() === 'resta') {
+            const unidad = match.sipPlus.extra.unidad || 0;
+            valorCast = valorCast - unidad;
         }
         valorSP = parseInt(valorCast.toString(), 10);
     }
