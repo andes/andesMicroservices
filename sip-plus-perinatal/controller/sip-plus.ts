@@ -2,6 +2,7 @@ import { getPacienteSP, postPacienteSP } from '../service/sip-plus';
 import * as moment from 'moment';
 import { IPaciente } from '../schemas/paciente';
 import { getMatching } from '../service/matchPerinatal';
+import { getOrganizacionAndes } from '../service/organizacion';
 import { IPerinatal, ISnomedConcept } from 'sip-plus-perinatal/schemas/perinatal';
 
 
@@ -92,8 +93,8 @@ async function formatPacienteSP(pacienteSP: any) {
 export async function postPaciente(paciente: IPaciente, prestacion, pacienteSP: any = {}) {
 
     const registros = getRegistros(prestacion.ejecucion.registros);
-
-    let newPaciente = await completePacienteSP(pacienteSP, paciente, registros, prestacion.ejecucion.fecha);
+    const organizacion = prestacion.ejecucion.organizacion;
+    let newPaciente = await completePacienteSP(pacienteSP, paciente, registros, prestacion.ejecucion.fecha, organizacion);
 
     if (newPaciente && Object.keys(newPaciente).length) {
         await postPacienteSP(paciente.documento, newPaciente);
@@ -108,7 +109,7 @@ export async function postPaciente(paciente: IPaciente, prestacion, pacienteSP: 
  * @param registros 
  * @returns 
  */
-export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPaciente, registros, fecha) {
+export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPaciente, registros, fecha, organizacion) {
     let newPaciente;
     try {
         // obtenemos el número de embarazo por el que se generó la prestación
@@ -122,7 +123,7 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
             let embActual = embActivo ? embActivo.valor : {};
 
             // completamos la ficha (embarazo) con datos del paciente
-            let newDatosEmb = await datosEmbarazo(paciente, embActual);
+            let newDatosEmb = await datosEmbarazo(paciente, embActual, organizacion);
 
             // completamos ficha con datos de la prestación
             newDatosEmb = await createMatchSnomed(registros, embActual, newDatosEmb);
@@ -267,15 +268,30 @@ async function completeData(allData, dataInit = {}, newData) {
  * @param embActual 
  * @param datosEmb 
  */
-async function datosEmbarazo(paciente, embActual) {
+async function datosEmbarazo(paciente, embActual, organizacion) {
+    const keysEmb = Object.keys(embActual);
+    let newEmb = {};
+    // cargamos datos de la organización al abrir la ficha en sipPlus
+    if (!keysEmb.length && organizacion && organizacion.id) {
+        const orgAndes = await getOrganizacionAndes(organizacion.id);
+        const codigoSisa: string = orgAndes.codigo.sisa ? orgAndes.codigo.sisa.toString() : '';
+        if (codigoSisa) {
+            newEmb['0017'] = {
+                countryId: "AR",
+                divisionId: "58",
+                subdivisionId: codigoSisa.substring(4, 7),
+                code: codigoSisa.substring(2, 4) + codigoSisa.substring(9)
+            }
+        }
+
+    }
     // obtengo los datos del paciente durante el embarazo a ser mapeados
     const datosEmb = await getMatching('gesta');
 
     // obtengo todas las key del datosEmb que no se encuetren en embActual
-    const keysEmb = Object.keys(embActual);
     const newData = embActual ? datosEmb.filter(d => !keysEmb.includes(d.sipPlus.code)) : datosEmb;
 
-    return await completeData(paciente, {}, newData);
+    return await completeData(paciente, newEmb, newData);
 }
 
 
@@ -291,7 +307,7 @@ async function createMatchSnomed(registros: any[], embActual, newDatosEmb) {
         const arrayId = registros.map(cId => cId.concepto.conceptId);
         const arrayCode = Object.keys(embActual);
         const matchEmbarazo = await getMatching('snomed');
-        // obtengo todos los conceptos definidos por BD que matchean con los recibidos de la prestación
+        // obtengo todos los conceptos definidos por BD que coincidan con los recibidos de la prestación
         // y que no se encuentren ya cargados en el embarazo
         const idsMatched = matchEmbarazo.filter(cId => (arrayId.includes(cId.concepto.conceptId) &&
             (!arrayCode.includes(cId.sipPlus.code))));
@@ -360,8 +376,13 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
         const reg = registros.find(reg => reg.concepto.conceptId === idMatch.concepto.conceptId);
         if (reg && reg.valor) {
             const type = idMatch.sipPlus.type.toUpperCase();
-            let valorSP = (type === 'DATE') ? moment(reg.valor.toString()).format('DD/MM/YY') :
-                (type === 'NUMERIC') ? parseInt(reg.valor, 10) : null;
+            let valorSP = null;
+            if (type === 'DATE') {
+                valorSP = moment(reg.valor.toString()).format('DD/MM/YY');
+            }
+            if (type === 'NUMERIC') {
+                valorSP = mappingNumeric(reg.valor, idMatch);
+            }
             if (type === 'TEXT') {
                 let arrayKeyValor = Object.keys(reg.valor);
                 if (arrayKeyValor.length) {
@@ -378,4 +399,31 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
         }
     });
     return newData;
+}
+
+function mappingNumeric(valor: any, match: IPerinatal) {
+    let valorSP = null;
+    if (match.sipPlus.extra) {
+        let valorCast = parseFloat(valor);
+        // aplicamos operaciones en los datos numericos
+        const operation = match.sipPlus.extra.operation;
+        if (operation && operation.toString().toLowerCase() === 'cast-unidad') {
+            // modificamos la unidad de medida del valor (ejemplo kg en gr)
+            const potencia = match.sipPlus.extra.potency || 1;
+            const base = match.sipPlus.extra.floor || 1;
+            const unidad = match.sipPlus.extra.unidad || 1;
+            valorCast = valorCast * parseFloat(unidad) * Math.pow(parseInt(base, 10), parseInt(potencia, 10));
+
+        }
+        //ver para que funcione con la talla de replicar esto para el otro mapping de NUMERIC asi todos usan esta función
+        if (operation && operation.toString().toLowerCase() === 'resta') {
+            const unidad = match.sipPlus.extra.unidad || 0;
+            valorCast = valorCast - unidad;
+        }
+        valorSP = parseInt(valorCast.toString(), 10);
+    }
+    else {
+        valorSP = parseInt(valor.toString(), 10);
+    }
+    return valorSP;
 }
