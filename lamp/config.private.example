@@ -1,0 +1,36 @@
+export const conSql = {
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: '',
+        port: ''
+    },
+    pool: {
+        acquireTimeoutMillis: 15000
+    }
+};
+
+export const fakeRequest = {
+    user: {
+        usuario: '',
+        app: '',
+        organizacion: ''
+    },
+    ip: conSql.serverSql.server,
+    connection: {
+        localAddress: ''
+    }
+};
+
+export const logDatabase = {
+    log: {
+        host: '',
+        options: ''
+    }
+};
+
+export const ANDES_HOST = '';
+export const ANDES_KEY = '';
