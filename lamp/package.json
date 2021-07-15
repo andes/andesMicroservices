@@ -1,14 +1,21 @@
 {
   "name": "lamp",
   "version": "1.0.0",
-  "description": "",
+  "description": "Importador de resultados LAMP del HPN",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "tslint --project ..",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w",
+    "node": "nodemon -q ./index.js"
   },
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
-    "moment": "^2.29.1"
+    "moment": "^2.29.1",
+    "@andes/log": "^2.2.2",
+    "mssql": "^4.2.1",
+    "request": "^2.88.2"
   },
   "author": "",
   "license": "ISC"
