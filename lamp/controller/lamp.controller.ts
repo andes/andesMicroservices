@@ -31,7 +31,7 @@ export async function updateFichas(data) {
 }
 
 function updateResultadoFicha(ficha, r) {
-    const seccion = ficha.secciones.find(s => s.id === 'clasificacionFinal');
+    const seccion = ficha.secciones.find(s => s.name === 'Tipo de confirmación y Clasificación Final');
     let lamp = seccion.fields.find(f => Object.keys(f)[0] === 'lamp').lamp;
     let clasificacionfinal;
     let fields;
