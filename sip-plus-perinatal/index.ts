@@ -17,8 +17,8 @@ router.group('/perinatal', (group) => {
         try {
             const prestacion = req.body.data;
             // verificamos si la prestacion es "Consulta de control de embarazo"
-            // "consulta de ginecología", "Consulta de obstetricia" o "Consulta de tocoginecología"
-            const conceptConsultaEmbarazo = ['1191000013107', '721000013105', '1181000013109', '1141000013103'];
+            // "consulta de ginecología", "Consulta de obstetricia", "Consulta de tocoginecología" o "consulta de control de embarazo de alto riesgo"
+            const conceptConsultaEmbarazo = ['1191000013107', '721000013105', '1181000013109', '1141000013103', '1341000013100'];
             const conceptId = prestacion.solicitud.tipoPrestacion.conceptId;
 
             if (conceptConsultaEmbarazo.includes(conceptId)) {
