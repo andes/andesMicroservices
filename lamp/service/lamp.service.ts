@@ -1,4 +1,6 @@
-import { ANDES_HOST, ANDES_KEY } from './../config.private';
+import { ANDES_HOST, ANDES_KEY, fakeRequest } from './../config.private';
+import { log } from '@andes/log';
+
 const request = require('request');
 
 export function patch(id, fields) {
@@ -14,6 +16,8 @@ export function patch(id, fields) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
+        log(fakeRequest, 'lamp:ejecutar', null, '/patch de ficha epidemiológica', null, options);
+        
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);

@@ -8,7 +8,7 @@
     "lint": "tslint --project ..",
     "tsc": "../node_modules/typescript/bin/tsc",
     "tsc:w": "../node_modules/typescript/bin/tsc -w",
-    "node": "nodemon -q ./index.js",
+    "node": "nodemon -q ./index.js"
   },
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
