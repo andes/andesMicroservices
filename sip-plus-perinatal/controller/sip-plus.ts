@@ -385,12 +385,19 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
             }
             if (type === 'TEXT') {
                 let arrayKeyValor = Object.keys(reg.valor);
-                if (arrayKeyValor.length) {
+                if ((typeof reg.valor !== 'string') && arrayKeyValor.length) {
+
                     const valor = idMatch.sipPlus.valor ? idMatch.sipPlus.valor.find(v => v.id === reg.valor.id) : null;
                     valorSP = valor ? valor.label.toString() : null;
                 }
                 else {
-                    valorSP = reg.valor.toString();
+                    // eliminamos texto HTML si lo tiene
+                    valorSP = reg.valor.replace(/(<([^>]+)>)/gi, '');
+                    if (idMatch.sipPlus.extra) {
+                        // verificamos si se restringe por longitud de caracteres
+                        const length = idMatch.sipPlus.extra.length || valorSP.length;
+                        valorSP = valorSP.substr(0, length);
+                    }
                 }
             }
             if (valorSP) {
