@@ -356,18 +356,20 @@ async function createMatchControl(registros: any[], embActual, newDatosEmb, fech
                 const numCtrl = (arrayKeys.length) ? (Math.max.apply(null, arrayKeys) + 1).toString() : '1';
                 // obtengo todos los conceptos definidos por BD que matchean con los recibidos de la prestación
                 let matchPrenatal: IPerinatal[] = await getMatching('snomed-prenatal');
-                const proxCtrl = registros.find(reg => reg.concepto.conceptId === '390840006');
+                // obtenemos el concepto asociado al día del próximo control
+                const dia = matchPrenatal.find(elem => elem.key.includes('dia-proximo-turno'));
+                const conceptIdProxCtrol = (dia && dia.concepto) ? dia.concepto.conceptId : null;
+                const proxCtrl = conceptIdProxCtrol ? registros.find(reg => reg.concepto.conceptId === conceptIdProxCtrol) : null;
                 let newCtrl = {
                     '0116': fechaControl
                 };
                 // completamos los datos del próximo control (día y mes)
                 if (proxCtrl && proxCtrl.valor) {
-                    const dia = matchPrenatal.find(elem => elem.concepto.conceptId === '390840006' && elem.key.includes('dia-proximo-turno'));
-                    const mes = matchPrenatal.find(elem => elem.concepto.conceptId === '390840006' && elem.key.includes('mes-proximo-turno'));
+                    const mes = matchPrenatal.find(elem => elem.key.includes('mes-proximo-turno'));
                     newCtrl[dia.sipPlus.code] = moment(proxCtrl.valor).date();
                     newCtrl[mes.sipPlus.code] = moment(proxCtrl.valor).month() + 1;
                     // eliminamos los registros ya mappeados
-                    matchPrenatal = matchPrenatal.filter(elemMatch => elemMatch.concepto.conceptId !== '390840006');
+                    matchPrenatal = matchPrenatal.filter(elemMatch => elemMatch.concepto.conceptId !== conceptIdProxCtrol);
                 }
                 newCtrl = await mappingSnomed(matchPrenatal, registros, newCtrl);
 
