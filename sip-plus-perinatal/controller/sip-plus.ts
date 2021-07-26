@@ -129,7 +129,7 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
             newDatosEmb = await createMatchSnomed(registros, embActual, newDatosEmb);
 
             // completamos en la ficha los datos de un nuevo control
-            newDatosEmb = await createMatchControl(registros, embActual, newDatosEmb, fecha);
+            newDatosEmb = await createMatchControl(registros, embActual, newDatosEmb, fecha, organizacion);
 
             if (Object.keys(newPaciente).length || Object.keys(newDatosEmb).length) {
                 newPaciente["pregnancies"] = {};
@@ -272,16 +272,10 @@ async function datosEmbarazo(paciente, embActual, organizacion) {
     const keysEmb = Object.keys(embActual);
     let newEmb = {};
     // cargamos datos de la organización al abrir la ficha en sipPlus
-    if (!keysEmb.length && organizacion && organizacion.id) {
-        const orgAndes = await getOrganizacionAndes(organizacion.id);
-        const codigoSisa: string = orgAndes.codigo.sisa ? orgAndes.codigo.sisa.toString() : '';
-        if (codigoSisa) {
-            newEmb['0017'] = {
-                countryId: "AR",
-                divisionId: "58",
-                subdivisionId: codigoSisa.substring(4, 7),
-                code: codigoSisa.substring(2, 4) + codigoSisa.substring(9)
-            }
+    if (!keysEmb.length) {
+        const organizacionSP = await mapInstitucion(organizacion);
+        if (organizacionSP) {
+            newEmb['0017'] = organizacionSP;
         }
 
     }
@@ -292,6 +286,22 @@ async function datosEmbarazo(paciente, embActual, organizacion) {
     const newData = embActual ? datosEmb.filter(d => !keysEmb.includes(d.sipPlus.code)) : datosEmb;
 
     return await completeData(paciente, newEmb, newData);
+}
+
+async function mapInstitucion(organizacion) {
+    if (organizacion && organizacion.id) {
+        const orgAndes = await getOrganizacionAndes(organizacion.id);
+        const codigoSisa: string = orgAndes.codigo.sisa ? orgAndes.codigo.sisa.toString() : '';
+        if (codigoSisa) {
+            return {
+                countryId: "AR",
+                divisionId: "58",
+                subdivisionId: codigoSisa.substring(4, 7),
+                code: codigoSisa.substring(2, 4) + codigoSisa.substring(9)
+            }
+        }
+    }
+    return null;
 }
 
 
@@ -324,7 +334,7 @@ async function createMatchSnomed(registros: any[], embActual, newDatosEmb) {
  * @param fecha 
  * @returns 
  */
-async function createMatchControl(registros: any[], embActual, newDatosEmb, fecha) {
+async function createMatchControl(registros: any[], embActual, newDatosEmb, fecha, organizacion) {
     try {
         if (fecha) {
             const fechaControl = moment(fecha.toString()).format('DD/MM/YY');
@@ -361,6 +371,11 @@ async function createMatchControl(registros: any[], embActual, newDatosEmb, fech
                 }
                 newCtrl = await mappingSnomed(matchPrenatal, registros, newCtrl);
 
+                // mapeo de organizacion en el control
+                const organizacionSP = await mapInstitucion(organizacion);
+                if (organizacionSP) {
+                    newCtrl['0686'] = organizacionSP;
+                }
                 newDatosEmb["prenatal"] = {};
                 newDatosEmb["prenatal"][numCtrl] = newCtrl;
             }
@@ -385,12 +400,19 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
             }
             if (type === 'TEXT') {
                 let arrayKeyValor = Object.keys(reg.valor);
-                if (arrayKeyValor.length) {
+                if ((typeof reg.valor !== 'string') && arrayKeyValor.length) {
+
                     const valor = idMatch.sipPlus.valor ? idMatch.sipPlus.valor.find(v => v.id === reg.valor.id) : null;
                     valorSP = valor ? valor.label.toString() : null;
                 }
                 else {
-                    valorSP = reg.valor.toString();
+                    // eliminamos texto HTML si lo tiene
+                    valorSP = reg.valor.replace(/(<([^>]+)>)/gi, '');
+                    if (idMatch.sipPlus.extra) {
+                        // verificamos si se restringe por longitud de caracteres
+                        const length = idMatch.sipPlus.extra.length || valorSP.length;
+                        valorSP = valorSP.substr(0, length);
+                    }
                 }
             }
             if (valorSP) {
