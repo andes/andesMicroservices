@@ -38,18 +38,22 @@ export async function getVacunas(paciente) {
                     const dtoMongoDB = {
                         idvacuna: vacunas[i].idSniAplicacion.toString(),
                         codigo: vacunas[i].idSniVacuna.toString() || '',
+                        vacuna: vacunas[i].sniVacunaNombre,
+                        codigoEsquema: vacunas[i].idSniVacunaEsquema.toString(),
+                        codigoCondicion: vacunas[i].sniAplicacionCondicionNombre.toString(),
+                        dosis: vacunas[i].sniDosisOrden,
+                        fechaAplicacion: vacunas[i].fechaAplicacion,
                         documento: vacunas[i].nrodoc,
                         apellido: vacunas[i].apellido,
                         nombre: vacunas[i].nombre,
                         fechaNacimiento: vacunas[i].fechaNacimiento,
                         sexo: paciente.sexo,
-                        vacuna: vacunas[i].sniVacunaNombre,
-                        dosis: vacunas[i].sniDosisNombre,
-                        fechaAplicacion: vacunas[i].fechaAplicacion,
-                        efector: vacunas[i].origenNombre,
-                        esquema: vacunas[i].vacunaEsquemaNombre || '',
-                        condicion: vacunas[i].sniAplicacionCondicionNombre
+                        efector: {
+                            codigo: vacunas[i].origenCodigo,
+                            nombre: vacunas[i].origenNombre
+                        }
                     };
+
                     promesas.push(operations.postMongoDB(dtoMongoDB));
                 }
                 await Promise.all(promesas);
