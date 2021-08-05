@@ -248,7 +248,7 @@ export class QueryRecupero {
  */
 export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Date, pool: any) {
     try {
-        const fecha = moment(fechaTurno).format('DD-MM-YY');
+        const fecha = moment(fechaTurno).format('MM-DD-YY');
         const query = 'exec dbo.FAC_GetTipoNomenclador @idObraSocial, @fecha';
 
         const resultado = await new sql.Request(pool)
@@ -259,6 +259,6 @@ export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Da
         return resultado.recordset[0].idTipoNomenclador;
 
     } catch (err) {
-        return err;
+        log(fakeRequestSql, 'microservices:factura:create', null, '/error en getIdTipoNomencladorSIPS', null, err);
     }
 }

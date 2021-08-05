@@ -3,7 +3,7 @@ import { getProfesional } from './../services/profesional.service';
 import { getSnomed } from './../services/snomed.service';
 import { getPrestacion } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
-import { getPuco } from './../services/obra-social.service';
+
 
 async function facturacionAutomatica(datosFactura: any) {
     let factura = {};
@@ -119,6 +119,9 @@ export async function facturaRup(prestacion: any) {
 async function getDatos(prestacion) {
     let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
     let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
+    if (prestacion.obraSocial === 'prepaga' && prestacion.prepaga) {
+        _obraSocialPaciente = prestacion.prepaga;
+    }
     let _datosProfesional: any = (prestacion.profesionales.length > 0) ? (prestacion.profesionales[0]._id) ? getProfesional(prestacion.profesionales[0]._id) : getProfesional(prestacion.profesionales[0].id) : null;
     let _getDR = (prestacion.idPrestacion) ? getPrestacion(prestacion.idPrestacion) : null;
 
