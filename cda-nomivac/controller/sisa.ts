@@ -45,11 +45,15 @@ export async function getVacunas(paciente) {
                         sexo: paciente.sexo,
                         vacuna: vacunas[i].sniVacunaNombre,
                         dosis: vacunas[i].sniDosisNombre,
+                        ordenDosis: vacunas[i].sniDosisOrden,
                         fechaAplicacion: vacunas[i].fechaAplicacion,
                         efector: vacunas[i].origenNombre,
-                        esquema: vacunas[i].vacunaEsquemaNombre || '',
-                        condicion: vacunas[i].sniAplicacionCondicionNombre
+                        esquema: vacunas[i].sniVacunaEsquemaNombre || '',
+                        condicion: vacunas[i].sniAplicacionCondicionNombre || '',
+                        codigoEsquema: vacunas[i].idSniVacunaEsquema,
+                        codigoCondicion: vacunas[i].idSniAplicacionCondicion
                     };
+
                     promesas.push(operations.postMongoDB(dtoMongoDB));
                 }
                 await Promise.all(promesas);
