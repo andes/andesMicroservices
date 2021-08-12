@@ -31,7 +31,7 @@ export async function getVacunas(paciente) {
                         },
                         cie10: 'Z26.9', // CIE10: Vacunación profilactica
                         file: null,
-                        texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisNombre || ''} Esquema: ${vacunas[i].vacunaEsquemaNombre} pertenece al lote: ${vacunas[i].lote}`
+                        texto: texto + `Vacuna: ${vacunas[i].sniVacunaNombre} Dosis: ${vacunas[i].sniDosisNombre || ''} Esquema: ${vacunas[i].sniVacunaEsquemaNombre} pertenece al lote: ${vacunas[i].lote}`
                     };
                     promesas.push(operations.postCDA(dto));
 
