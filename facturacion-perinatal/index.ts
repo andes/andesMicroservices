@@ -16,7 +16,8 @@ router.group('/perinatalSql', (group) => {
         try {
             const prestacion = req.body.data;
             // verificamos si la prestacion es "Consulta de control de embarazo"
-            const conceptConsultaEmbarazo = ['1191000013107', '721000013105', '1181000013109', '1141000013103', '1341000013100'];
+            const conceptConsultaEmbarazo = ['1191000013107', '721000013105', '1181000013109', '1141000013103',
+                '1341000013100', '1201000013105', '1741000013104', '4501000013105', '1711000013103'];
             const conceptId = prestacion.solicitud.tipoPrestacion.conceptId;
             if (conceptConsultaEmbarazo.includes(conceptId)) {
                 Connections.initialize(logDatabase.log.host, logDatabase.log.options);
