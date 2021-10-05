@@ -55,7 +55,7 @@ function updateResultadoFicha(ficha, r) {
 }
 
 async function getResultadosLAMP(lamps) {
-    const documentos = lamps.map(f => f.paciente.documento);
+    const documentos = lamps.filter(f => f.paciente.documento).map(f => f.paciente.documento);
     const fechaTope = moment.min(lamps.map(f => moment(f.createdAt))).format('YYYY-MM-DD');
     const data = make(documentos, fechaTope);
 
