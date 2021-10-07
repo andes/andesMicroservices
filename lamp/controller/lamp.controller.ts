@@ -17,8 +17,6 @@ export async function updateFichas(data) {
     if (lamps?.length) {
         const resultados = await getResultadosLAMP(lamps);
 
-        log(fakeRequest, 'lamp:ejecutar', null, '/resultados LAMP HPN', null, resultados.recordset);
-
         if (resultados.recordset?.length) {
             resultados.recordset.forEach(r => {
                 let ficha = lamps.find(f => f.paciente.documento === String(r.documento) );
