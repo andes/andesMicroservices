@@ -16,7 +16,6 @@ export function patch(id, fields) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        log(fakeRequest, 'lamp:ejecutar', null, '/patch de ficha epidemiológica', null, options);
         
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
