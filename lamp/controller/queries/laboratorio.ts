@@ -7,7 +7,7 @@ export function make(pacientes, fechaTope) {
         server: config.conSql.serverSql.server,
         database: config.conSql.serverSql.database,
         options: {
-            tdsVersion: '7_1'
+            encrypt: true
         }
     };
     const codigoLAMP = '9063'
