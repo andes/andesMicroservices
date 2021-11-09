@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
-    "moment": "^2.29.1",
     "@andes/log": "^2.2.2",
-    "mssql": "^4.2.1",
+    "moment": "^2.29.1",
+    "mssql": "^7.2.1",
     "request": "^2.88.2"
   },
   "author": "",
