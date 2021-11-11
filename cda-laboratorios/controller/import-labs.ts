@@ -80,29 +80,6 @@ function downloadFile(url) {
     });
 }
 
-function donwloadFileHeller(idProtocolo, year) {
-    return new Promise((resolve, reject) => {
-
-        http.get(wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year=' + year, (response) => {
-            return response.on('data', (buffer) => {
-                const resp = buffer.toString();
-
-                const regexp = /10.1.104.37\/resultados_omg\/([0-9\s\-\_]*).pdf/;
-                const match = resp.match(regexp);
-                if (match && match[1]) {
-                    return downloadFile(wsSalud.hellerFS + match[1] + '.pdf').then((_resp) => {
-                        return resolve(_resp);
-                    }).catch(reject);
-                } else {
-                    return reject({ error: 'heller-error' });
-                }
-
-            });
-        });
-    });
-}
-
-
 export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
@@ -132,12 +109,8 @@ export async function importarDatos(paciente) {
                     let pdfUrl;
                     let response;
 
-                    if (String(lab.idEfector) === '221') {
-                        response = await donwloadFileHeller(lab.idProtocolo, fecha.format('YYYY'));
-                    } else {
-                        pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-                        response = await downloadFile(pdfUrl);
-                    }
+                    pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
+                    response = await downloadFile(pdfUrl);
 
                     let adjunto64 = await toBase64(response);
                     const dto = {
