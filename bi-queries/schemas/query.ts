@@ -26,6 +26,7 @@ export type IQuery = {
     };
     desdeAndes: boolean;
     data?: any;
+    type?: string;
 };
 
 export interface IParams {
@@ -64,7 +65,9 @@ export const QuerySchema = new mongoose.Schema({
         config: mongoose.SchemaTypes.Mixed
     },
     data: mongoose.SchemaTypes.Mixed,
-    desdeAndes: Boolean // Para las consultas que se acceden desde la Andes
+    desdeAndes: Boolean, // Para las consultas que se acceden desde la Andes
+    type: String
+
 });
 
 export const Query = mongoose.model('queries', QuerySchema, 'queries');
