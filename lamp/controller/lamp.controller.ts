@@ -1,8 +1,9 @@
 import * as sql from 'mssql';
-import { fakeRequest } from '../config.private';
+import { userScheduler } from '../config.private';
 import { patch } from '../service/lamp.service';
 import { make } from './queries/laboratorio';
-import { log } from '@andes/log';
+import { lampLog } from '../../lamp/logger/lampLog';
+const logLamp = lampLog.startTrace();
 import * as moment from 'moment';
 
 // ID 9373
@@ -65,8 +66,7 @@ async function getResultadosLAMP(lamps) {
             let resultadosChunks = await new sql.Request(pool).query(data.query);
             resultados = [...resultados, ...resultadosChunks.recordset];
         } catch (error) {
-            log(fakeRequest, 'lamp', null, 'getResultadosLAMP:error', { error, query: data.query }, documentosChunck);
-            return error;
+            await logLamp.error('lamp:query:laboratorio-central', { query: data.query, pacientes: documentosChunck }, error.message, userScheduler);
         }
     }
     return resultados;
