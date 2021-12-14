@@ -93,7 +93,7 @@ export async function updateEstadoFacturacionSinTurno(idPrestacion, _estadoFactu
 
         request(options, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-                resolve(body.body);
+                resolve(body);
             } else {
                 reject('No hace patch sin turno: ' + error);
             }
