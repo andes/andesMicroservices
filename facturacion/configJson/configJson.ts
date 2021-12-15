@@ -4,6 +4,7 @@ import { facturaRecupero } from './../facturar/recupero-financiero/factura-recup
 import { drNiñoSano, drOtoemisiones } from './datos-reportables';
 
 import { QuerySumar } from './../facturar/sumar/query-sumar';
+import { QueryRecupero, getIdTipoNomencladorSIPS } from './../facturar/recupero-financiero/query-recupero';
 
 import { IDtoFacturacion } from './../interfaces/IDtoFacturacion';
 import { IDtoSumar } from '../interfaces/IDtoSumar';
@@ -103,6 +104,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let dtoSumar: IDtoSumar;
     let dtoRecupero: IDtoRecupero;
     let tipoFacturacion: String = '';
+    const fechaTurno = dtoFacturacion.turno.fechaTurno;
     if (dtoFacturacion.obraSocial.financiador !== 'SUMAR') {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
@@ -110,7 +112,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
 
         dtoRecupero = {
             objectId: dtoFacturacion.turno._id,
-            fechaTurno: dtoFacturacion.turno.fechaTurno,
+            fechaTurno,
             idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
             codigo: dtoFacturacion.configAutomatica.recuperoFinanciero.codigo,
             idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,
@@ -121,7 +123,17 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
             motivoDeConsulta: dtoFacturacion.motivoConsulta,
             prepaga: dtoFacturacion.obraSocial.prepaga,
         };
+
+        let queryRecupero = new QueryRecupero();
+        const idObraSocial = await queryRecupero.getIdObraSocialSips(pool, dtoRecupero);
+
+        //obtenemos el idTipoNomenclador desde SIPS
+        if (idObraSocial && typeof idObraSocial === 'number') {
+            dtoRecupero.idTipoNomenclador = await getIdTipoNomencladorSIPS(idObraSocial, fechaTurno, pool);
+        }
+
         await facturaRecupero(pool, dtoRecupero);
+
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         tipoFacturacion = 'sumar';
@@ -130,7 +142,7 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         dtoSumar = {
             idPrestacion: dtoFacturacion.idPrestacion,
             idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
-            fechaTurno: dtoFacturacion.turno.fechaTurno,
+            fechaTurno,
             objectId: dtoFacturacion.turno._id,
             cuie: dtoFacturacion.organizacion.cuie,
             diagnostico: (main) ? main.diagnostico : null,

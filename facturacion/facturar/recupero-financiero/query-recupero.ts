@@ -241,3 +241,24 @@ export class QueryRecupero {
     }
 }
 
+
+/***
+ * Obtenemos de SIPS el idTipoNomenclador
+ * por medio del store procedure FAC_GetTipoNomenclador 
+ */
+export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Date, pool: any) {
+    try {
+        const fecha = moment(fechaTurno).format('MM-DD-YY');
+        const query = 'exec dbo.FAC_GetTipoNomenclador @idObraSocial, @fecha';
+
+        const resultado = await new sql.Request(pool)
+            .input('fecha', sql.VarChar(8), fecha)
+            .input('idObraSocial', sql.Int, idObraSocial)
+            .query(query);
+
+        return resultado.recordset[0].idTipoNomenclador;
+
+    } catch (err) {
+        log(fakeRequestSql, 'microservices:factura:create', null, '/error en getIdTipoNomencladorSIPS', null, err);
+    }
+}
