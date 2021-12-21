@@ -4,6 +4,9 @@ import { ANDES_HOST, ANDES_KEY } from '../config.private';
 const request = require('request');
 const cache = {};
 
+import { msCDALaboratoriosLog as log } from '../logger/msCDALaboratorios';
+const logCDA = log.startTrace();
+
 export async function organizacionBySisaCode(sisa) {
     return new Promise((resolve, reject) => {
         if (cache[sisa]) {
@@ -46,7 +49,7 @@ export async function getDetalles(pool, idProtocolo, idEfector) {
 }
 
 export function postCDA(data: any) {
-    return new Promise((resolve: any, reject: any) => {
+    return new Promise( async (resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/modules/cda/create`;
         const options = {
             url,
@@ -57,7 +60,10 @@ export function postCDA(data: any) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        request(options, (error, response, body) => {
+        await logCDA.info('lamp:ejecutar', { data });
+
+        request(options, async (error, response, body) => {
+            await logCDA.info('lamp:ejecutar', {response: response.body });
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }

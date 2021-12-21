@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@andes/fhir": "^1.0.0",
+    "@andes/log": "^2.2.5",
     "concurrently": "^5.3.0",
     "mssql": "^6.2.0",
     "p-queue": "^3.0.0"
