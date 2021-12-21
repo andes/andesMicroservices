@@ -63,7 +63,7 @@ export function postCDA(data: any) {
         await logCDA.info('lamp:ejecutar', { data });
 
         request(options, async (error, response, body) => {
-            await logCDA.info('lamp:ejecutar', {response: response.body });
+            await logCDA.info('lamp:ejecutar', {response: response.body,  paciente: data.paciente});
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
