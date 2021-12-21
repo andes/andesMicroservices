@@ -139,7 +139,7 @@ export async function importarDatos(paciente) {
                 } else {
                     // Ver que hacer si no matchea TODO
                     if (value < cota) {
-                        throw new Error(`Match failed!: ${ value }`);
+                        throw new Error(`Paciente atch failed!: ${ value } para ${ paciente.documento }`);
                         // logger('-----------------------------------');
                         // logger(paciente.nombre, lab.nombre);
                         // logger(paciente.apellido, lab.apellido);
