@@ -4,6 +4,9 @@ import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as operations from './operations';
 import * as http from 'http';
+import { userScheduler } from '../config.private';
+import { msCDALaboratoriosLog } from '../logger/msCDALaboratorios';
+const log = msCDALaboratoriosLog.startTrace();
 
 const cota = 0.95;
 
@@ -98,6 +101,11 @@ export async function importarDatos(paciente) {
                 });
 
                 const value = matchPaciente(paciente, lab);
+                
+                if (!details?.recordset) {
+                    throw new Error(`No se encontraron detalles de protocolo.`);
+                }
+
                 if (value >= cota && validado && details.recordset) {
                     const fecha = moment(lab.fecha, 'DD/MM/YYYY');
 
@@ -131,6 +139,7 @@ export async function importarDatos(paciente) {
                 } else {
                     // Ver que hacer si no matchea TODO
                     if (value < cota) {
+                        throw new Error(`Match failed!: ${ value }`);
                         // logger('-----------------------------------');
                         // logger(paciente.nombre, lab.nombre);
                         // logger(paciente.apellido, lab.apellido);
@@ -141,6 +150,7 @@ export async function importarDatos(paciente) {
 
                 }
             } catch (e) {
+                await log.error('lamp:ejecutar', { error: e }, e.message, userScheduler);
                 console.error(`Erro en download files: ${e.message}`);
                 // No va return porque sigue con el proximo laboratorio dentro del for
                 // return false;
@@ -150,6 +160,7 @@ export async function importarDatos(paciente) {
         return true;
     } catch (e) {
         // logger('Error', e);
+        await log.error('lamp:ejecutar', { error: e }, e.message, userScheduler);
         if (e && e.error === 'sips-pdf') {
             return false;
         }
