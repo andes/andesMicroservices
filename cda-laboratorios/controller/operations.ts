@@ -4,8 +4,8 @@ import { ANDES_HOST, ANDES_KEY } from '../config.private';
 const request = require('request');
 const cache = {};
 
-import { msCDALaboratoriosLog as log } from '../logger/msCDALaboratorios';
-const logCDA = log.startTrace();
+// import { msCDALaboratoriosLog as log } from '../logger/msCDALaboratorios';
+// const logCDA = log.startTrace();
 
 export async function organizacionBySisaCode(sisa) {
     return new Promise((resolve, reject) => {
@@ -60,10 +60,8 @@ export function postCDA(data: any) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        await logCDA.info('lamp:ejecutar', { data });
 
         request(options, async (error, response, body) => {
-            await logCDA.info('lamp:ejecutar', {response: response.body,  paciente: data.paciente});
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }

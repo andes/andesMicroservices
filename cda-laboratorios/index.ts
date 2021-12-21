@@ -13,7 +13,6 @@ router.group('/cda', (group) => {
     group.post('/ejecutar', (req, res) => {
         res.send({ message: 'ok' });
         const id = req.body.id;
-        const webhookId = req.body.subscription;
         const event = req.body.event;
         const data = req.body.data;
 
