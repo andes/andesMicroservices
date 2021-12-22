@@ -87,8 +87,11 @@ export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
         let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
+        await log.info('cda:import:laboratorios', { laboratorios });
+        
         for (const lab of laboratorios.recordset) {
             try {
+
                 const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
                 const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
 
@@ -105,6 +108,8 @@ export async function importarDatos(paciente) {
                 if (!details?.recordset) {
                     throw new Error(`No se encontraron detalles de protocolo.`);
                 }
+
+                await log.info('cda:import:laboratorios', { value, validado, detalles: details.recordset });
 
                 if (value >= cota && validado && details.recordset) {
                     const fecha = moment(lab.fecha, 'DD/MM/YYYY');
@@ -149,7 +154,7 @@ export async function importarDatos(paciente) {
 
                 }
             } catch (e) {
-                await log.error('lamp:ejecutar', { error: e }, e.message, userScheduler);
+                await log.error('cda:import:laboratorios', { error: e }, e.message, userScheduler);
                 console.error(`Erro en download files: ${e.message}`);
                 // No va return porque sigue con el proximo laboratorio dentro del for
                 // return false;
@@ -159,7 +164,7 @@ export async function importarDatos(paciente) {
         return true;
     } catch (e) {
         // logger('Error', e);
-        await log.error('lamp:ejecutar', { error: e }, e.message, userScheduler);
+        await log.error('cda:import:laboratorios', { error: e }, e.message, userScheduler);
         if (e && e.error === 'sips-pdf') {
             return false;
         }
