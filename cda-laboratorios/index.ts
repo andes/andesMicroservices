@@ -5,10 +5,6 @@ let pkg = require('./package.json');
 
 let ms = new Microservice(pkg);
 
-import { msCDALaboratoriosLog  } from './logger/msCDALaboratorios';
-const log = msCDALaboratoriosLog.startTrace();
-
-
 const router = ms.router();
 const queue = new PQueue({ concurrency: 5 });
 
@@ -36,7 +32,6 @@ router.group('/cda', (group) => {
                 break;
         }
 
-        await log.info('cda:import:laboratorios', { paciente });
         // Esperamos el paciente desde una prestación.
         if (paciente) {
             queue.add(() => {

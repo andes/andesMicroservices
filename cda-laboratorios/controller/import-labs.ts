@@ -87,7 +87,6 @@ export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
         let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
-        await log.info('cda:import:laboratorios', { laboratorios });
         
         for (const lab of laboratorios.recordset) {
             try {
@@ -108,8 +107,6 @@ export async function importarDatos(paciente) {
                 if (!details?.recordset) {
                     throw new Error(`No se encontraron detalles de protocolo.`);
                 }
-
-                await log.info('cda:import:laboratorios', { value, validado, detalles: details.recordset });
 
                 if (value >= cota && validado && details.recordset) {
                     const fecha = moment(lab.fecha, 'DD/MM/YYYY');
