@@ -4,8 +4,8 @@ import { ANDES_HOST, ANDES_KEY } from '../config.private';
 const request = require('request');
 const cache = {};
 
-// import { msCDALaboratoriosLog as log } from '../logger/msCDALaboratorios';
-// const logCDA = log.startTrace();
+import { msCDALaboratoriosLog as log } from '../logger/msCDALaboratorios';
+const logCDA = log.startTrace();
 
 export async function organizacionBySisaCode(sisa) {
     return new Promise((resolve, reject) => {
@@ -36,7 +36,10 @@ export async function getEncabezados(pool, documento) {
         'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
         'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
         'where encabezado.numeroDocumento = ' + documento;
-    return await new sql.Request(pool).query(query);
+
+    const laboratorios = await new sql.Request(pool).query(query);
+    await log.info('cda:import:laboratorios', { documento, query, laboratorios});
+    return laboratorios;
 
 }
 
