@@ -13,10 +13,12 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
-    "lint": "tslint --project ..",
+    "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
+    "lint": "tslint --project .",
     "tsc": "../node_modules/typescript/bin/tsc",
-    "tsc:w": "../node_modules/typescript/bin/tsc -w"
-},
+    "tsc:w": "../node_modules/typescript/bin/tsc -w",
+    "node": "nodemon -q ./index.js"
+  },
   "author": "",
   "license": "ISC"
 }

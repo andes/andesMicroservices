@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "tslint --project ..",
+    "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
+    "lint": "tslint --project .",
     "tsc": "../node_modules/typescript/bin/tsc",
-    "tsc:w": "../node_modules/typescript/bin/tsc -w"
+    "tsc:w": "../node_modules/typescript/bin/tsc -w",
+    "node": "nodemon -q ./index.js"
   },
   "author": "",
   "license": "ISC",
@@ -21,9 +23,8 @@
     "html-pdf": "^2.2.0",
     "moment": "^2.22.2",
     "mssql": "^4.2.1",
-    "node-sass": "^5.0.0",
+    "node-sass": "^7.0.1",
     "p-queue": "^3.0.0",
     "request": "^2.88.0"
-  },
-  "devDependencies": {}
+  }
 }
