@@ -34,9 +34,10 @@ router.group('/cda', (group) => {
                 break;
         }
         if (paciente) {
-            queue.add(() => {
-                return importarDatos(paciente);
-            });
+            // queue.add(() => {
+            //     return importarDatos(paciente);
+            // });
+            importarDatos(paciente);
         }
     });
 });
