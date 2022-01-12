@@ -74,7 +74,8 @@ function downloadFile(url) {
             } else {
                 return reject({ error: 'sips-pdf', status: response.statusCode });
             }
-        }).on('error', (e) => {
+        }).on('error', async (e) => {
+            await log.error('cda-laboratorios:import:downloadFile', { error: e, url }, `No se pudo descarga el pdf: ${e.message}`, userScheduler);
             // tslint:disable-next-line:no-console
             console.error(`No se pudo descarga el pdf: ${e.message}`);
             return reject(e);
@@ -86,82 +87,81 @@ function downloadFile(url) {
 export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
-        let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
+        let laboratorios: any = await operations.getEncabezados(pool, paciente);
         
-        for (const lab of laboratorios.recordset) {
-            try {
+        if (laboratorios?.recordset?.length) {
+            for (const lab of laboratorios?.recordset) {
+                try {
 
-                const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
-                const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
+                    const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
+                    const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
 
-                let validado = true;
-                let hiv = false;
+                    let validado = true;
+                    let hiv = false;
 
-                details.recordset.forEach(detail => {
-                    validado = validado && (detail.profesional_val !== '');
-                    hiv = hiv || /hiv|vih/i.test(detail.item);
-                });
+                    const value = matchPaciente(paciente, lab);
+                    
+                    if (value >= cota && validado && details?.recordset) {
 
-                const value = matchPaciente(paciente, lab);
-                
-                if (!details?.recordset) {
-                    throw new Error(`No se encontraron detalles de protocolo.`);
-                }
+                        details.recordset.forEach(detail => {
+                            validado = validado && (detail.profesional_val !== '');
+                            hiv = hiv || /hiv|vih/i.test(detail.item);
+                        });
 
-                if (value >= cota && validado && details.recordset) {
-                    const fecha = moment(lab.fecha, 'DD/MM/YYYY');
+                        const fecha = moment(lab.fecha, 'DD/MM/YYYY');
 
-                    const profesional = {
-                        nombre: lab.solicitante,
-                        apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
-                    };
+                        const profesional = {
+                            nombre: lab.solicitante,
+                            apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
+                        };
 
-                    let pdfUrl;
-                    let response;
+                        let pdfUrl;
+                        let response;
 
-                    pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-                    response = await downloadFile(pdfUrl);
+                        pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
+                        response = await downloadFile(pdfUrl);
 
-                    let adjunto64 = await toBase64(response);
-                    const dto = {
-                        id: lab.idProtocolo,
-                        organizacion: organizacion._id,
-                        fecha: fecha.toDate(),
-                        tipoPrestacion: '4241000179101',
-                        paciente,
-                        confidencialidad: hiv ? 'R' : 'N',
-                        profesional,
-                        cie10: 'Z01.7',
-                        file: adjunto64,
-                        texto: 'Exámen de Laboratorio'
-                    };
+                        let adjunto64 = await toBase64(response);
+                        const dto = {
+                            id: lab.idProtocolo,
+                            organizacion: organizacion._id,
+                            fecha: fecha.toDate(),
+                            tipoPrestacion: '4241000179101',
+                            paciente,
+                            confidencialidad: hiv ? 'R' : 'N',
+                            profesional,
+                            cie10: 'Z01.7',
+                            file: adjunto64,
+                            texto: 'Exámen de Laboratorio'
+                        };
 
-                    await operations.postCDA(dto);
+                        await operations.postCDA(dto);
 
-                } else {
-                    // Ver que hacer si no matchea TODO
-                    if (value < cota) {
-                        // logger('-----------------------------------');
-                        // logger(paciente.nombre, lab.nombre);
-                        // logger(paciente.apellido, lab.apellido);
-                        // logger(paciente.documento, lab.numeroDocumento);
-                        // logger(paciente.sexo, lab.sexo);
-                        // logger(paciente.fechaNacimiento, lab.fechaNacimiento);
+                    } else {
+                        // Ver que hacer si no matchea TODO
+                        if (value < cota) {
+                            // logger('-----------------------------------');
+                            // logger(paciente.nombre, lab.nombre);
+                            // logger(paciente.apellido, lab.apellido);
+                            // logger(paciente.documento, lab.numeroDocumento);
+                            // logger(paciente.sexo, lab.sexo);
+                            // logger(paciente.fechaNacimiento, lab.fechaNacimiento);
+                        }
+
                     }
-
+                } catch (e) {
+                    await log.error('cda-laboratorios:import:laboratorios', { error: e, paciente }, e.message, userScheduler);
+                    console.error(`Erro en download files: ${e.message}`);
+                    // No va return porque sigue con el proximo laboratorio dentro del for
+                    // return false;
                 }
-            } catch (e) {
-                await log.error('cda:import:laboratorios', { error: e }, e.message, userScheduler);
-                console.error(`Erro en download files: ${e.message}`);
-                // No va return porque sigue con el proximo laboratorio dentro del for
-                // return false;
             }
         }
         pool.close();
         return true;
     } catch (e) {
         // logger('Error', e);
-        await log.error('cda:import:laboratorios', { error: e }, e.message, userScheduler);
+        await log.error('cda-laboratorios:import:laboratorios', { error: e, paciente }, e.message, userScheduler);
         if (e && e.error === 'sips-pdf') {
             return false;
         }
