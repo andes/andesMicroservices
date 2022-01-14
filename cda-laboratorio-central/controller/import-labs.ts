@@ -41,7 +41,7 @@ export async function importarDatos(paciente) {
                         const dto = {
                             id: lab.idProtocolo,
                             organizacion: organizacion._id,
-                            fecha,
+                            fecha: fecha.toDate(),
                             tipoPrestacion: '4241000179101',
                             paciente,
                             confidencialidad: 'N',
