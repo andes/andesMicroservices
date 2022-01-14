@@ -1,7 +1,9 @@
 
 import * as sql from 'mssql';
 import { ANDES_HOST, ANDES_KEY, IP_LABCENTRAL, SISA_LAB } from '../config.private';
-import { log } from '@andes/log';
+import { userScheduler } from '../config.private';
+import { msCDALaboratoriosLog } from '../logger/msCDALaboratorioCentral';
+const log = msCDALaboratoriosLog.startTrace();
 const got = require('got');
 const cache = {};
 
@@ -25,7 +27,7 @@ export async function organizacionBySisaCode(sisa) {
             const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
             const {error, statusCode, body} = await got(url, { responseType: 'json' });
             if (error) {
-                log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'postCDA:error', { error });
+                await log.error('cda-laboratorio-central:organizacionBySisaCode', { error, url }, error.message, userScheduler);
             } else if (statusCode >= 200 && statusCode < 300) {
                 const orgs: any[] = body;
                 if (orgs && orgs.length) {
@@ -44,23 +46,23 @@ export async function organizacionBySisaCode(sisa) {
 
 // hardcodear el codigo sisa
 
-export async function getEncabezados(pool, documento) {
+export async function getEncabezados(pool, paciente) {
     const query = `select ${SISA_LAB} as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, paciente.apellido as pacienteApellido, paciente.nombre as pacienteNombre, FORMAT(paciente.fechaNacimiento, 'dd/MM/yyyy') as fechaNacimiento, encabezado.sexo,  
         paciente.numeroDocumento as numeroDocumento, FORMAT(encabezado.fechaTomaMuestra, 'dd/MM/yyyy') as fecha, encabezado.idProtocolo , solicitante.nombre as solicitante from LAB_Protocolo as encabezado  
         inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector
         inner join Sys_Efector as solicitante on encabezado.idEfectorSolicitante = solicitante.idEfector
         inner join Sys_Paciente as paciente on encabezado.idPaciente = paciente.idPaciente
         where fechaRegistro > '2020-01-01'
-        AND paciente.numeroDocumento = ${documento}`;
+        AND paciente.numeroDocumento = ${paciente.documento}`;
     try {
         return await new sql.Request(pool).query(query);
     } catch (error) {
-        log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'getEncabezados:error', { error, query });
+        await log.error('cda-laboratorio-central:getEncabezados', { error, query, paciente }, error.message, userScheduler);
         return error;
     }
 }
 
-export async function getDetalles(pool, idProtocolo, idEfector) {
+export async function getDetalles(pool, idProtocolo) {
     const query = `select _item.nombre, resultadoCar  as resultado,detalle.metodo as metodo, observaciones, FORMAT(detalle.fechaValida, 'dd/MM/yyyy') as fecha_validacion, usuarioValida.apellido as profesional_validacion, usuarioValida.firmaValidacion as profesional_firma
         from LAB_DetalleProtocolo as detalle
         inner join LAB_Item as _item on _item.idItem = detalle.idItem
@@ -71,7 +73,7 @@ export async function getDetalles(pool, idProtocolo, idEfector) {
     try {
         return await new sql.Request(pool).query(query);
     } catch (error) {
-        log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'getDetalles:error', { error, query });
+        await log.error('cda-laboratorio-central:getDetalles', { error, query }, error.message, userScheduler);
         return error;
     }
 }
@@ -85,12 +87,21 @@ export async function postCDA(data: any) {
         },
         responseType: 'json'
     };
-    const { error, statusCode, body } = await got.post(url, options);
-    if (error) {
-        log(fakeRequest, 'microservices:integration:cda-labcentral', null, 'postCDA:error', { error });
+
+    try {
+        const { error, statusCode, body } = await got.post(url, options);
+
+        if (error) {
+            await log.error('cda-laboratorio-central:postCDA', { error, options }, error.message, userScheduler);
+        }
+        if (statusCode >= 200 && statusCode < 300) {
+            return body;
+        }
+        return (error || body);
+    } catch (error) {
+        await log.error('cda-laboratorio-central:postCDA', { error, options }, error.message, userScheduler);
+        return error;
+
     }
-    if (statusCode >= 200 && statusCode < 300) {
-        return body;
-    }
-    return (error || body);
+    
 }

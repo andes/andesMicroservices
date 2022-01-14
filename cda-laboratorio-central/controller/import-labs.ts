@@ -1,10 +1,12 @@
 import { conSql } from '../config.private';
-import { log } from '@andes/log';
 import * as moment from 'moment';
 import * as sql from 'mssql';
 import * as operations from './operations';
 import { InformeLAB } from '../utils/informes/informe-lab';
 import * as fs from 'fs';
+import { userScheduler } from '../config.private';
+import { msCDALaboratoriosLog } from '../logger/msCDALaboratorioCentral';
+const log = msCDALaboratoriosLog.startTrace();
 
 const cota = 0.95;
 
@@ -21,11 +23,11 @@ const connection = {
 export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
-        let laboratorios: any = await operations.getEncabezados(pool, paciente.documento);
+        let laboratorios: any = await operations.getEncabezados(pool, paciente);
         for (const lab of laboratorios.recordset) {
             try {
-                const details: any = await operations.getDetalles(pool, lab.idProtocolo, lab.idEfector);
-                if (details.recordset && details.recordset.length > 0 ) {
+                const details: any = await operations.getDetalles(pool, lab.idProtocolo);
+                if (details?.recordset?.length) {
                     const fecha = moment(lab.fecha, 'DD/MM/YYYY');
                     const organizacion: any = await operations.organizacionBySisaCode(lab.efectorCodSisa);
                     const profesional = {
@@ -54,13 +56,13 @@ export async function importarDatos(paciente) {
                     return null; // NO se encontraron registros en la consulta
                 }
             } catch (error) {
-                log(operations.fakeRequest, 'microservices:integration:cda-labcentral', null, 'importarDatos:error', { error });
+                await log.error('cda-laboratorio-central:importarDatos', { error, paciente }, error.message, userScheduler);
             }
         }
         pool.close();
         return true;
     } catch (error) {
-        log(operations.fakeRequest, 'microservices:integration:cda-labcentral', null, 'importarDatos:error', { error });
+        await log.error('cda-laboratorio-central:importarDatos', { error, paciente }, error.message, userScheduler);
         return true;
     }
 }
