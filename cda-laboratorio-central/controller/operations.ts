@@ -91,17 +91,15 @@ export async function postCDA(data: any) {
     try {
         const { error, statusCode, body } = await got.post(url, options);
 
-        if (error) {
-            await log.error('cda-laboratorio-central:postCDA', { error, options }, error.message, userScheduler);
-        }
         if (statusCode >= 200 && statusCode < 300) {
             return body;
         }
         return (error || body);
     } catch (error) {
-        await log.error('cda-laboratorio-central:postCDA', { error, options }, error.message, userScheduler);
+        if (!error.response.body?.error?.error?.includes('prestacion_existente')) {
+            await log.error('cda-laboratorio-central:postCDA', { error, options }, error.message, userScheduler);
+        }
         return error;
-
     }
     
 }
