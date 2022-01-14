@@ -3,7 +3,9 @@ import * as sql from 'mssql';
 import { ANDES_HOST, ANDES_KEY } from '../config.private';
 const request = require('request');
 const cache = {};
-
+import { msCDALaboratoriosLog } from '../logger/msCDALaboratorios';
+const log = msCDALaboratoriosLog.startTrace();
+import { userScheduler } from '../config.private';
 
 export async function organizacionBySisaCode(sisa) {
     return new Promise((resolve, reject) => {
@@ -29,12 +31,18 @@ export async function organizacionBySisaCode(sisa) {
 }
 
 
-export async function getEncabezados(pool, documento) {
+export async function getEncabezados(pool, paciente) {
+    const documento = paciente.documento;
     const query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
         'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
         'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
         'where encabezado.numeroDocumento = ' + documento;
-    return await new sql.Request(pool).query(query);
+    try {
+        return await new sql.Request(pool).query(query);
+    } catch (error) {
+        await log.error('cda-laboratorios:query:LAB_ResultadoEncabezado', { error, query, paciente }, error.message, userScheduler);
+        return null;
+    }
 
 }
 
@@ -42,8 +50,12 @@ export async function getEncabezados(pool, documento) {
 export async function getDetalles(pool, idProtocolo, idEfector) {
     const query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
         ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
-    return await new sql.Request(pool).query(query);
-
+    try {
+        return await new sql.Request(pool).query(query);
+    } catch (error) {
+        await log.error('cda-laboratorios:query:LAB_ResultadoDetalle', { error, query }, error.message, userScheduler);
+        return null;
+    }
 }
 
 export function postCDA(data: any) {
@@ -60,6 +72,9 @@ export function postCDA(data: any) {
         };
 
         request(options, async (error, response, body) => {
+            if (error) {
+                await log.error('cda-laboratorios:import:postCDA', { error, options }, error.message, userScheduler);
+            }
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
