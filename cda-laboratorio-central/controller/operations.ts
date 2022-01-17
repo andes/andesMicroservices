@@ -97,7 +97,7 @@ export async function postCDA(data: any) {
         return (error || body);
     } catch (error) {
         if (!error.response.body?.error?.error?.includes('prestacion_existente')) {
-            await log.error('cda-laboratorio-central:postCDA', { error, options }, error.message, userScheduler);
+            await log.error('cda-laboratorio-central:postCDA', { error, options, payload: error.response?.body }, error.message, userScheduler);
         }
         return error;
     }
