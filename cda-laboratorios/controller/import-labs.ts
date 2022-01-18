@@ -65,7 +65,7 @@ async function toBase64(response) {
     });
 }
 
-function downloadFile(url) {
+function downloadFile(url, paciente) {
     return new Promise((resolve, reject) => {
 
         http.get(url, (response) => {
@@ -75,7 +75,7 @@ function downloadFile(url) {
                 return reject({ error: 'sips-pdf', status: response.statusCode });
             }
         }).on('error', async (e) => {
-            await log.error('cda-laboratorios:import:downloadFile', { error: e, url }, `No se pudo descarga el pdf: ${e.message}`, userScheduler);
+            await log.error('cda-laboratorios:import:downloadFile', { error: e, url, paciente  }, `No se pudo descarga el pdf: ${e.message}`, userScheduler);
             // tslint:disable-next-line:no-console
             console.error(`No se pudo descarga el pdf: ${e.message}`);
             return reject(e);
@@ -88,7 +88,7 @@ export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
         let laboratorios: any = await operations.getEncabezados(pool, paciente);
-        
+
         if (laboratorios?.recordset?.length) {
             for (const lab of laboratorios?.recordset) {
                 try {
@@ -119,7 +119,7 @@ export async function importarDatos(paciente) {
                         let response;
 
                         pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-                        response = await downloadFile(pdfUrl);
+                        response = await downloadFile(pdfUrl, paciente);
 
                         let adjunto64 = await toBase64(response);
                         const dto = {
@@ -151,7 +151,6 @@ export async function importarDatos(paciente) {
                     }
                 } catch (e) {
                     await log.error('cda-laboratorios:import:laboratorios', { error: e, paciente }, e.message, userScheduler);
-                    console.error(`Erro en download files: ${e.message}`);
                     // No va return porque sigue con el proximo laboratorio dentro del for
                     // return false;
                 }
