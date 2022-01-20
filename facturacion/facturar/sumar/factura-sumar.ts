@@ -21,7 +21,7 @@ let querySumar = new QuerySumar();
 export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
     const transaction = new sql.Transaction(pool);
     let _estado = 'Sin Comprobante';
-
+    let dtoComprobante, prestacion, datosReportables, estadoFacturacion;
     try {
         await transaction.begin();
         const request = await new sql.Request(transaction);
@@ -32,7 +32,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         if (!existeComprobante) {
             _estado = 'Comprobante sin prestacion';
 
-            let dtoComprobante = {
+            dtoComprobante = {
                 cuie: dtoSumar.cuie,
                 fechaComprobante: moment(dtoSumar.fechaTurno).format('MM/DD/YYYY'),
                 claveBeneficiario: dtoSumar.claveBeneficiario,
@@ -55,7 +55,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
 
                 moment.locale('es');
-                let prestacion = {
+                prestacion = {
                     idComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
                     idNomenclador: dtoSumar.idNomenclador,
                     cantidad: 1,
@@ -96,7 +96,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
             turno = await getDatosTurno(dtoSumar.objectId);
         }
 
-        const estadoFacturacion = {
+        estadoFacturacion = {
             tipo: 'sumar',
             numeroComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
             estado: _estado
@@ -114,7 +114,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
 
     } catch (e) {
         transaction.rollback(error => {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear comprobante sumar', null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear comprobante sumar', null, { dtoComprobante, prestacion, datosReportables, estadoFacturacion }, error);
         });
     }
 }

@@ -122,8 +122,9 @@ export class QueryRecupero {
      * @memberof QueryRecupero
      */
     async saveOrdenRecupero(request: any, dtoOrden: any) {
+        let query;
         try {
-            let query = 'INSERT INTO [dbo].[FAC_Orden]' +
+            query = 'INSERT INTO [dbo].[FAC_Orden]' +
                 ' ([idEfector]' +
                 ' ,[numero]' +
                 ' ,[periodo]' +
@@ -192,7 +193,7 @@ export class QueryRecupero {
                 .query(query);
             return result.recordset[0] ? result.recordset[0].ID : null;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenRecupero', null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenRecupero', null, { dtoOrden, query }, error);
         }
     }
 
@@ -205,8 +206,9 @@ export class QueryRecupero {
      * @memberof QueryRecupero
      */
     async saveOrdenDetalle(request: any, ordenDetalle: any) {
+        let query;
         try {
-            let query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
+            query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
                 ' ([idOrden]' +
                 ' ,[idEfector]' +
                 ' ,[idNomenclador]' +
@@ -236,7 +238,7 @@ export class QueryRecupero {
 
             return result.recordset[0];
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenDetalleRecupero', null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenDetalleRecupero', null, { ordenDetalle, query }, error);
         }
     }
 }
@@ -247,9 +249,10 @@ export class QueryRecupero {
  * por medio del store procedure FAC_GetTipoNomenclador 
  */
 export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Date, pool: any) {
+    let query;
     try {
         const fecha = moment(fechaTurno).format('MM-DD-YY');
-        const query = 'exec dbo.FAC_GetTipoNomenclador @idObraSocial, @fecha';
+        query = 'exec dbo.FAC_GetTipoNomenclador @idObraSocial, @fecha';
 
         const resultado = await new sql.Request(pool)
             .input('fecha', sql.VarChar(8), fecha)
@@ -259,6 +262,6 @@ export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Da
         return resultado.recordset[0].idTipoNomenclador;
 
     } catch (err) {
-        log(fakeRequestSql, 'microservices:factura:create', null, '/error en getIdTipoNomencladorSIPS', null, err);
+        log(fakeRequestSql, 'microservices:factura:create', null, '/error en getIdTipoNomencladorSIPS', null, { idObraSocial, fechaTurno, query }, err);
     }
 }
