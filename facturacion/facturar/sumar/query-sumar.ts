@@ -16,8 +16,9 @@ export class QuerySumar {
      * @memberof QuerySumar
      */
     async saveComprobanteSumar(request: any, dtoComprobante: any) {
+        let query;
         try {
-            let query = 'INSERT INTO dbo.PN_comprobante (cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion,objectId,factAutomatico) ' +
+            query = 'INSERT INTO dbo.PN_comprobante (cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion,objectId,factAutomatico) ' +
                 ' values (@cuie, NULL, NULL, @fechaComprobante, @claveBeneficiario, @idAfiliado, @fechaCarga, @comentario, @marca, @periodo, @activo, @idTipoPrestacion, @objectId, @factAutomatico)' +
                 ' SELECT SCOPE_IDENTITY() AS id';
 
@@ -37,7 +38,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveComprobanteSumar', null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveComprobanteSumar', null, { query, dtoComprobante }, error);
         }
     }
 
@@ -76,7 +77,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en savePrestacionSumar', null, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/error en savePrestacionSumar', null, { query, dtoPrestacion }, error);
         }
     }
 

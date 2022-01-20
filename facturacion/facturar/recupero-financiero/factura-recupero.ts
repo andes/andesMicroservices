@@ -21,11 +21,11 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
         const request = await new sql.Request(transaction);
-
+        let dtoOrden, dtoOrdendetalle;
         try {
             let nomencladorRecupero: any = await queryRecupero.getNomencladorRecupero(pool, dtoRecupero);
 
-            let dtoOrden = {
+            dtoOrden = {
                 idEfector: dtoRecupero.idEfector,
                 /* Existe un trigger en Fac_Orden [Trigger_NumeroOrden] que actualiza 'numero' cuando el param es -1 */
                 numero: -1,
@@ -50,7 +50,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
 
             const newIdOrden = await queryRecupero.saveOrdenRecupero(request, dtoOrden);
 
-            let dtoOrdendetalle = {
+            dtoOrdendetalle = {
                 idOrden: newIdOrden,
                 idEfector: dtoRecupero.idEfector,
                 idNomenclador: nomencladorRecupero.idNomenclador,
@@ -71,7 +71,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
 
         } catch {
             transaction.rollback(error => {
-                log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear orden recupero', null, error);
+                log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear orden recupero', null, { dtoOrden, dtoOrdendetalle }, error);
             });
         }
     }
