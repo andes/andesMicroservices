@@ -1,4 +1,7 @@
 import * as moment from 'moment';
+import { log } from '@andes/log';
+import { fakeRequestSql } from '../config.private';
+
 import { facturaSumar } from './../facturar/sumar/factura-sumar';
 import { facturaRecupero } from './../facturar/recupero-financiero/factura-recupero';
 import { drNiñoSano, drOtoemisiones } from './datos-reportables';
@@ -109,31 +112,35 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         /* Paciente tiene OS Se factura por Recupero */
         /* TODO: Verificar si hay precondición para facturar por Recupero*/
         let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
+        const configAutomatica = dtoFacturacion.configAutomatica;
+        if (configAutomatica) {
+            dtoRecupero = {
+                objectId: dtoFacturacion.turno._id,
+                fechaTurno,
+                idTipoNomenclador: configAutomatica.recuperoFinanciero.idTipoNomenclador,
+                codigo: configAutomatica.recuperoFinanciero.codigo,
+                idServicio: configAutomatica.recuperoFinanciero.idServicio,
+                dniPaciente: dtoFacturacion.paciente.dni,
+                dniProfesional: dtoFacturacion.profesional.dni,
+                codigoFinanciador: os,
+                idEfector: dtoFacturacion.organizacion.idSips,
+                motivoDeConsulta: dtoFacturacion.motivoConsulta,
+                prepaga: dtoFacturacion.obraSocial.prepaga,
+            };
 
-        dtoRecupero = {
-            objectId: dtoFacturacion.turno._id,
-            fechaTurno,
-            idTipoNomenclador: dtoFacturacion.configAutomatica.recuperoFinanciero.idTipoNomenclador,
-            codigo: dtoFacturacion.configAutomatica.recuperoFinanciero.codigo,
-            idServicio: dtoFacturacion.configAutomatica.recuperoFinanciero.idServicio,
-            dniPaciente: dtoFacturacion.paciente.dni,
-            dniProfesional: dtoFacturacion.profesional.dni,
-            codigoFinanciador: os,
-            idEfector: dtoFacturacion.organizacion.idSips,
-            motivoDeConsulta: dtoFacturacion.motivoConsulta,
-            prepaga: dtoFacturacion.obraSocial.prepaga,
-        };
+            let queryRecupero = new QueryRecupero();
+            const idObraSocial = await queryRecupero.getIdObraSocialSips(pool, dtoRecupero);
 
-        let queryRecupero = new QueryRecupero();
-        const idObraSocial = await queryRecupero.getIdObraSocialSips(pool, dtoRecupero);
+            //obtenemos el idTipoNomenclador desde SIPS
+            if (idObraSocial && typeof idObraSocial === 'number') {
+                dtoRecupero.idTipoNomenclador = await getIdTipoNomencladorSIPS(idObraSocial, fechaTurno, pool);
+            }
 
-        //obtenemos el idTipoNomenclador desde SIPS
-        if (idObraSocial && typeof idObraSocial === 'number') {
-            dtoRecupero.idTipoNomenclador = await getIdTipoNomencladorSIPS(idObraSocial, fechaTurno, pool);
+            await facturaRecupero(pool, dtoRecupero);
         }
-
-        await facturaRecupero(pool, dtoRecupero);
-
+        else {
+            log(fakeRequestSql, 'microservices:factura:create', null, '/la prestacion no está configurada', null, { prestacion: dtoFacturacion.prestacion }, null);
+        }
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         tipoFacturacion = 'sumar';

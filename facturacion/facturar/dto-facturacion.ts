@@ -84,7 +84,7 @@ export async function facturaTurno(prestacion: any) {
     let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
 
     let dtoDatos = [{
-        idTurno: prestacion.id,
+        idTurno: prestacion.id || prestacion._id,
         fechaPrestacion: prestacion.horaInicio,
         organizacion: datos[0].organizacion,
         obraSocial: (datos[1]) ? (datos[1]) : null,

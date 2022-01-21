@@ -16,13 +16,12 @@ router.group('/facturacion', (group) => {
 
     group.post('/facturar', async (req, res) => {
         const data = req.body.data;
+        let dtoFacturacion: any;
         try {
             sql.close();
             let pool = await sql.connect(SipsDBConfiguration);
             const event = req.body.event;
 
-
-            let dtoFacturacion: any;
             switch (event) {
                 case 'facturacion:factura:buscador':
                     dtoFacturacion = await facturaBuscador(data);
@@ -44,7 +43,7 @@ router.group('/facturacion', (group) => {
                 await factura.facturar(pool, dtoFacturacion[x]);
             }
         } catch (error) {
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, data, error);
+            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, { data, dtoFacturacion }, error);
         }
         sql.close();
         res.json('OK');
