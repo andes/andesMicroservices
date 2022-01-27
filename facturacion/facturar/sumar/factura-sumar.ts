@@ -114,7 +114,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
 
     } catch (e) {
         transaction.rollback(error => {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear comprobante sumar', null, { dtoComprobante, prestacion, datosReportables, estadoFacturacion }, error);
+            log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear comprobante sumar', null, { dtoComprobante, prestacion, datosReportables, estadoFacturacion }, e);
         });
     }
 }
