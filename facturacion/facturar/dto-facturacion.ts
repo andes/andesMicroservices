@@ -82,10 +82,14 @@ export async function facturaBuscador(prestacion: any) {
 export async function facturaTurno(prestacion: any) {
     let datos: any = await getDatos(prestacion);
     let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
-
+    let fechaPrestacion = prestacion.fecha || prestacion.horaInicio;
+    if (prestacion.turno && prestacion.turno.horaInicio) {
+        fechaPrestacion = prestacion.turno.horaInicio;
+    }
     let dtoDatos = [{
-        idTurno: prestacion.id || prestacion._id,
-        fechaPrestacion: prestacion.horaInicio,
+        idTurno: prestacion.id || prestacion._id || prestacion.idPrestacion,
+        idPrestacion: prestacion.idPrestacion || prestacion.id,
+        fechaPrestacion,
         organizacion: datos[0].organizacion,
         obraSocial: (datos[1]) ? (datos[1]) : null,
         profesional: datos[2].profesional,
