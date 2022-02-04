@@ -1,8 +1,10 @@
 import * as sql from 'mssql';
 import { IDtoRecupero } from '../../interfaces/IDtoRecupero';
-import { fakeRequestSql } from './../../config.private';
-import { log } from '@andes/log';
 import * as moment from 'moment';
+
+import { userScheduler } from './../../config.private';
+import { msFacturacionLog } from './../../logger/msFacturacion';
+const log = msFacturacionLog.startTrace();
 
 export class QueryRecupero {
 
@@ -193,7 +195,7 @@ export class QueryRecupero {
                 .query(query);
             return result.recordset[0] ? result.recordset[0].ID : null;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenRecupero', null, { dtoOrden, query }, error);
+            log.error('query-recupero:saveOrdenRecupero:error', { dtoOrden, query }, error, userScheduler);
         }
     }
 
@@ -238,7 +240,7 @@ export class QueryRecupero {
 
             return result.recordset[0];
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveOrdenDetalleRecupero', null, { ordenDetalle, query }, error);
+            log.error('query-recupero:saveOrdenDetalle:error', { ordenDetalle, query }, error, userScheduler);
         }
     }
 }
@@ -262,6 +264,6 @@ export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Da
         return resultado.recordset[0].idTipoNomenclador;
 
     } catch (err) {
-        log(fakeRequestSql, 'microservices:factura:create', null, '/error en getIdTipoNomencladorSIPS', null, { idObraSocial, fechaTurno, query }, err);
+        log.error('query-recupero:getIdTipoNomencladorSIPS:error', { idObraSocial, fechaTurno, query }, err, userScheduler);
     }
 }

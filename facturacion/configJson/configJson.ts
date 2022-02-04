@@ -1,6 +1,7 @@
 import * as moment from 'moment';
-import { log } from '@andes/log';
-import { fakeRequestSql } from '../config.private';
+import { userScheduler } from '../config.private';
+import { msFacturacionLog } from '../logger/msFacturacion';
+const log = msFacturacionLog.startTrace();
 
 import { facturaSumar } from './../facturar/sumar/factura-sumar';
 import { facturaRecupero } from './../facturar/recupero-financiero/factura-recupero';
@@ -139,32 +140,35 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
             await facturaRecupero(pool, dtoRecupero);
         }
         else {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/la prestacion no está configurada', null, { prestacion: dtoFacturacion.prestacion }, null);
+            log.error('jsonFacturacion:recupero:sinConfiguracion', { prestacion: dtoFacturacion.prestacion }, 'la prestacion no está configurada', userScheduler);
         }
     } else {
         /* Paciente NO TIENE OS se factura por Sumar */
         tipoFacturacion = 'sumar';
         let main = await facturacion.main(dtoFacturacion, tipoFacturacion);
-
-        dtoSumar = {
-            idPrestacion: dtoFacturacion.idPrestacion,
-            idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
-            fechaTurno,
-            objectId: dtoFacturacion.turno._id,
-            cuie: dtoFacturacion.organizacion.cuie,
-            diagnostico: (main) ? main.diagnostico : null,
-            dniPaciente: dtoFacturacion.paciente.dni,
-            profesional: dtoFacturacion.profesional,
-            claveBeneficiario: afiliadoSumar.clavebeneficiario,
-            idAfiliado: afiliadoSumar.id_smiafiliados,
-            edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
-            sexo: (dtoFacturacion.paciente.sexo === 'masculino') ? 'M' : 'F',
-            fechaNacimiento: dtoFacturacion.paciente.fechaNacimiento,
-            anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
-            mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
-            dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
-            datosReportables: (main) ? main.datosReportables : null
-        };
-        await facturaSumar(pool, dtoSumar);
+        try {
+            dtoSumar = {
+                idPrestacion: dtoFacturacion.idPrestacion,
+                idNomenclador: (dtoFacturacion.configAutomatica) ? dtoFacturacion.configAutomatica.sumar.idNomenclador : null,
+                fechaTurno,
+                objectId: dtoFacturacion.turno._id,
+                cuie: dtoFacturacion.organizacion.cuie,
+                diagnostico: (main) ? main.diagnostico : null,
+                dniPaciente: dtoFacturacion.paciente.dni,
+                profesional: dtoFacturacion.profesional,
+                claveBeneficiario: afiliadoSumar.clavebeneficiario,
+                idAfiliado: afiliadoSumar.id_smiafiliados,
+                edad: moment(new Date()).diff(dtoFacturacion.paciente.fechaNacimiento, 'years'),
+                sexo: (dtoFacturacion.paciente.sexo === 'masculino') ? 'M' : 'F',
+                fechaNacimiento: dtoFacturacion.paciente.fechaNacimiento,
+                anio: moment(dtoFacturacion.paciente.fechaNacimiento).format('YYYY'),
+                mes: moment(dtoFacturacion.paciente.fechaNacimiento).format('MM'),
+                dia: moment(dtoFacturacion.paciente.fechaNacimiento).format('DD'),
+                datosReportables: (main) ? main.datosReportables : null
+            };
+            await facturaSumar(pool, dtoSumar);
+        } catch (error) {
+            log.error('jsonFacturacion:sumar:error', { dtoFacturacion, dtoSumar }, error, userScheduler);
+        }
     }
 }
