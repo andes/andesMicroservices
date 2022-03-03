@@ -58,6 +58,18 @@ export async function getDetalles(pool, idProtocolo, idEfector) {
     }
 }
 
+export async function getImpresionResultados(pool, idProtocolo, idEfector) {
+    const query = `Select * from LAB_ImprimeResultado 
+                    WHERE idProtocolo = ${idProtocolo} and idEfector = ${idEfector} 
+                    order by ordenarea, orden , orden1, grupo`;
+    try {
+        return await new sql.Request(pool).query(query);
+    } catch (error) {
+        await log.error('cda-laboratorios:query:LAB_ImprimeResultado', { error, query }, error.message, userScheduler);
+        return null;
+    }
+}
+
 export function postCDA(data: any) {
     return new Promise( async (resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/modules/cda/create`;

@@ -16,9 +16,13 @@
     "@andes/bootstrap": "file:../bootstrap",
     "@andes/log": "^2.2.5",
     "@andes/match": "^1.1.12",
+    "fs": "0.0.1-security",
+    "handlebars": "^4.7.7",
+    "html-pdf": "^2.2.0",
     "moment": "^2.22.2",
     "mongoose": "^5.13.14",
     "mssql": "^4.2.1",
+    "node-sass": "^7.0.1",
     "p-queue": "^3.0.0",
     "request": "^2.88.0"
   }

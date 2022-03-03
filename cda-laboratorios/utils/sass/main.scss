@@ -1,0 +1,80 @@
+
+html {
+    display: block; // height: 100vh;
+    padding: 0 2rem;
+    font-family: sans-serif;
+    font-size: .2cm;
+}
+
+body {
+    margin: 0; //Override
+    padding: 0;
+}
+
+
+// // // Globales
+.contenedor-secundario {
+    display: block;
+    text-align: center;
+    font-size: .25cm;
+}
+
+// Tipografía
+h4,
+h5 {
+    margin: 0.1cm 0;
+
+    &.bolder {
+        font-weight: 900;
+    }
+}
+
+h5 {
+    font-weight: lighter;
+}
+
+p {
+    font-size: 0.25cm;
+}
+
+hr {
+    // border: $borderBottom;
+    margin: 5px 0 5px 0;
+    width: 100%;
+
+    &.sm {
+        width: 15px;
+    }
+
+    &.lg {
+        width: 100%;
+    }
+}
+
+// // Footer
+footer {
+    height: 5cm;
+    max-height: 5cm;
+    font-size: 0.12cm;
+    font-style: italic;
+}
+
+.rTable { display: table; width: 100%; }
+.rTableRow { display: table-row; }
+.rTableHeading { display: table-header-group; }
+.rTableBody { display: table-row-group; }
+.rTableFoot { display: table-footer-group; }
+
+header{
+    .rTableCell, header.rTableHead { display: table-cell; width: 33%; padding: 2px 0;}
+}
+
+body {
+    .rTableCell1, .rTableHead { display: table-cell; width: 33%; padding: 2px 0;}
+    .rTableCell2, .rTableHead2 { display: table-cell; width: 22%; padding: 2px 0;}
+    .small {font-size:.15cm; font-style:italic;}
+}
+
+.contenedor-informe .rTableCell { width: 33%; padding: 2px 0;}
+h4 { font-size: .275cm; }
+h5 { font-size: .20cm; }
