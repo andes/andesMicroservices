@@ -1,9 +1,10 @@
-import { conSql, wsSalud } from '../config.private';
+import { conSql } from '../config.private';
 import * as moment from 'moment';
 import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as operations from './operations';
-import * as http from 'http';
+import * as fs from 'fs';
+import { InformeLAB } from '../utils/informes/informe-lab';
 import { userScheduler } from '../config.private';
 import { msCDALaboratoriosLog } from '../logger/msCDALaboratorios';
 const log = msCDALaboratoriosLog.startTrace();
@@ -46,44 +47,6 @@ function matchPaciente(pacMpi, pacLab) {
     return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
 }
 
-
-async function toBase64(response) {
-    return new Promise((resolve, reject) => {
-        let chunks: any = [];
-        response.on('data', (chunk) => {
-            chunks.push(chunk);
-        });
-        response.on('end', () => {
-            const informe = Buffer.concat(chunks);
-            const i = 'data:application/pdf;base64,' + informe.toString('base64');
-            return resolve(i);
-        });
-        response.on('error', (err) => {
-            return reject(err);
-        });
-
-    });
-}
-
-function downloadFile(url, paciente) {
-    return new Promise((resolve, reject) => {
-
-        http.get(url, (response) => {
-            if (response.statusCode === 200) {
-                return resolve(response);
-            } else {
-                return reject({ error: 'sips-pdf', status: response.statusCode });
-            }
-        }).on('error', async (e) => {
-            await log.error('cda-laboratorios:import:downloadFile', { error: e, url, paciente  }, `No se pudo descarga el pdf: ${e.message}`, userScheduler);
-            // tslint:disable-next-line:no-console
-            console.error(`No se pudo descarga el pdf: ${e.message}`);
-            return reject(e);
-        });
-
-    });
-}
-
 export async function importarDatos(paciente) {
     try {
         const pool = await new sql.ConnectionPool(connection).connect();
@@ -100,7 +63,7 @@ export async function importarDatos(paciente) {
                     let hiv = false;
 
                     const value = matchPaciente(paciente, lab);
-                    
+
                     if (value >= cota && validado && details?.recordset) {
 
                         details.recordset.forEach(detail => {
@@ -115,27 +78,27 @@ export async function importarDatos(paciente) {
                             apellido: '-' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                         };
 
-                        let pdfUrl;
-                        let response;
+                        const resultados = await operations.getImpresionResultados(pool, lab.idProtocolo, lab.idEfector);
+                        const informe = new InformeLAB(resultados.recordset[0], resultados.recordset, 'Laboratorio');
+                        fs.readFile((await informe.informe() as string), async (err, data) => {
+                            if (err) {throw err; }
+                            const file = 'data:application/pdf;base64,' + data.toString('base64');
 
-                        pdfUrl = wsSalud.host + wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-                        response = await downloadFile(pdfUrl, paciente);
+                            const dto = {
+                                id: lab.idProtocolo,
+                                organizacion: organizacion._id,
+                                fecha: fecha.toDate(),
+                                tipoPrestacion: '4241000179101',
+                                paciente,
+                                confidencialidad: hiv ? 'R' : 'N',
+                                profesional,
+                                cie10: 'Z01.7',
+                                file,
+                                texto: 'Exámen de Laboratorio'
+                            };
 
-                        let adjunto64 = await toBase64(response);
-                        const dto = {
-                            id: lab.idProtocolo,
-                            organizacion: organizacion._id,
-                            fecha: fecha.toDate(),
-                            tipoPrestacion: '4241000179101',
-                            paciente,
-                            confidencialidad: hiv ? 'R' : 'N',
-                            profesional,
-                            cie10: 'Z01.7',
-                            file: adjunto64,
-                            texto: 'Exámen de Laboratorio'
-                        };
-
-                        await operations.postCDA(dto);
+                            await operations.postCDA(dto);
+                        });
 
                     } else {
                         // Ver que hacer si no matchea TODO

@@ -1,5 +1,12 @@
 import { Microservice, Middleware } from '@andes/bootstrap';
 import { importarDatos } from './controller/import-labs';
+
+import * as operations from './controller/operations'
+import { InformeLAB } from './utils/informes/informe-lab';
+import { conSql } from './config.private';
+import * as sql from 'mssql';
+
+
 const PQueue = require('p-queue');
 let pkg = require('./package.json');
 
@@ -10,6 +17,7 @@ const queue = new PQueue({ concurrency: 5 });
 
 router.group('/cda', (group) => {
     // group.use(Middleware.authenticate());
+
     group.post('/ejecutar', async (req, res) => {
         res.send({ message: 'ok' });
         const id = req.body.id;
