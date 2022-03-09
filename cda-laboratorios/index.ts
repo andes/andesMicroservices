@@ -35,7 +35,7 @@ router.group('/cda', (group) => {
         }
 
         // Esperamos el paciente desde una prestación.
-        if (paciente) {
+        if (paciente?.documento) {
             queue.add(() => {
                 return importarDatos(paciente);
             });

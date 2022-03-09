@@ -33,7 +33,7 @@ router.group('/cda', (group) => {
                 paciente = data.paciente;
                 break;
         }
-        if (paciente) {
+        if (paciente?.documento) {
             queue.add(() => {
                 return importarDatos(paciente);
             });
