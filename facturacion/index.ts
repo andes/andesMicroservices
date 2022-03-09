@@ -7,7 +7,10 @@ let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 import * as sql from 'mssql';
 
-import { Connections, log } from '@andes/log';
+import { Connections } from '@andes/log';
+import { userScheduler } from './config.private';
+import { msFacturacionLog } from './logger/msFacturacion';
+const log = msFacturacionLog.startTrace();
 
 const router = ms.router();
 
@@ -34,7 +37,7 @@ router.group('/facturacion', (group) => {
                 //     dtoFacturacion = await facturaRup(data);
                 //     break;
                 default:
-                    await log(fakeRequestSql, 'microservices:factura:create', null, '/Origen facturación inválido', null);
+                    log.error('facturacion:create', { event, data }, 'Origen facturación inválido', userScheduler);
                     break;
             }
 
@@ -43,7 +46,7 @@ router.group('/facturacion', (group) => {
                 await factura.facturar(pool, dtoFacturacion[x]);
             }
         } catch (error) {
-            await log(fakeRequestSql, 'microservices:factura:create', null, '/error en la conexión sql', null, { data, dtoFacturacion }, error);
+            log.error('facturacion:create:error', { data, dtoFacturacion }, error, userScheduler);
         }
         sql.close();
         res.json('OK');

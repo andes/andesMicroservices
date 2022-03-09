@@ -14,12 +14,11 @@
   "license": "ISC",
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
+    "@andes/log": "^2.2.5",
     "@andes/match": "^1.1.12",
-    "@andes/log": "^1.0.11",
     "moment": "^2.22.2",
     "mongoose": "^5.4.6",
     "mssql": "^4.3.0",
     "request": "^2.88.0"
-  },
-  "devDependencies": {}
+  }
 }

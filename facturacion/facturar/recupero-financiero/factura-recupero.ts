@@ -1,8 +1,10 @@
 import * as sql from 'mssql';
 import { QueryRecupero } from './query-recupero';
 import { IDtoRecupero } from './../../interfaces/IDtoRecupero';
-import { fakeRequestSql } from './../../config.private';
-import { log } from '@andes/log';
+
+import { userScheduler } from './../../config.private';
+import { msFacturacionLog } from './../../logger/msFacturacion';
+const log = msFacturacionLog.startTrace();
 
 let queryRecupero = new QueryRecupero();
 
@@ -50,28 +52,30 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
 
             const newIdOrden = await queryRecupero.saveOrdenRecupero(request, dtoOrden);
 
-            dtoOrdendetalle = {
-                idOrden: newIdOrden,
-                idEfector: dtoRecupero.idEfector,
-                idNomenclador: nomencladorRecupero.idNomenclador,
-                descripcion: nomencladorRecupero.descripcion,
-                cantidad: 1,
-                valorUnidad: nomencladorRecupero.valorUnidad,
-                ajuste: 0,
-                totoal: nomencladorRecupero.valorUnidad
-            };
+            if (newIdOrden) {
+                dtoOrdendetalle = {
+                    idOrden: newIdOrden,
+                    idEfector: dtoRecupero.idEfector,
+                    idNomenclador: nomencladorRecupero.idNomenclador,
+                    descripcion: nomencladorRecupero.descripcion,
+                    cantidad: 1,
+                    valorUnidad: nomencladorRecupero.valorUnidad,
+                    ajuste: 0,
+                    totoal: nomencladorRecupero.valorUnidad
+                };
 
-            await queryRecupero.saveOrdenDetalle(request, dtoOrdendetalle);
+                await queryRecupero.saveOrdenDetalle(request, dtoOrdendetalle);
 
-            transaction.commit(error => {
-                if (error) {
-                    return error;
-                }
-            });
-
-        } catch {
+                transaction.commit(error => {
+                    if (error) {
+                        return error;
+                    }
+                });
+            }
+        } catch (e) {
             transaction.rollback(error => {
-                log(fakeRequestSql, 'microservices:factura:create', null, '/rollback crear orden recupero', null, { dtoRecupero, dtoOrden, dtoOrdendetalle }, error);
+                log.error('facturaRecupero:rollback crear orden recupero', { dtoRecupero, dtoOrden, dtoOrdendetalle }, e, userScheduler);
+
             });
         }
     }
