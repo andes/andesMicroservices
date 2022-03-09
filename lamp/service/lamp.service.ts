@@ -16,7 +16,7 @@ export function patch(id, fields) {
                 Authorization: `JWT ${ANDES_KEY}`
             }
         };
-        
+
         request(options, (error, response, body) => {
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
