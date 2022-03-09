@@ -15,7 +15,7 @@
     "dependencies": {
         "@andes/bootstrap": "file:../bootstrap",
         "@andes/fhir": "^1.0.1",
-        "@andes/log": "^1.0.11",
+        "@andes/log": "^2.2.5",
         "@andes/match": "^1.1.12",
         "async": "^2.6.1",
         "html-entities": "^1.2.1",

@@ -1,8 +1,10 @@
-import { log } from '@andes/log';
 import * as operations from '../service/nomivacCDA';
 import { organizacionId } from '../config.private';
 import { sisaVacunas } from '../service/nomivacWSsisa';
-import * as moment from 'moment';
+import { userScheduler } from './../config.private';
+import { msCDANomivacLog } from './../logger/nomivacCDALog';
+const log = msCDANomivacLog.startTrace();
+
 /**
  * Actualiza las vacunas de un paciente de ANDES usando el webservice de NOMIVAC
  *
@@ -61,18 +63,7 @@ export async function getVacunas(paciente) {
                 return null;
             }
         } catch (e) {
-            let fakeRequest = {
-                user: {
-                    usuario: 'msNomivac',
-                    app: 'integracion-nomivac',
-                    organizacion: 'sss'
-                },
-                ip: 'localhost',
-                connection: {
-                    localAddress: ''
-                }
-            };
-            await log(fakeRequest, 'microservices:integration:nomivac', paciente.id, e, paciente);
+            log.error('getVacunas:error', paciente, e, userScheduler);
             throw e;
         }
     } else {
