@@ -19,10 +19,12 @@ export function postCDA(data: any) {
             }
         };
         request(options, (error, response, body) => {
+            if (error) {
+                log.error('postCDA:Nomivac', { data }, error, userScheduler);
+            }
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
-            log.error('postCDA:Nomivac', { data }, error, userScheduler);
             return resolve(error || body);
         });
     });
