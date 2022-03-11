@@ -2,7 +2,7 @@ import * as sql from 'mssql';
 import { IDtoSumar } from '../../interfaces/IDtoSumar';
 import moment = require('moment');
 import 'moment/locale/es';
-import { msFacturacionLog } from './logger/msFacturacion';
+import { msFacturacionLog } from '../../logger/msFacturacion';
 import { userScheduler } from '../../config.private';
 
 const log = msFacturacionLog.startTrace();
