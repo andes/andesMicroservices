@@ -81,7 +81,10 @@ export async function importarDatos(paciente) {
                         const resultados = await operations.getImpresionResultados(pool, lab.idProtocolo, lab.idEfector);
                         const informe = new InformeLAB(resultados.recordset[0], resultados.recordset, 'Laboratorio');
                         fs.readFile((await informe.informe() as string), async (err, data) => {
-                            if (err) {throw err; }
+                            
+                            // if (err) {throw err; }
+                            if (err) { return false; }
+                            
                             const file = 'data:application/pdf;base64,' + data.toString('base64');
 
                             const dto = {
@@ -97,7 +100,7 @@ export async function importarDatos(paciente) {
                                 texto: 'Exámen de Laboratorio'
                             };
 
-                            await operations.postCDA(dto);
+                            return await operations.postCDA(dto);
                         });
 
                     } else {
