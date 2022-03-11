@@ -14,14 +14,14 @@
     "license": "ISC",
     "dependencies": {
         "@andes/bootstrap": "file:../bootstrap",
+        "@andes/log": "^2.2.5",
         "@andes/match": "^1.1.12",
+        "async": "^2.6.1",
         "html-entities": "^1.2.1",
         "moment": "^2.22.0",
+        "mongoose": "^5.3.12",
         "mssql": "^4.1.0",
-        "request": "^2.88.0",
         "promise-mysql": "^3.3.1",
-        "@andes/log": "^1.0.11",
-        "async": "^2.6.1",
-        "mongoose": "^5.3.12"
+        "request": "^2.88.0"
     }
 }

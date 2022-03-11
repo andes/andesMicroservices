@@ -1,33 +1,36 @@
 import { Microservice } from '@andes/bootstrap';
 import * as ejecutaCDA from './controller/ejecutaCDA';
-import { Connections } from '@andes/log';
-import { logDatabase } from './config.private';
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
+import { userScheduler } from './config.private';
+import { msCDAHellerLog } from './logger/msCDAHeller';
+const log = msCDAHellerLog.startTrace();
 
 router.group('/cda', (group) => {
-    Connections.initialize(logDatabase.log.host, logDatabase.log.options);
     // group.use(Middleware.authenticate());
     group.post('/ejecutar', async (req: any, res) => {
-        res.send({ message: 'ok' });
+        try {
+            res.send({ message: 'ok' });
 
-        const id = req.body.id;
-        const webhookId = req.body.subscription;
-        const event = req.body.event;
-        const data = req.body.data;
-        let paciente;
-        switch (event) {
-            case 'mobile:patient:login':
-                paciente = data.pacientes[0];
-                break;
-            default:
-                paciente = data.paciente;
-                break;
-        }
-        if (paciente) {
-            await ejecutaCDA.ejecutar(paciente);
-            await ejecutaCDA.ejecutarMysql(paciente);
+            const id = req.body.id;
+            const event = req.body.event;
+            const data = req.body.data;
+            let paciente;
+            switch (event) {
+                case 'mobile:patient:login':
+                    paciente = data.pacientes[0];
+                    break;
+                default:
+                    paciente = data.paciente;
+                    break;
+            }
+            if (paciente) {
+                await ejecutaCDA.ejecutar(paciente);
+                await ejecutaCDA.ejecutarMysql(paciente);
+            }
+        } catch (error) {
+            log.error('cda-heller:post:ejecutar', { req }, error, userScheduler)
         }
     });
 });
