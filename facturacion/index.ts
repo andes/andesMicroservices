@@ -1,6 +1,6 @@
-import { logDatabase, SipsDBConfiguration, fakeRequestSql } from './config.private';
+import { logDatabase, SipsDBConfiguration } from './config.private';
 import { Factura } from './factura';
-import { facturaBuscador, facturaTurno, facturaRup } from './facturar/dto-facturacion';
+import { facturaBuscador, facturaTurno } from './facturar/dto-facturacion';
 
 import { Microservice } from '@andes/bootstrap';
 let pkg = require('./package.json');

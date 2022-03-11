@@ -2,8 +2,10 @@ import * as sql from 'mssql';
 import { IDtoSumar } from '../../interfaces/IDtoSumar';
 import moment = require('moment');
 import 'moment/locale/es';
-import { fakeRequestSql } from './../../config.private';
-import { log } from '@andes/log';
+import { msFacturacionLog } from './logger/msFacturacion';
+import { userScheduler } from '../../config.private';
+
+const log = msFacturacionLog.startTrace();
 
 export class QuerySumar {
 
@@ -38,7 +40,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveComprobanteSumar', null, { query, dtoComprobante }, error);
+            log.error('query-sumar:saveComprobanteSumar', { dtoComprobante, query }, error, userScheduler);
         }
     }
 
@@ -77,7 +79,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en savePrestacionSumar', null, { query, dtoPrestacion }, error);
+            log.error('query-sumar:savePrestacionSumar', { dtoPrestacion, query }, error, userScheduler);
         }
     }
 
@@ -102,46 +104,7 @@ export class QuerySumar {
                 .query(query);
             return result.recordset[0].id;
         } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveDatosReportablesSumar', null, error);
-        }
-    }
-
-    async saveBeneficiario(pool: any, paciente: any) {
-        const transaction = new sql.Transaction(pool);
-
-        await transaction.begin();
-        const request = await new sql.Request(pool);
-
-        let query = 'INSERT INTO [dbo].[PN_beneficiarios] ([clave_beneficiario],[tipo_transaccion],[apellido_benef],[nombre_benef]' +
-            ',[tipo_documento],[numero_doc],[id_categoria],[sexo],[fecha_nacimiento_benef], [id_tribu], [id_lengua],[fecha_inscripcion]' +
-            ',[fecha_carga], [usuario_carga],[activo]) ' +
-            'VALUES (@clave_beneficiario, @tipo_transaccion, @apellido_benef, @nombre_benef, @tipo_documento, @numero_doc, @id_categoria ' +
-            ',@sexo, @fecha_nacimiento_benef, @id_tribu,@id_lengua, @fecha_inscripcion, @fecha_carga, @usuario_carga, @activo) ' +
-            'SELECT SCOPE_IDENTITY() AS id';
-
-        try {
-            const result = await request
-                .input('clave_beneficiario', sql.VarChar(50), '2100000000000000')
-                .input('tipo_transaccion', sql.VarChar(100), 'A')
-                .input('apellido_benef', sql.VarChar(100), paciente.apellido)
-                .input('nombre_benef', sql.VarChar(100), paciente.nombre)
-                .input('tipo_documento', sql.VarChar(100), 'DNI')
-                .input('numero_doc', sql.VarChar(10), paciente.dni)
-                .input('id_categoria', sql.Int, await this.getCategoriaBeneficiario(paciente))
-                .input('sexo', sql.VarChar(100), (paciente.sexo === 'masculino') ? 'M' : paciente.sexo === 'femenino' ? 'F' : 'I')
-                .input('fecha_nacimiento_benef', sql.DateTime, new Date(paciente.fechaNacimiento))
-                .input('id_tribu', sql.Int, 0)
-                .input('id_lengua', sql.Int, 0)
-                .input('fecha_inscripcion', sql.DateTime, new Date())
-                .input('fecha_carga', sql.DateTime, new Date())
-                .input('usuario_carga', sql.VarChar(100), 'Fact.Auto')
-                .input('activo', sql.VarChar(100), '1')
-
-                .query(query);
-
-            return result.recordset;
-        } catch (error) {
-            log(fakeRequestSql, 'microservices:factura:create', null, '/error en saveBeneficiarioesSumar', null, error);
+            log.error('query-sumar:saveDatosReportablesSumar', { dtoPrestacion, query }, error, userScheduler);
         }
     }
 
