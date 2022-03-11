@@ -4,31 +4,10 @@ import { postCDA } from './../service/cda.service';
 import * as factory from './queries/heller';
 import * as sql from 'mssql';
 import * as mysql from 'promise-mysql';
-import * as ConfigPrivate from '../config.private';
-import { log } from '@andes/log';
+import { userScheduler } from '../config.private';
+import { msCDAHellerLog } from '../logger/msCDAHeller';
+const log = msCDAHellerLog.startTrace();
 
-let fakeRequestSql = {
-    user: {
-        usuario: 'msHeller',
-        app: 'integracion-heller',
-        organizacion: 'sss'
-    },
-    ip: ConfigPrivate.staticConfiguration.heller.ip,
-    connection: {
-        localAddress: ''
-    }
-};
-let fakeRequestMysql = {
-    user: {
-        usuario: 'msHeller',
-        app: 'integracion-heller',
-        organizacion: 'sss'
-    },
-    ip: ConfigPrivate.staticConfiguration.hellerMysql.ip,
-    connection: {
-        localAddress: ''
-    }
-};
 export async function ejecutar(paciente) {
     try {
         let data = factory.make(paciente);
@@ -45,8 +24,6 @@ export async function ejecutar(paciente) {
                     }
                 });
                 await Promise.all(ps);
-                log(fakeRequestSql, 'microservices:integration:heller', paciente.id, '/ejecuta CDA exito', null);
-
                 return true;
             } else {
                 return true;
@@ -55,20 +32,8 @@ export async function ejecutar(paciente) {
             return true;
         }
 
-    } catch (ex) {
-        let fakeRequest = {
-            user: {
-                usuario: 'msHeller',
-                app: 'integracion-heller',
-                organizacion: 'sss'
-            },
-            ip: ConfigPrivate.staticConfiguration.heller.ip,
-            connection: {
-                localAddress: ''
-            }
-        };
-        log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en /ejecuta', ex);
-        throw ex;
+    } catch (error) {
+        return log.error('cda-heller:ejecutaCDA:ejecutar', { paciente }, error, userScheduler);
     }
 }
 
@@ -87,8 +52,6 @@ export async function ejecutarMysql(paciente) {
                 });
                 await Promise.all(ps);
                 pool.end();
-                log(fakeRequestMysql, 'microservices:integration:heller', paciente.id, '/ejecutaMysql CDA exito', null);
-
                 return true;
             } else {
                 pool.end();
@@ -98,20 +61,9 @@ export async function ejecutarMysql(paciente) {
         } else {
             return true;
         }
-    } catch (ex) {
-        let fakeRequest = {
-            user: {
-                usuario: 'msHeller',
-                app: 'integracion-heller',
-                organizacion: 'sss'
-            },
-            ip: ConfigPrivate.staticConfiguration.heller.ip,
-            connection: {
-                localAddress: ''
-            }
-        };
-        log(fakeRequest, 'microservices:integration:heller', paciente.id, 'Error en /ejecutarMysql', ex);
-        throw ex;
+    } catch (error) {
+        return log.error('cda-heller:ejecutaCDA:ejecutarMysql', { paciente }, error, userScheduler);
+
     }
 }
 
