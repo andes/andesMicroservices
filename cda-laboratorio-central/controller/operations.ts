@@ -96,9 +96,8 @@ export async function postCDA(data: any) {
         }
         return (error || body);
     } catch (error) {
-        if (!error.response.body?.error?.error?.includes('prestacion_existente')) {
-            await log.error('cda-laboratorio-central:postCDA', { error, options, payload: error.response?.body }, error.message, userScheduler);
-        }
+        // Suspendemos los logs del post por demasiados registros de 500 - prestación existente
+        // await log.error('cda-laboratorio-central:postCDA', { error, options, payload: error.response?.body }, error.message, userScheduler);
         return error;
     }
     
