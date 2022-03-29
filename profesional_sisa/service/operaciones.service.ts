@@ -1,7 +1,8 @@
-import { ANDES_HOST, ANDES_KEY, fakeRequest, SISA } from '../config.private';
-
-import { log } from '@andes/log';
+import { ANDES_HOST, ANDES_KEY, SISA, userScheduler } from '../config.private';
 import moment = require('moment');
+import { msProfesionalSISA } from '../logger/msProfesionalSISA';
+const log = msProfesionalSISA.startTrace();
+
 const fetch = require('node-fetch');
 
 export async function postProfesionalSISA(profesional: any) {
@@ -16,25 +17,29 @@ export async function postProfesionalSISA(profesional: any) {
         json: true,
         body: data
     };
-    const { error, status, body } = await fetch(url, options);
-    if (error) {
-        log(fakeRequest, 'microservices:integration:profesional-sisa', null, 'postProfesionalSISA:error', { error });
+        
+    try {
+        const { error, status, body } = await fetch(url, options);
+        if (status >= 200 && status < 300) {
+            return body;
+        }
+        return (error || body);
+    } catch (error) {
+        log.error('profesional_sisa:postProfesionalSISA', { error, options }, error.message, userScheduler);
     }
-    if (status >= 200 && status < 300) {
-        return body;
-    }
-    return (error || body);
+    
 }
 
 export async function getProfesional(idProfesional) {
+    const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
+    const options = {
+        method: 'GET',
+        headers: {
+            Authorization: `JWT ${ANDES_KEY}`
+        }
+    };
+        
     try {
-        const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
-        const options = {
-            method: 'GET',
-            headers: {
-                Authorization: `JWT ${ANDES_KEY}`
-            }
-        };
         let response = await fetch(url, options);
         const responseJson = await response.json();
         if (responseJson._id) {
@@ -42,21 +47,20 @@ export async function getProfesional(idProfesional) {
         } else {
             return null;
         }
-    }
-    catch (error) {
-        log(fakeRequest, 'microservices:integration:profesional_sips', idProfesional, 'getProfesional:error', error);
+    } catch (error) {
+        log.error('profesional_sisa:getProfesional', { error, url, options }, error.message, userScheduler);
     }
 }
 
 export async function getProfesion(codigo) {
+    const url = `${ANDES_HOST}/core/tm/profesiones?codigo=${codigo}`;
+    const options = {
+        method: 'GET',
+        headers: {
+            Authorization: `JWT ${ANDES_KEY}`
+        }
+    };
     try {
-        const url = `${ANDES_HOST}/core/tm/profesiones?codigo=${codigo}`;
-        const options = {
-            method: 'GET',
-            headers: {
-                Authorization: `JWT ${ANDES_KEY}`
-            }
-        };
         let response = await fetch(url, options);
         const responseJson = await response.json();
         if (responseJson.length) {
@@ -64,9 +68,8 @@ export async function getProfesion(codigo) {
         } else {
             return null;
         }
-    }
-    catch (error) {
-        log(fakeRequest, 'microservices:integration:profesional_sips', codigo, 'getProfesion:error', error);
+    } catch (error) {
+        log.error('profesional_sisa:getProfesion', { error, url, options }, error.message, userScheduler);
     }
 }
 
