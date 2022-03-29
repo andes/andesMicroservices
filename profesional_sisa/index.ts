@@ -6,9 +6,9 @@ let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 const router = ms.router();
 
-router.post('/profesionalSISA', async (_req: any, res) => {
+router.post('/profesionalSISA', async (req: any, res) => {
     res.send({ message: 'ok' });
-    const profesional = _req.body.data;
+    const profesional = req.body.data;
     if (profesional) {
         let prof = await operaciones.getProfesional(profesional._id);
         await exportSISA(prof);
