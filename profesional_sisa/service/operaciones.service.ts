@@ -100,7 +100,7 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
 
     // Datos de la matrícula
     if (formacionGrado?.profesion?.codigo){
-        profesionalSisa['ID_PROFESION'] = parseInt(formacionGrado.profesion);
+        profesionalSisa['ID_PROFESION'] = parseInt(formacionGrado.profesion.codigo);
     }
     profesionalSisa['ID_PROVINCIA_MATRICULA'] = 15;
     if (formacionGrado?.matriculacion?.length && formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1]?.matriculaNumero) {
