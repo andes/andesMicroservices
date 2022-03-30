@@ -117,8 +117,6 @@ export async function importarDatos(paciente) {
                     }
                 } catch (e) {
                     await log.error('cda-laboratorios:import:laboratorios', { error: e, paciente }, e.message, userScheduler);
-                    // No va return porque sigue con el proximo laboratorio dentro del for
-                    // return false;
                 }
             }
         }

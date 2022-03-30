@@ -25,7 +25,7 @@ export async function postProfesionalSISA(profesional: any) {
         }
         return (error || body);
     } catch (error) {
-        log.error('profesional_sisa:postProfesionalSISA', { error, options }, error.message, userScheduler);
+        log.error('profesional_sisa:postProfesionalSISA', { error, data }, error.message, userScheduler);
     }
     
 }
@@ -48,7 +48,7 @@ export async function getProfesional(idProfesional) {
             return null;
         }
     } catch (error) {
-        log.error('profesional_sisa:getProfesional', { error, url, options }, error.message, userScheduler);
+        log.error('profesional_sisa:getProfesional', { error, url }, error.message, userScheduler);
     }
 }
 
@@ -69,7 +69,7 @@ export async function getProfesion(codigo) {
             return null;
         }
     } catch (error) {
-        log.error('profesional_sisa:getProfesion', { error, url, options }, error.message, userScheduler);
+        log.error('profesional_sisa:getProfesion', { error, url }, error.message, userScheduler);
     }
 }
 
@@ -100,7 +100,7 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
 
     // Datos de la matrícula
     if (formacionGrado?.profesion?.codigo){
-        profesionalSisa['ID_PROFESION'] = parseInt(formacionGrado.profesion);
+        profesionalSisa['ID_PROFESION'] = parseInt(formacionGrado.profesion.codigo);
     }
     profesionalSisa['ID_PROVINCIA_MATRICULA'] = 15;
     if (formacionGrado?.matriculacion?.length && formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1]?.matriculaNumero) {
