@@ -79,62 +79,56 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['APELLIDO'] = profesional.apellido;
     profesionalSisa['NOMBRE'] = profesional.nombre;
     profesionalSisa['ID_TIPODOC'] = 1;
-    profesionalSisa['NRODOC'] = profesional.documento;
+    profesionalSisa['NRODOC'] = parseInt(profesional.documento);
     profesionalSisa['SEXO'] = (profesional.sexo === 'femenino' || profesional.sexo === 'Femenino') ? 'F' : 'M';
     profesionalSisa['FECHA_NACIMIENTO'] = moment(profesional.fechaNacimiento).format('DD-MM-YYYY');
-    profesionalSisa['ID_PAIS_NACIMIENTO'] = '0';
-    profesionalSisa['ID_LOC_NACIMIENTO'] = '0';
-    profesionalSisa['ID_PAIS'] = '0';
     const email = profesional.contactos.find(x => x.tipo === 'email' && x.valor);
     profesionalSisa['EMAIL'] = email ? email.valor : '';
-    profesionalSisa['EMAIL2'] = '';
     profesionalSisa['HABILITADO'] = profesional.habilitado ? 'SI' : 'NO';
 
     // Datos de la profesión
     profesionalSisa['TITULO'] = formacionGrado ? formacionGrado.titulo : '';
-    let codigoInstitucion = formacionGrado ? formacionGrado.entidadFormadora.codigo : '0';
-    profesionalSisa['ID_INSTITUCION_FORMADORA'] = codigoInstitucion;
+    
+    if (formacionGrado.entidadFormadora.codigo) {
+        profesionalSisa['ID_INSTITUCION_FORMADORA'] = parseInt(formacionGrado.entidadFormadora.codigo);
+    }
     profesionalSisa['FECHA_TITULO'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
     let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
-    profesionalSisa['ID_PROFESION_REFERENCIA'] = (profesionDeReferencia && profesionDeReferencia.profesionCodigoRef) ? profesionDeReferencia.profesionCodigoRef : '';
-    profesionalSisa['ID_INSTITUCION_SEDE'] = '';
-    profesionalSisa['REVALIDA'] = 'NO';
-    profesionalSisa['ID_INSTITUCION_REVALIDA'] = '';
-    profesionalSisa['FECHA_REVALIDA'] = '';
+    if (profesionDeReferencia?.profesionCodigoRef) {
+        profesionalSisa['ID_PROFESION_REFERENCIA'] = parseInt(profesionDeReferencia.profesionCodigoRef);
+    }
 
     // Datos de la matrícula
-    profesionalSisa['ID_PROFESION'] = (formacionGrado && formacionGrado.profesion) ? formacionGrado.profesion.codigo : '';
-    profesionalSisa['ID_PROVINCIA_MATRICULA'] = '15';
-    profesionalSisa['MATRICULA'] = (formacionGrado && formacionGrado.matriculacion) ? formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].matriculaNumero : '';
+    if (formacionGrado?.profesion?.codigo){
+        profesionalSisa['ID_PROFESION'] = parseInt(formacionGrado.profesion);
+    }
+    profesionalSisa['ID_PROVINCIA_MATRICULA'] = 15;
+    if (formacionGrado?.matriculacion?.length && formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1]?.matriculaNumero) {
+        let matricula = formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].matriculaNumero;
+        profesionalSisa['MATRICULA'] = parseInt(matricula);
+    }
     profesionalSisa['FECHA_MATRICULA'] = moment(formacionGrado.fechaDeInscripcion).format('DD-MM-YYYY');
-    profesionalSisa['ID_SITUACION_MATRICULA'] = '1';
-    profesionalSisa['LIBRO'] = '';
-    profesionalSisa['FOLIO'] = '';
-    profesionalSisa['ACTA'] = '';
-    profesionalSisa['EXPEDIENTE'] = '';
-    profesionalSisa['COMENTARIO'] = '';
+    profesionalSisa['ID_SITUACION_MATRICULA'] = 1;
     profesionalSisa['REMATRICULACION'] = 'NO';
-    profesionalSisa['ID_ORIGEN_EMITE'] = '';
     const domicilio = profesional.domicilios.find(x => x.tipo === 'real');
     profesionalSisa['CALLE'] = domicilio ? domicilio.valor : '';
     profesionalSisa['CALLE_NRO'] = '-';
     profesionalSisa['CALLE_PISO'] = '-';
     profesionalSisa['CALLE_DPTO'] = '-';
-    profesionalSisa['ID_LOCALIDAD_DOMICILIO'] = '0';
-    profesionalSisa['ID_PROVINCIA_DOMICILIO'] = '15';
-    profesionalSisa['ID_PAIS_DOMICILIO'] = '200';
-    profesionalSisa['CP'] = '';
+    profesionalSisa['ID_PROVINCIA_DOMICILIO'] = 15;
+    profesionalSisa['ID_PAIS_DOMICILIO'] = 200;
     const tel_celular = profesional.contactos.find(x => x.tipo === 'celular' && x.valor);
     const tel_fijo = profesional.contactos.find(x => x.tipo === 'fijo' && x.valor);
     profesionalSisa['TIENE_TELEFONO'] = (tel_celular || tel_fijo || email) ? 'SI' : 'NO';
-    profesionalSisa['ID_TIPO_TE1'] = tel_fijo ? '1' : '';
-    profesionalSisa['ID_TIPO_TE2'] = tel_celular ? '2' : '';
-    profesionalSisa['ID_TIPO_TE3'] = '';
-    profesionalSisa['ID_TIPO_TE4'] = '';
-    profesionalSisa['TE1'] = tel_fijo ? tel_fijo.valor : '';
-    profesionalSisa['TE2'] = tel_celular ? tel_celular.valor : '';
-    profesionalSisa['TE3'] = '';
-    profesionalSisa['TE4'] = '';
+    if (tel_fijo) {
+        profesionalSisa['ID_TIPO_TE1'] =  1;
+        profesionalSisa['TE1'] = tel_fijo.valor;
+    }
+
+    if (tel_celular) {
+        profesionalSisa['ID_TIPO_TE2'] =  2;
+        profesionalSisa['TE2'] = tel_celular.valor;
+    }
 
     return profesionalSisa;
 }
