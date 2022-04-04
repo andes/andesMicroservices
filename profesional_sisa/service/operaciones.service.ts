@@ -2,8 +2,7 @@ import { ANDES_HOST, ANDES_KEY, SISA, userScheduler } from '../config.private';
 import moment = require('moment');
 import { msProfesionalSISA } from '../logger/msProfesionalSISA';
 const log = msProfesionalSISA.startTrace();
-
-const fetch = require('node-fetch');
+const got = require('got');
 
 export async function postProfesionalSISA(profesional: any) {
     const url = SISA.host;
@@ -11,65 +10,66 @@ export async function postProfesionalSISA(profesional: any) {
         usuario: SISA.username,
         clave: SISA.password,
         profesional
-    };
-    const options = {
-        method: 'POST',
-        json: true,
-        body: data
-    };
-        
-    try {
-        const { error, status, body } = await fetch(url, options);
-        if (status >= 200 && status < 300) {
-            return body;
-        }
-        return (error || body);
-    } catch (error) {
-        log.error('profesional_sisa:postProfesionalSISA', { error, options }, error.message, userScheduler);
     }
-    
+
+    const options = {
+        json: data,
+        responseType: 'json'
+    }
+
+    try {
+        const { statusCode, body } = await got.post(url, options);
+        if (statusCode >= 200 && statusCode < 300 && body?.resultado != 'ERROR_DATOS') {
+            return body;
+        } else {
+            return log.error('profesional_sisa:postProfesionalSISA', { options: data, statusCode: statusCode }, 'unkown error', userScheduler);
+        } 
+    } catch (error) {
+        log.error('profesional_sisa:postProfesionalSISA', { error, options: data }, error.message, userScheduler);
+    }
 }
 
 export async function getProfesional(idProfesional) {
     const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
     const options = {
-        method: 'GET',
         headers: {
             Authorization: `JWT ${ANDES_KEY}`
-        }
+        },
+        responseType: 'json'
     };
         
     try {
-        let response = await fetch(url, options);
-        const responseJson = await response.json();
-        if (responseJson._id) {
-            return responseJson;
+        const { statusCode, body } = await got(url, options);
+        if (statusCode >= 200 && statusCode < 300 && body._id) {
+            return body;
         } else {
+            log.error('profesional_sisa:getProfesional', { url, statusCode }, 'unkown error', userScheduler);
             return null;
         }
     } catch (error) {
-        log.error('profesional_sisa:getProfesional', { error, url, options }, error.message, userScheduler);
+        log.error('profesional_sisa:getProfesional', { error, url }, error.message, userScheduler);
     }
 }
 
 export async function getProfesion(codigo) {
     const url = `${ANDES_HOST}/core/tm/profesiones?codigo=${codigo}`;
     const options = {
-        method: 'GET',
         headers: {
             Authorization: `JWT ${ANDES_KEY}`
-        }
+        },
+        responseType: 'json'
     };
+
     try {
-        let response = await fetch(url, options);
-        const responseJson = await response.json();
-        if (responseJson.length) {
-            return responseJson[0];
+        let { statusCode, body } = await got(url, options);
+        if (statusCode >= 200 && statusCode < 300 && body.length) {
+            return body[0];
         } else {
+            log.error('profesional_sisa:getProfesional', { url, statusCode }, 'unkown error', userScheduler);
             return null;
         }
     } catch (error) {
-        log.error('profesional_sisa:getProfesion', { error, url, options }, error.message, userScheduler);
+        log.error('profesional_sisa:getProfesion', { error, url }, error.message, userScheduler);
     }
 }
 

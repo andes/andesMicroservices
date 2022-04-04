@@ -85,7 +85,7 @@ export function postCDA(data: any) {
 
         request(options, async (error, response, body) => {
             if (error) {
-                await log.error('cda-laboratorios:import:postCDA', { error, options }, error.message, userScheduler);
+                await log.error('cda-laboratorios:import:postCDA', { error, data }, error.message, userScheduler);
             }
             if (response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
