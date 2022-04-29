@@ -1,8 +1,5 @@
 import { Microservice } from '@andes/bootstrap';
 import { process } from './controller/sisa.controller';
-import { organizacionBySisaCode } from './controller/sisa.controller';
-import { InformeLAB } from './utils/informes/informe-lab';
-
 
 const PQueue = require('p-queue');
 let pkg = require('./package.json');

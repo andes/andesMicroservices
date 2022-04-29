@@ -12,7 +12,6 @@ const got = require('got');
 export async function process(caso) {
     try {
         const fechaDiagnostico = moment(caso.fecha_DIAGNOSTICO).format('DD/MM/YYYY');
-        const fechaCarga = moment(caso.fecha_APERTURA).format('DD/MM/YYYY');
         const sisaCodeSSS = '10058035765691';
         const tipoPrestacion = '3031000246109'; //reporte de resultado de test de covid-19 proveniente de sistema de registro informático nacional
         const organizacion: any = await organizacionBySisaCode(sisaCodeSSS);
@@ -46,13 +45,17 @@ export async function process(caso) {
                 sexo: caso.sexo == 'M' ? 'masculino' : caso.sexo = 'F' ? 'femenino' : 'otro',
                 fechaNacimiento: moment(caso.fecha_NACIMIENTO).format('DD/MM/YYYY')
             };
-            
+            const profesional = {
+                nombre: 'NO INFORMADO',
+                apellido: '-'
+            };
             const dto = {
-                id: caso.idEvento,
+                id: caso.ideventocaso,
                 organizacion: organizacion._id,
-                fecha: fechaCarga,
+                fecha: caso.fecha_APERTURA,
                 tipoPrestacion,
                 paciente,
+                profesional,
                 confidencialidad: 'N',
                 cie10: 'Z01.7',
                 file: adjunto64,
@@ -66,7 +69,7 @@ export async function process(caso) {
 }
 
 export async function postCDA(data: any) {
-    const url = `${ANDES_HOST}/modules/cda/create/sisa`;
+    const url = `${ANDES_HOST}/modules/cda/create/sisa-covid`;
     const options = {
         json: data,
         headers: {
@@ -76,8 +79,8 @@ export async function postCDA(data: any) {
     };
 
     try {
-        const { error, statusCode, body } = await got.post(url, options);
 
+        const { error, statusCode, body } = await got.post(url, options);
         if (statusCode >= 200 && statusCode < 300) {
             return body;
         }
@@ -85,7 +88,7 @@ export async function postCDA(data: any) {
     } catch (error) {
         return error;
     }
-    
+
 }
 
 export async function organizacionBySisaCode(sisa) {
@@ -94,7 +97,7 @@ export async function organizacionBySisaCode(sisa) {
         org = cache[sisa];
     } else {
         const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
-        const {error, statusCode, body} = await got(url, { responseType: 'json' });
+        const { error, statusCode, body } = await got(url, { responseType: 'json' });
         if (error) {
             return await log.error('cda-sisa:organizacionBySisaCode', { error, url }, error.message, userScheduler);
         } else if (statusCode >= 200 && statusCode < 300) {
