@@ -1,0 +1,31 @@
+{
+  "name": "cda-laboratorio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
+    "lint": "tslint --project .",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w",
+    "node": "nodemon -q ./index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "@andes/log": "^2.2.2",
+    "@andes/match": "^1.1.12",
+    "aws-sdk": "^2.1096.0",
+    "filereader": "^0.10.3",
+    "fs": "0.0.1-security",
+    "got": "^11.8.0",
+    "handlebars": "^4.7.6",
+    "html-pdf": "^2.2.0",
+    "moment": "^2.22.2",
+    "mssql": "^4.2.1",
+    "node-sass": "^7.0.1",
+    "p-queue": "^3.0.0",
+    "request": "^2.88.0"
+  }
+}
