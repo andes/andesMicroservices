@@ -1,9 +1,9 @@
 import { validaDatosReportables } from '../facturar/sumar/factura-sumar';
 import async = require('async');
 
-let datoReportable = [];
 
 export async function drOtoemisiones(dto) {
+    let datoReportable = [];
     if ((dto.arrayPrestacion) && (dto.arrayPrestacion.length > 0) && (preCondicionSumar(dto))) {
         let dr = {
             idDatoReportable: '',
@@ -42,6 +42,7 @@ export async function drOtoemisiones(dto) {
 }
 
 export async function drNiñoSano(dto) {
+    let datoReportable = [];
     if ((dto.arrayPrestacion) && (dto.arrayPrestacion.length > 0) && (preCondicionSumar(dto))) {
         dto.arrayPrestacion = dto.arrayPrestacion.filter((obj: any) => obj !== null).map((obj: any) => obj);
 
