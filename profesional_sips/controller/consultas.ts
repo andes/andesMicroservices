@@ -7,8 +7,7 @@ import { fakeRequest } from './../config.private';
 export async function existeProfesionalSIPS(profesional: any, conexion) {
     const dni = parseInt(profesional.documento, 10);
     if (dni) {
-        const query = `SELECT TOP 1 *
-            FROM [dbo].[Sys_Profesional] where [activo]=1 and [numeroDocumento] = '${dni}'`;
+        const query = `SELECT TOP 1 * FROM [dbo].[Sys_Profesional] where [numeroDocumento] = '${dni}'`;
         try {
             const result = await conexion.request().query(query);
             if (result && result.recordset) {
@@ -17,7 +16,7 @@ export async function existeProfesionalSIPS(profesional: any, conexion) {
                 return null;
             }
         } catch (err) {
-            log(fakeRequest, 'microservices:integration:sipsYsumar', profesional.id, 'existeProfesionalSIPS-buscar por documento: error', { error: err, query, profesional: dni });
+            log(fakeRequest, 'microservices:integration:profesional_sips', profesional.id, 'existeProfesionalSIPS-buscar por documento: error', { error: err, query, profesional: dni });
             return err;
         }
     } else {
@@ -26,37 +25,48 @@ export async function existeProfesionalSIPS(profesional: any, conexion) {
 }
 
 export async function insertarProfesionalSIPS(profesional: any, conexion) {
-    let organizacion, idTipoProfesional = 1;
-    if (profesional.createdBy.organizacion) {
-        organizacion = await operaciones.getOrganizacion(profesional.createdBy.organizacion.id);
-    }
-    if (profesional.formacionGrado && profesional.formacionGrado.length > 0) {
-        const formacionGrado = profesional.formacionGrado[0];
-        if (formacionGrado.profesion._id) {
-            idTipoProfesional = await operaciones.getTipoProfesional(formacionGrado.profesion._id);
-        }
-    }
-    let idEfector: any = organizacion;
-    let apellido = profesional.apellido.toUpperCase();
-    let nombre = profesional.nombre.toUpperCase();
-    let idTipoDocumento = 1;
-    let numeroDocumento = profesional.documento ? profesional.documento : 0;
     let matricula = '';
-    if (profesional.profesionalMatriculado && profesional.formacionGrado.length > 0) {
-        matricula = profesional.formacionGrado?.matriculacion[0]?.matriculaNumero;
+    const formacionGrado = profesional.formacionGrado;
+    const tieneGrado = formacionGrado && formacionGrado.length;
+    const esMatriculado = profesional.profesionalMatriculado;
+    if (esMatriculado && tieneGrado && formacionGrado[0].matriculacion && formacionGrado[0].matriculacion.length) {
+        matricula = formacionGrado[0].matriculacion[0] ? formacionGrado[0].matriculacion[0].matriculaNumero : '';
     } else {
         if (profesional.matriculaExterna) {
             matricula = profesional.matriculaExterna;
         }
     }
-    let legajo = profesional.legajo ? profesional.legajo : '0';
-    let codigoSISA = profesional.codigoSISA ? profesional.sisa : '0';
-    let activo = 1;
-    let idUsuario = 1486739;
-    let contactos = profesional.contactos;
+    if (esMatriculado && !matricula) {
+        //profesional de matriculaciones sin matricula, no se guarda en sips
+        return;
+    }
+
+    let organizacion, idTipoProfesional = 1;
+    const organizacionUser = profesional.createdBy || profesional.updatedBy;
+    if (organizacionUser && organizacionUser.organizacion) {
+        organizacion = await operaciones.getOrganizacion(organizacionUser.organizacion.id);
+        if (!organizacion.idSips) {
+            const efectorSips = await getOrganizacionSIPS(organizacion.sisa, conexion);
+            organizacion.idSips = efectorSips.idEfector;
+        }
+    }
+    if (tieneGrado) {
+        if (formacionGrado[0].profesion._id) {
+            idTipoProfesional = await operaciones.getTipoProfesional(formacionGrado[0].profesion._id);
+        }
+    }
+    const idEfector: any = organizacion.idSips;
+    const apellido = profesional.apellido.toUpperCase();
+    const nombre = profesional.nombre.toUpperCase();
+    const idTipoDocumento = 1;
+    const numeroDocumento = profesional.documento ? profesional.documento : 0;
+    const legajo = profesional.legajo ? profesional.legajo : '0';
+    const codigoSISA = profesional.codigoSISA ? profesional.sisa : '0';
+    const activo = 1;
+    const idUsuario = 1486739;
     let mail;
     let telefono;
-    contactos.forEach((element) => {
+    profesional.contactos.forEach((element) => {
         if (element.tipo == 'email') {
             mail = element.valor;
         }
@@ -72,7 +82,7 @@ export async function insertarProfesionalSIPS(profesional: any, conexion) {
         ' SELECT SCOPE_IDENTITY() AS id';
     try {
         let result = await new sql.Request(conexion)
-            .input('idEfector', sql.Int, idEfector.organizacion.idSips)
+            .input('idEfector', sql.Int, idEfector)
             .input('apellido', sql.VarChar(50), apellido)
             .input('nombre', sql.VarChar(50), nombre)
             .input('idTipoDocumento', sql.Int, idTipoDocumento)
@@ -102,5 +112,21 @@ export async function insertarProfesionalSIPS(profesional: any, conexion) {
     } catch (err) {
         log(fakeRequest, 'microservices:integration:profesional_sips', profesional.id, 'insertarProfesionalSIPS:error', { error: err, queryInsert, profesional: profesional.documento });
         return err;
+    }
+}
+
+export async function getOrganizacionSIPS(codSisa: any, conexion) {
+    if (codSisa) {
+        const codigoSisa = parseInt(codSisa, 10);
+        const query = `SELECT TOP 1 * FROM [SIPS].[dbo].[Sys_Efector] where codigoSisa = '${codigoSisa}' and activo=1`;
+        try {
+            const result = await conexion.request().query(query);
+            return (result && result.recordset) ? result.recordset[0] : null;
+        } catch (err) {
+            log(fakeRequest, 'microservices:integration:profesional_sips', codSisa, 'getOrganizacionSIPS:error', { error: err, query, codigoSisa });
+            return err;
+        }
+    } else {
+        return null;
     }
 }

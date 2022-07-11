@@ -11,7 +11,7 @@ export async function conexionProfesional(profesional) {
         let _profesionalExistenteSIPS = consulta.existeProfesionalSIPS(profesional, conexion);
         let [profesionalExistenteSIPS] = await Promise.all([_profesionalExistenteSIPS]);
         await transaction.begin();
-        let _pacienteSIPS: any = setProfesionalSIPS(profesional, profesionalExistenteSIPS, conexion);
+        let _pacienteSIPS: any = addProfesionalSIPS(profesional, profesionalExistenteSIPS, conexion);
         await Promise.all([_pacienteSIPS]);
         await transaction.commit();
     } catch (ex) {
@@ -21,7 +21,7 @@ export async function conexionProfesional(profesional) {
 }
 
 /* Valida si el profesional ya fue creado en la BD de SIPS */
-async function setProfesionalSIPS(profesional, profesionalExistenteSIPS, conexion) {
+async function addProfesionalSIPS(profesional, profesionalExistenteSIPS, conexion) {
     const transaction = await new sql.Transaction(conexion);
     try {
         await transaction.begin();
@@ -30,7 +30,7 @@ async function setProfesionalSIPS(profesional, profesionalExistenteSIPS, conexio
         }
         await transaction.commit();
     } catch (error) {
-        log(fakeRequest, 'microservices:integration:profesional_sips', profesional._id, 'setProfesionalSIPS:error', { error, profesional: profesional.documento });
+        log(fakeRequest, 'microservices:integration:profesional_sips', profesional._id, 'addProfesionalSIPS:error', { error, profesional: profesional });
         transaction.rollback();
     }
 }

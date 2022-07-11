@@ -37,19 +37,16 @@ export async function getOrganizacion(idOrganizacion): Promise<any> {
         };
         let response = await fetch(url, options);
         const responseJson = await response.json();
+        let organizacion;
         if (responseJson._id) {
-            if (responseJson) {
-                return {
-                    organizacion: {
-                        nombre: responseJson.nombre,
-                        cuie: responseJson.codigo.cuie,
-                        idSips: responseJson.codigo.sips
-                    }
-                }
-            }
-        } else {
-            return null;
+            organizacion = {
+                nombre: responseJson.nombre,
+                cuie: responseJson.codigo.cuie,
+                idSips: responseJson.codigo.sips,
+                sisa: responseJson.codigo.sisa || '0'
+            };
         }
+        return organizacion || null;
     } catch (error) {
         log(fakeRequest, 'microservices:integration:profesional_sips', idOrganizacion, 'getOrganizacion:error', {});
     }
