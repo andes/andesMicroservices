@@ -110,10 +110,11 @@ export class QuerySumar {
 
     /* Valida si existe el beneficiario en Pn_Beneficiario */
     async validaBeneficiarioSumar(pool: any, paciente: any) {
+        let query;
         return new Promise((resolve: any, reject: any) => {
             (async () => {
                 try {
-                    let query = 'SELECT * FROM dbo.PN_beneficiarios WHERE numero_doc = @numero_doc AND activo = @activo';
+                    query = 'SELECT * FROM dbo.PN_beneficiarios WHERE numero_doc = @numero_doc AND activo = @activo';
                     let resultado = await new sql.Request(pool)
                         .input('numero_doc', sql.VarChar(50), paciente.dni)
                         .input('activo', sql.VarChar(1), '1')
@@ -125,6 +126,7 @@ export class QuerySumar {
                     }
 
                 } catch (err) {
+                    log.error('query-sumar:validaBeneficiarioSumar', { paciente, query }, err, userScheduler);
                     reject(err);
                 }
             })();
@@ -157,26 +159,17 @@ export class QuerySumar {
     }
 
     async getAfiliadoSumar(pool: any, documento: any) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let query = 'SELECT * FROM dbo.PN_smiafiliados WHERE afidni = @documento AND activo = @activo';
-                    let resultado = await new sql.Request(pool)
-                        .input('documento', sql.VarChar(50), documento)
-                        .input('activo', sql.VarChar(1), 'S')
-                        .query(query);
+        let query = 'SELECT * FROM dbo.PN_smiafiliados WHERE afidni = @documento AND activo = @activo';
+        try {
+            let resultado = await new sql.Request(pool)
+                .input('documento', sql.VarChar(50), documento)
+                .input('activo', sql.VarChar(1), 'S')
+                .query(query);
+            return (resultado && resultado.recordset[0]) ? resultado.recordset[0] : null;
 
-                    if (resultado && resultado.recordset[0]) {
-                        resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
-                    } else {
-                        resolve(null);
-                    }
-
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+        } catch (err) {
+            log.error('query-sumar:getAfiliadoSumar', { documento, query }, err, userScheduler);
+        }
     }
 
     /**
@@ -197,47 +190,32 @@ export class QuerySumar {
     }
 
     async getComprobante(pool: any, dtoSumar: IDtoSumar) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let query = 'SELECT id_comprobante FROM dbo.PN_comprobante WHERE objectId = @objectId';
-                    let result = await new sql.Request(pool)
-                        .input('objectId', sql.VarChar(100), dtoSumar.objectId)
-                        .query(query);
-                    if (result && result.recordset[0]) {
-                        resolve(result.recordset[0].id_comprobante);
-                    } else {
-                        resolve(null);
-                    }
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+        let query = 'SELECT id_comprobante FROM dbo.PN_comprobante WHERE objectId = @objectId';
+        try {
+            let result = await new sql.Request(pool)
+                .input('objectId', sql.VarChar(100), dtoSumar.objectId)
+                .query(query);
+
+            return (result && result.recordset[0]) ? result.recordset[0].id_comprobante : null;
+        }
+        catch (err) {
+            log.error('query-sumar:getComprobante', { dtoSumar, query }, err, userScheduler);
+        }
     }
 
     async getPrestacionSips(pool: any, dtoSumar: IDtoSumar) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let fechaPrestacion = moment(dtoSumar.fechaTurno).format('YYYY-MM-DD');
-
-                    let result = await pool.request()
-                        .input('idAfiliado', sql.Int, dtoSumar.idAfiliado)
-                        .input('idNomenclador', sql.Int, dtoSumar.idNomenclador)
-                        .input('fechaPrestacion', sql.Date, fechaPrestacion)
-                        .output('idPrestacion', sql.Int)
-                        .execute('PN_ValidaPrestacionPaciente');
-
-                    if (result && result.recordset[0]) {
-                        resolve(result.recordset[0].id_prestacion);
-                    } else {
-                        resolve(null);
-                    }
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+        try {
+            let fechaPrestacion = moment(dtoSumar.fechaTurno).format('YYYY-MM-DD');
+            let result = await pool.request()
+                .input('idAfiliado', sql.Int, dtoSumar.idAfiliado)
+                .input('idNomenclador', sql.Int, dtoSumar.idNomenclador)
+                .input('fechaPrestacion', sql.Date, fechaPrestacion)
+                .output('idPrestacion', sql.Int)
+                .execute('PN_ValidaPrestacionPaciente');
+            return (result && result.recordset[0]) ? result.recordset[0].id_prestacion : null;
+        }
+        catch (err) {
+            log.error('query-sumar:getPrestacionSips', dtoSumar, err, userScheduler);
+        }
     }
 }

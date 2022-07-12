@@ -28,10 +28,8 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         await transaction.begin();
         const request = await new sql.Request(transaction);
 
-        let newIdComprobante: any;
-        let existeComprobante = await validaComprobante(pool, dtoSumar);
-
-        if (!existeComprobante) {
+        let idComprobante = await validaComprobante(pool, dtoSumar);
+        if (!idComprobante) {
             _estado = 'Comprobante sin prestacion';
 
             dtoComprobante = {
@@ -47,7 +45,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
                 objectId: dtoSumar.objectId
             };
 
-            newIdComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
+            idComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
         }
 
         if (dtoSumar.datosReportables) {
@@ -58,7 +56,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
 
                 moment.locale('es');
                 prestacion = {
-                    idComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
+                    idComprobante,
                     idNomenclador: dtoSumar.idNomenclador,
                     cantidad: 1,
                     precioPrestacion: precioPrestacion.precio,
@@ -100,7 +98,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
 
         estadoFacturacion = {
             tipo: 'sumar',
-            numeroComprobante: (newIdComprobante) ? newIdComprobante : existeComprobante,
+            numeroComprobante: idComprobante,
             estado: _estado
         };
 
