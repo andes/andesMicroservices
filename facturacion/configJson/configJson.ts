@@ -22,33 +22,11 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
  * @param {IDtoFacturacion} dtoFacturacion
  * @param {*} datosConfiguracionAutomatica
  */
-export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
+export async function exportarFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
     let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
 
     let facturacion = {
-        /* Prestación Odontología */
-        /* TODO: poner la expresión que corresponda */
-        /* %%%%%%%%% Está en desarrollo todavía  %%%%%%%%%%%%%%%%%%%%% */
-        34043003: {
-            term: 'consulta de odontologia',
-            sumar: (arrayPrestacion, arrayConfiguracion) => {
-
-                let dr = {
-                    idDatoReportable: '',
-                    datoReportable: ''
-                };
-
-                arrayPrestacion = arrayPrestacion.filter(obj => obj !== null);
-                arrayConfiguracion = arrayConfiguracion.map((dr: any) => dr[0]);
-
-                // let caries = arrayPrestacion.find(obj => console.log("Primero: ", obj.conceptId) === console.log("Segundo: ", arrayConfiguracion[0].conceptId));
-
-                let caries2 = arrayConfiguracion.find(obj => obj.conceptId === arrayPrestacion.conceptId);
-
-            }
-        },
-
         /* Prestación Otoemisiones */
         /* TODO: poner la expresión que corresponda */
         otoemisiones: {

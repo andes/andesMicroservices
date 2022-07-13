@@ -1,15 +1,13 @@
 import { logDatabase, SipsDBConfiguration } from './config.private';
-import { Factura } from './factura';
 import { facturaBuscador, facturaTurno } from './facturar/dto-facturacion';
-
 import { Microservice } from '@andes/bootstrap';
-let pkg = require('./package.json');
-let ms = new Microservice(pkg);
-import * as sql from 'mssql';
-
 import { Connections } from '@andes/log';
 import { userScheduler } from './config.private';
 import { msFacturacionLog } from './logger/msFacturacion';
+import { exportarFacturacion } from './configJson/configJson';
+const sql = require('mssql')
+const pkg = require('./package.json');
+const ms = new Microservice(pkg);
 const log = msFacturacionLog.startTrace();
 
 const router = ms.router();
@@ -19,6 +17,7 @@ router.group('/facturacion', (group) => {
 
     group.post('/facturar', async (req, res) => {
         res.json('OK');
+
         let _pool;
         new sql.ConnectionPool(SipsDBConfiguration)
             .connect()
@@ -45,9 +44,8 @@ router.group('/facturacion', (group) => {
                         break;
                 }
     
-                let factura = new Factura();
                 for (let x = 0; x < dtoFacturacion.length; x++) {
-                    await factura.facturar(pool, dtoFacturacion[x]);
+                    await exportarFacturacion(pool, dtoFacturacion[x]);
                 }
                 pool.close();
     

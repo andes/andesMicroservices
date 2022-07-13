@@ -11,105 +11,76 @@ export class QueryRecupero {
     async getIdPacienteSips(pool: any, dni: any) {
         const query = 'SELECT TOP 1 idPaciente FROM dbo.Sys_Paciente where activo = 1 and numeroDocumento = @dni order by objectId DESC;';
         try {
-            let resultado = await new sql.Request(pool)
+            const resultado = await new sql.Request(pool)
                 .input('dni', sql.VarChar(50), dni)
                 .query(query);
-            if (resultado?.recordset[0]) {
-                return resultado.recordset[0].idPaciente;
-            }
-            return null;
-        } catch (err) {
-            log.error('query-recupero:getIdPacienteSips:error', { dni, query }, err, userScheduler);
 
+            return resultado.recordset.length ? resultado.recordset[0].idPaciente : null;
+        } catch (error) {
+            log.error('query-recupero:getIdPacienteSips', { query, dni }, error, userScheduler);
             return null;
         }
     }
 
     async getIdProfesionalSips(pool: any, dni: any) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE activo = 1 and numeroDocumento = @dni';
-                    let resultado = await new sql.Request(pool)
-                        .input('dni', sql.VarChar(50), dni)
-                        .query(query);
-                    if (resultado && resultado.recordset[0]) {
-                        resolve(resultado.recordset[0] ? resultado.recordset[0].idProfesional : null);
-                    } else {
-                        resolve('No se encuentra Profesional en SIPS: ');
-                    }
+        const query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE activo = 1 and numeroDocumento = @dni';
+        try {
+            const resultado = await new sql.Request(pool)
+                .input('dni', sql.VarChar(50), dni)
+                .query(query);
 
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+            return resultado.recordset.length ? resultado.recordset[0].idProfesional : null;
+        } catch (error) {
+            log.error('query-recupero:getIdProfesionalSips', { query, dni }, error, userScheduler);
+            return null;
+        }
     }
 
 
     async getNomencladorRecupero(pool: any, nomencladorRF: any) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let query = 'SELECT idNomenclador, idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador';
-                    let resultado = await new sql.Request(pool)
-                        .input('codigo', sql.VarChar(50), nomencladorRF.codigo)
-                        .input('idTipoNomenclador', sql.Int, nomencladorRF.idTipoNomenclador)
-                        .query(query);
+        const query = 'SELECT idNomenclador, idTipoPractica, valorUnidad, descripcion FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador';
+        try {
+            const resultado = await new sql.Request(pool)
+                .input('codigo', sql.VarChar(50), nomencladorRF.codigo)
+                .input('idTipoNomenclador', sql.Int, nomencladorRF.idTipoNomenclador)
+                .query(query);
 
-                    if (resultado && resultado.recordset[0]) {
-                        resolve(resultado.recordset[0] ? resultado.recordset[0] : null);
-                    } else {
-                        resolve('No se encuentra Nomenclador en Recupero: ');
-                    }
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+            return resultado.recordset[0];
+        } catch (error) {
+            log.error('query-recupero:getNomencladorRecupero', { query, nomencladorRF }, error, userScheduler);
+            return null;
+        }
     }
 
     async getIdObraSocialSips(pool: any, dtoRecupero: any) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let prepaga = dtoRecupero.prepaga;
-                    let codFinanciador = dtoRecupero.codigoFinanciador;
-                    let query = (!prepaga) ? 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;' : 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE idObraSocial = @codigo;';
-                    let result = await new sql.Request(pool)
-                        .input('codigo', sql.Int, codFinanciador)
-                        .query(query);
-                    if (result && result.recordset[0]) {
-                        resolve(result.recordset[0] ? result.recordset[0].idObraSocial : 0);
-                    } else {
-                        resolve('No se encuentra Obra Social en SIPS:');
-                    }
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+        let query;
+        try {
+            const prepaga = dtoRecupero.prepaga;
+            const codFinanciador = dtoRecupero.codigoFinanciador;
+            query = (!prepaga) ? 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;' : 'SELECT idObraSocial FROM dbo.Sys_ObraSocial WHERE idObraSocial = @codigo;';
+            const resultado = await new sql.Request(pool)
+                .input('codigo', sql.Int, codFinanciador)
+                .query(query);
+
+            return resultado.recordset.length ? resultado.recordset[0].idObraSocial : 0;
+        } catch (error) {
+            log.error('query-recupero:getIdObraSocialSips', { query }, error, userScheduler);
+            return null;
+        }
     }
 
     async getOrdenDePrestacion(pool: any, dtoRecupero: IDtoRecupero) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let query = 'SELECT TOP 1 * FROM dbo.FAC_Orden WHERE objectId = @objectId';
-                    let result = await new sql.Request(pool)
-                        .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
-                        .query(query);
-                    if (result && result.recordset[0]) {
-                        resolve(1);
-                    } else {
-                        resolve(0);
-                    }
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+        const query = 'SELECT TOP 1 * FROM dbo.FAC_Orden WHERE objectId = @objectId';
+        try {
+            const resultado = await new sql.Request(pool)
+                .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
+                .query(query);
 
+            return resultado.recordset.length;
+        } catch (error) {
+            log.error('query-recupero:getOrdenDePrestacion', { query }, error, userScheduler);
+            return null;
+        }
     }
 
     /**
@@ -121,53 +92,53 @@ export class QueryRecupero {
      * @memberof QueryRecupero
      */
     async saveOrdenRecupero(request: any, dtoOrden: any) {
-        let query;
-        try {
-            query = 'INSERT INTO [dbo].[FAC_Orden]' +
-                ' ([idEfector]' +
-                ' ,[numero]' +
-                ' ,[periodo]' +
-                ' ,[idServicio]' +
-                ' ,[idPaciente]' +
-                ' ,[idProfesional]' +
-                ' ,[fecha]' +
-                ' ,[fechaPractica]' +
-                ' ,[idTipoPractica]' +
-                ' ,[observaciones]' +
-                ' ,[idObraSocial]' +
-                ' ,[idUsuarioRegistro]' +
-                ' ,[fechaRegistro]' +
-                ' ,[idPrefactura]' +
-                ' ,[idFactura]' +
-                ' ,[baja]' +
-                ' ,[monto]' +
-                ' ,[fechaSiniestro]' +
-                ' ,[objectId] ' +
-                ' ,[factAutomatico])' +
-                ' VALUES' +
-                ' (@idEfector' +
-                ' ,@numero' +
-                ' ,@periodo' +
-                ' ,@idServicio' +
-                ' ,@idPaciente' +
-                ' ,@idProfesional' +
-                ' ,@fecha' +
-                ' ,@fechaPractica' +
-                ' ,@idTipoPractica' +
-                ' ,@observaciones ' +
-                ' ,@idObraSocial' +
-                ' ,@idUsuarioRegistro' +
-                ' ,@fechaRegistro' +
-                ' ,@idPrefactura' +
-                ' ,@idFactura' +
-                ' ,@baja' +
-                ' ,@monto' +
-                ' ,@fechaSiniestro' +
-                ' ,@objectId ' +
-                ' ,@factAutomatico) ' +
-                'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
-                'SELECT @numeroOrden as ID';
+        const query = 'INSERT INTO [dbo].[FAC_Orden]' +
+            ' ([idEfector]' +
+            ' ,[numero]' +
+            ' ,[periodo]' +
+            ' ,[idServicio]' +
+            ' ,[idPaciente]' +
+            ' ,[idProfesional]' +
+            ' ,[fecha]' +
+            ' ,[fechaPractica]' +
+            ' ,[idTipoPractica]' +
+            ' ,[observaciones]' +
+            ' ,[idObraSocial]' +
+            ' ,[idUsuarioRegistro]' +
+            ' ,[fechaRegistro]' +
+            ' ,[idPrefactura]' +
+            ' ,[idFactura]' +
+            ' ,[baja]' +
+            ' ,[monto]' +
+            ' ,[fechaSiniestro]' +
+            ' ,[objectId] ' +
+            ' ,[factAutomatico])' +
+            ' VALUES' +
+            ' (@idEfector' +
+            ' ,@numero' +
+            ' ,@periodo' +
+            ' ,@idServicio' +
+            ' ,@idPaciente' +
+            ' ,@idProfesional' +
+            ' ,@fecha' +
+            ' ,@fechaPractica' +
+            ' ,@idTipoPractica' +
+            ' ,@observaciones ' +
+            ' ,@idObraSocial' +
+            ' ,@idUsuarioRegistro' +
+            ' ,@fechaRegistro' +
+            ' ,@idPrefactura' +
+            ' ,@idFactura' +
+            ' ,@baja' +
+            ' ,@monto' +
+            ' ,@fechaSiniestro' +
+            ' ,@objectId ' +
+            ' ,@factAutomatico) ' +
+            'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
+            'SELECT @numeroOrden as ID';
 
+        try {
+            
             const result = await request
                 .input('idEfector', sql.Int, dtoOrden.idEfector)
                 .input('numero', sql.Int, dtoOrden.numero)
@@ -190,9 +161,10 @@ export class QueryRecupero {
                 .input('objectId', sql.VarChar(50), dtoOrden.objectId)
                 .input('factAutomatico', sql.VarChar(50), dtoOrden.factAutomatica)
                 .query(query);
-            return result.recordset[0] ? result.recordset[0].ID : null;
+            return result.recordset.length ? result.recordset[0].ID : null;
         } catch (error) {
-            log.error('query-recupero:saveOrdenRecupero:error', { dtoOrden, query }, error, userScheduler);
+            log.error('query-recupero:saveOrdenRecupero', { dtoOrden, query }, error, userScheduler);
+            return null;
         }
     }
 
@@ -205,26 +177,24 @@ export class QueryRecupero {
      * @memberof QueryRecupero
      */
     async saveOrdenDetalle(request: any, ordenDetalle: any) {
-        let query;
+        const query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
+            ' ([idOrden]' +
+            ' ,[idEfector]' +
+            ' ,[idNomenclador]' +
+            ' ,[descripcion]' +
+            ' ,[cantidad]' +
+            ' ,[valorUnidad]' +
+            ' ,[ajuste])' +
+            ' VALUES' +
+            ' (@idOrden' +
+            ' ,@idEfector' +
+            ' ,@idNomenclador' +
+            ' ,@descripcion' +
+            ' ,@cantidad' +
+            ' ,@valorUnidad' +
+            ' ,@ajuste) ' +
+            'SELECT SCOPE_IDENTITY() as ID';
         try {
-            query = 'INSERT INTO [dbo].[FAC_OrdenDetalle]' +
-                ' ([idOrden]' +
-                ' ,[idEfector]' +
-                ' ,[idNomenclador]' +
-                ' ,[descripcion]' +
-                ' ,[cantidad]' +
-                ' ,[valorUnidad]' +
-                ' ,[ajuste])' +
-                ' VALUES' +
-                ' (@idOrden' +
-                ' ,@idEfector' +
-                ' ,@idNomenclador' +
-                ' ,@descripcion' +
-                ' ,@cantidad' +
-                ' ,@valorUnidad' +
-                ' ,@ajuste) ' +
-                'SELECT SCOPE_IDENTITY() as ID';
-
             const result = await request
                 .input('idOrden', sql.Int, ordenDetalle.idOrden)
                 .input('idEfector', sql.Int, ordenDetalle.idEfector)
@@ -234,10 +204,9 @@ export class QueryRecupero {
                 .input('valorUnidad', sql.Decimal(18, 2), ordenDetalle.valorUnidad)
                 .input('ajuste', sql.Decimal(18, 2), ordenDetalle.ajuste)
                 .query(query);
-
             return result.recordset[0];
         } catch (error) {
-            log.error('query-recupero:saveOrdenDetalle:error', { ordenDetalle, query }, error, userScheduler);
+            log.error('query-recupero:saveOrdenDetalle', { ordenDetalle, query }, error, userScheduler);
         }
     }
 }
@@ -248,20 +217,18 @@ export class QueryRecupero {
  * por medio del store procedure FAC_GetTipoNomenclador 
  */
 export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Date, pool: any) {
-    let query;
+    const query = 'exec dbo.FAC_GetTipoNomenclador @idObraSocial, @fecha';
     try {
         const fecha = moment(fechaTurno).format('MM-DD-YY');
-        query = 'exec dbo.FAC_GetTipoNomenclador @idObraSocial, @fecha';
-
         const resultado = await new sql.Request(pool)
             .input('fecha', sql.VarChar(8), fecha)
             .input('idObraSocial', sql.Int, idObraSocial)
             .query(query);
+        return resultado.recordset.length ? resultado.recordset[0].idTipoNomenclador : null;
 
-        return resultado.recordset[0].idTipoNomenclador;
-
-    } catch (err) {
-        log.error('query-recupero:getIdTipoNomencladorSIPS:error', { idObraSocial, fechaTurno, query }, err, userScheduler);
+    } catch (error) {
+        log.error('query-recupero:getIdTipoNomencladorSIPS', { idObraSocial, fechaTurno, query }, error, userScheduler);
+        return null;
     }
 }
 
@@ -287,8 +254,8 @@ async function getRelPacienteObraSocial(pool, idPaciente, idObraSocial) {
         }
 
         return null;
-    } catch (err) {
-        log.error('query-recupero:getRelPacienteObraSocial:error', { idObraSocial, idPaciente, query }, err, userScheduler);
+    } catch (error) {
+        log.error('query-recupero:getRelPacienteObraSocial', { idObraSocial, idPaciente, query }, error, userScheduler);
         return null;
     }
 }
@@ -314,8 +281,8 @@ async function insertRelPacienteObraSocial(pool, idPaciente, idObraSocial) {
             .query(query);
 
         return result.recordset[0].id;
-    } catch (err) {
-        log.error('query-recupero:insertRelPacienteObraSocial:error', { idObraSocial, idPaciente, query }, err, userScheduler);
+    } catch (error) {
+        log.error('query-recupero:insertRelPacienteObraSocial', { idObraSocial, idPaciente, query }, error, userScheduler);
         return null;
     }
 }
