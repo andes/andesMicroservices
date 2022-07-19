@@ -9,23 +9,20 @@ const log = msFacturacionLog.startTrace();
 export class QueryRecupero {
 
     async getIdPacienteSips(pool: any, dni: any) {
-        return new Promise((resolve: any, reject: any) => {
-            (async () => {
-                try {
-                    let query = 'SELECT TOP 1 idPaciente FROM dbo.Sys_Paciente where activo = 1 and numeroDocumento = @dni order by objectId DESC;';
-                    let resultado = await new sql.Request(pool)
-                        .input('dni', sql.VarChar(50), dni)
-                        .query(query);
-                    if (resultado && resultado.recordset[0]) {
-                        resolve(resultado.recordset[0] ? resultado.recordset[0].idPaciente : null);
-                    } else {
-                        resolve('No se encuentra Paciente en SIPS: ');
-                    }
-                } catch (err) {
-                    reject(err);
-                }
-            })();
-        });
+        const query = 'SELECT TOP 1 idPaciente FROM dbo.Sys_Paciente where activo = 1 and numeroDocumento = @dni order by objectId DESC;';
+        try {
+            let resultado = await new sql.Request(pool)
+                .input('dni', sql.VarChar(50), dni)
+                .query(query);
+            if (resultado?.recordset[0]) {
+                return resultado.recordset[0].idPaciente;
+            }
+            return null;
+        } catch (err) {
+            log.error('query-recupero:getIdPacienteSips:error', { dni, query }, err, userScheduler);
+
+            return null;
+        }
     }
 
     async getIdProfesionalSips(pool: any, dni: any) {
@@ -265,5 +262,60 @@ export async function getIdTipoNomencladorSIPS(idObraSocial: any, fechaTurno: Da
 
     } catch (err) {
         log.error('query-recupero:getIdTipoNomencladorSIPS:error', { idObraSocial, fechaTurno, query }, err, userScheduler);
+    }
+}
+
+export async function updateRelPacienteObraSocial(pool, idPaciente, idObraSocial) {
+    const idRelPacienteObraSocial = await getRelPacienteObraSocial(pool, idPaciente, idObraSocial);
+    if (!idRelPacienteObraSocial) {
+        await insertRelPacienteObraSocial(pool, idPaciente, idObraSocial);
+    }
+}
+
+async function getRelPacienteObraSocial(pool, idPaciente, idObraSocial) {
+    const query = `SELECT TOP 1 idRelPacienteObraSocial 
+            FROM [dbo].[Sys_RelPacienteObraSocial] 
+            WHERE idPaciente = @idPaciente AND idObraSocial = @idObraSocial;`;
+    try {
+        let resultado = await new sql.Request(pool)
+            .input('idPaciente', sql.Int, idPaciente)
+            .input('idObraSocial', sql.Int, idObraSocial)
+            .query(query);
+
+        if (resultado?.recordset[0]) {
+            return resultado.recordset[0].idRelPacienteObraSocial;
+        }
+
+        return null;
+    } catch (err) {
+        log.error('query-recupero:getRelPacienteObraSocial:error', { idObraSocial, idPaciente, query }, err, userScheduler);
+        return null;
+    }
+}
+
+async function insertRelPacienteObraSocial(pool, idPaciente, idObraSocial) {
+    const query = `INSERT INTO [dbo].[Sys_RelPacienteObraSocial] 
+            ([idPaciente] 
+            ,[idObraSocial] 
+            ,[numeroAfiliado] 
+            ,[fechaAlta]) 
+        VALUES 
+            (@idPaciente 
+            ,@idObraSocial 
+            ,@numeroAfiliado 
+            ,@fechaAlta) 
+            SELECT SCOPE_IDENTITY() as ID`;
+    try {
+        const result = await new sql.Request(pool)
+            .input('idPaciente', sql.Int, idPaciente)
+            .input('idObraSocial', sql.Int, idObraSocial)
+            .input('numeroAfiliado', sql.VarChar(50), '')
+            .input('fechaAlta', sql.DateTime, new Date())
+            .query(query);
+
+        return result.recordset[0].id;
+    } catch (err) {
+        log.error('query-recupero:insertRelPacienteObraSocial:error', { idObraSocial, idPaciente, query }, err, userScheduler);
+        return null;
     }
 }

@@ -5,7 +5,7 @@ import { getPrestacion } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
 
-async function facturacionAutomatica(datosFactura: any) {
+function facturacionAutomatica(datosFactura: any) {
     let factura = {};
     let facturaArray = [];
 
@@ -99,7 +99,7 @@ export async function facturaTurno(prestacion: any) {
         configAutomatica: configAuto,
         datosReportables: null
     }];
-    return await facturacionAutomatica(dtoDatos);
+    return facturacionAutomatica(dtoDatos);
 }
 
 export async function facturaRup(prestacion: any) {

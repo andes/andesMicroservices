@@ -33,7 +33,7 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
                 numero: -1,
                 periodo: '0000/00',
                 idServicio: dtoRecupero.idServicio,
-                idPaciente: await queryRecupero.getIdPacienteSips(pool, dtoRecupero.dniPaciente),
+                idPaciente: dtoRecupero.idPaciente,
                 idProfesional: await queryRecupero.getIdProfesionalSips(pool, dtoRecupero.dniProfesional),
                 fecha: new Date(),
                 fechaPractica: dtoRecupero.fechaTurno,

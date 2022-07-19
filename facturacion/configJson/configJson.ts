@@ -8,7 +8,7 @@ import { facturaRecupero } from './../facturar/recupero-financiero/factura-recup
 import { drNiñoSano, drOtoemisiones } from './datos-reportables';
 
 import { QuerySumar } from './../facturar/sumar/query-sumar';
-import { QueryRecupero, getIdTipoNomencladorSIPS } from './../facturar/recupero-financiero/query-recupero';
+import { QueryRecupero, getIdTipoNomencladorSIPS, updateRelPacienteObraSocial } from './../facturar/recupero-financiero/query-recupero';
 
 import { IDtoFacturacion } from './../interfaces/IDtoFacturacion';
 import { IDtoSumar } from '../interfaces/IDtoSumar';
@@ -115,31 +115,36 @@ export async function jsonFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
         let os = (dtoFacturacion.obraSocial.prepaga) ? dtoFacturacion.obraSocial.idObraSocial : dtoFacturacion.obraSocial.codigoPuco;
         const configAutomatica = dtoFacturacion.configAutomatica;
         if (configAutomatica) {
-            dtoRecupero = {
-                objectId: dtoFacturacion.turno._id,
-                fechaTurno,
-                idTipoNomenclador: configAutomatica.recuperoFinanciero.idTipoNomenclador,
-                codigo: configAutomatica.recuperoFinanciero.codigo,
-                idServicio: configAutomatica.recuperoFinanciero.idServicio,
-                dniPaciente: dtoFacturacion.paciente.dni,
-                dniProfesional: dtoFacturacion.profesional.dni,
-                codigoFinanciador: os,
-                idEfector: dtoFacturacion.organizacion.idSips,
-                motivoDeConsulta: dtoFacturacion.motivoConsulta,
-                prepaga: dtoFacturacion.obraSocial.prepaga,
-            };
-
             let queryRecupero = new QueryRecupero();
-            const idObraSocial = await queryRecupero.getIdObraSocialSips(pool, dtoRecupero);
+            const idPaciente = await queryRecupero.getIdPacienteSips(pool, dtoFacturacion.paciente.dni);
 
-            //obtenemos el idTipoNomenclador desde SIPS
-            if (idObraSocial && typeof idObraSocial === 'number') {
-                dtoRecupero.idTipoNomenclador = await getIdTipoNomencladorSIPS(idObraSocial, fechaTurno, pool);
+            if (idPaciente) {
+                dtoRecupero = {
+                    objectId: dtoFacturacion.turno._id,
+                    fechaTurno,
+                    idTipoNomenclador: configAutomatica.recuperoFinanciero.idTipoNomenclador,
+                    codigo: configAutomatica.recuperoFinanciero.codigo,
+                    idServicio: configAutomatica.recuperoFinanciero.idServicio,
+                    idPaciente,
+                    dniProfesional: dtoFacturacion.profesional.dni,
+                    codigoFinanciador: os,
+                    idEfector: dtoFacturacion.organizacion.idSips,
+                    motivoDeConsulta: dtoFacturacion.motivoConsulta,
+                    prepaga: dtoFacturacion.obraSocial.prepaga,
+                };
+
+                const idObraSocial = await queryRecupero.getIdObraSocialSips(pool, dtoRecupero);
+
+                if (idObraSocial && typeof idObraSocial === 'number') {
+                    // si no existe la relacion paciente/obra social, la creamos
+                    await updateRelPacienteObraSocial(pool, idPaciente, idObraSocial);
+                    //obtenemos el idTipoNomenclador desde SIPS
+                    dtoRecupero.idTipoNomenclador = await getIdTipoNomencladorSIPS(idObraSocial, fechaTurno, pool);
+                }
+
+                await facturaRecupero(pool, dtoRecupero);
             }
-
-            await facturaRecupero(pool, dtoRecupero);
-        }
-        else {
+        } else {
             log.error('jsonFacturacion:recupero:sinConfiguracion', { prestacion: dtoFacturacion.prestacion }, 'la prestacion no está configurada', userScheduler);
         }
     } else {

@@ -4,7 +4,7 @@ export interface IDtoRecupero {
     idTipoNomenclador: Number;
     idServicio: Number;
     codigo: String;
-    dniPaciente: String;
+    idPaciente: String;
     dniProfesional: String;
     codigoFinanciador: String;
     idEfector: Number;
