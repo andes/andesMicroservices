@@ -1,7 +1,7 @@
 import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
 import { logDatabase } from './config.private';
-import { createFacturarPerinatal, updateFacturarPerinatal } from './controller/perinatal';
+import { createFacturarPerinatal, updateFacturarPerinatal, getRegistros } from './controller/perinatal';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -14,12 +14,20 @@ router.group('/perinatalSql', (group) => {
     group.post('/create', async (req: any, res) => {
         res.send({ message: 'ok' });
         try {
-            const prestacion = req.body.data;
-            // verificamos si la prestacion es "Consulta de control de embarazo"
-            const conceptConsultaEmbarazo = ['1191000013107', '721000013105', '1181000013109', '1141000013103',
+            const prestacion = req.body.data.prestacion;
+            const conceptConsultaEmbarazo = ['1191000013107', '1141000013103',
                 '1341000013100', '1201000013105', '1741000013104', '4501000013105', '1711000013103'];
             const conceptId = prestacion.solicitud.tipoPrestacion.conceptId;
-            if (conceptConsultaEmbarazo.includes(conceptId)) {
+            // verificamos si la prestación es algunas de las relacionadas a control de embarazo
+            // si no lo es, entonces verificamos que contenga entre sus registros alguno estos conceptos
+            let enviarFacturacion: boolean = conceptConsultaEmbarazo.includes(conceptId);
+
+            if (!enviarFacturacion) {
+                const registros = getRegistros(prestacion.ejecucion.registros);
+                // Cuando se registra concepto número de "embarazo" de cualquier otra prestación.
+                enviarFacturacion = registros.find(reg => conceptConsultaEmbarazo.includes(reg.conceptId));
+            }
+            if (enviarFacturacion) {
                 Connections.initialize(logDatabase.log.host, logDatabase.log.options);
                 const cantValidaciones = prestacion.estados.filter(est => est.tipo === 'ejecucion').length;
                 if (cantValidaciones < 2) {

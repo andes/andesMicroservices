@@ -90,9 +90,8 @@ async function formatPacienteSP(pacienteSP: any) {
  * @param paciente 
  * @param registros obtenidos de la prestación que se inició en Andes
  */
-export async function postPaciente(paciente: IPaciente, prestacion, pacienteSP: any = {}) {
+export async function postPaciente(paciente: IPaciente, prestacion, registros, pacienteSP: any = {}) {
 
-    const registros = getRegistros(prestacion.ejecucion.registros);
     const organizacion = prestacion.ejecucion.organizacion;
     let newPaciente = await completePacienteSP(pacienteSP, paciente, registros, prestacion.ejecucion.fecha, organizacion);
 
