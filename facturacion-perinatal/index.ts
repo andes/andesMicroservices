@@ -25,7 +25,7 @@ router.group('/perinatalSql', (group) => {
             if (!enviarFacturacion) {
                 const registros = getRegistros(prestacion.ejecucion.registros);
                 // Cuando se registra concepto número de "embarazo" de cualquier otra prestación.
-                enviarFacturacion = registros.find(reg => conceptConsultaEmbarazo.includes(reg.conceptId));
+                enviarFacturacion = registros.find(reg => conceptConsultaEmbarazo.includes(reg.concepto.conceptId));
             }
             if (enviarFacturacion) {
                 Connections.initialize(logDatabase.log.host, logDatabase.log.options);
@@ -40,6 +40,7 @@ router.group('/perinatalSql', (group) => {
                 }
             }
         } catch (e) {
+            console.log("ERROR => ", e);
             throw e;
         }
     });
