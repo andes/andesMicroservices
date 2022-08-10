@@ -1,6 +1,8 @@
 import { SIP_PLUS, fakeRequest } from '../config.private';
+import { msSipPlusPerinatalLog } from '../logger/msSipPlusPerinatal';
+const log = msSipPlusPerinatalLog.startTrace();
 const fetch = require('node-fetch');
-import { log } from '@andes/log';
+
 
 const url = `${SIP_PLUS.host}/record/AR/DNI/`;
 
@@ -32,26 +34,31 @@ export async function getPacienteSP(paciente: any) {
     if (documento) {
         try {
             let response = await fetch(`${url}${documento}`, options('GET'));
+            try {
+                if (response.status >= 200 && response.status < 300) {
+                    let responseJson = await response.json();
 
-            if (response.status >= 200 && response.status < 300) {
-                let responseJson = await response.json();
+                    const keyResponse = Object.keys(responseJson).length || null;
+                    if (keyResponse) {
+                        return { paciente: responseJson };
+                    }
+                    else {
+                        return { paciente: null };
 
-                const keyResponse = Object.keys(responseJson).length || null;
-                if (keyResponse) {
-                    return { paciente: responseJson };
+                    }
                 }
-                else {
+                if (response.status === 404) {
+                    // paciente no encontrado
                     return { paciente: null };
 
                 }
-            }
-            if (response.status === 404) {
-                // paciente no encontrado
-                return { paciente: null };
+            } catch (error) {
+                log.error('getPacienteSP:error', { paciente, response }, error, fakeRequest);
+                return null;
             }
 
         } catch (error) {
-            log(fakeRequest, 'microservices:integration:sip-plus', paciente, 'getPacienteSP:error', error);
+            log.error('getPacienteSP:error', { paciente }, error, fakeRequest);
         }
     }
     return null;
@@ -63,16 +70,21 @@ export async function postPacienteSP(documento: string = '', pacienteSP) {
             const body = JSON.stringify(pacienteSP);
             let optionsPost: any = options('POST', body);
             let response: any = await fetch(`${url}${documento}`, optionsPost);
-            if (response.status >= 200 && response.status < 300) {
-                return { paciente: optionsPost.body };
-            }
-            if (response.status === 404) {
-                // paciente no encontrado
-                return { paciente: null };
+            try {
+                if (response.status >= 200 && response.status < 300) {
+                    return { paciente: optionsPost.body };
+                }
+                if (response.status === 404) {
+                    // paciente no encontrado
+                    return { paciente: null };
+                }
+            } catch (error) {
+                log.error('postPacienteSP:error', { pacienteSP, response }, error, fakeRequest);
+                return null;
             }
 
         } catch (error) {
-            log(fakeRequest, 'microservices:integration:sip-plus', pacienteSP, 'postPacienteSP:error', error);
+            log.error('postPacienteSP:error', { pacienteSP }, error, fakeRequest);
         }
     }
     return null;

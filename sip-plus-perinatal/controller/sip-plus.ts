@@ -4,6 +4,9 @@ import { IPaciente } from '../schemas/paciente';
 import { getMatching } from '../service/matchPerinatal';
 import { getOrganizacionAndes } from '../service/organizacion';
 import { IPerinatal, ISnomedConcept } from 'sip-plus-perinatal/schemas/perinatal';
+import { fakeRequest, MONGO_HOST } from '../config.private';
+import { msSipPlusPerinatalLog } from '../logger/msSipPlusPerinatal';
+const log = msSipPlusPerinatalLog.startTrace();
 
 
 /**
@@ -136,7 +139,7 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
             }
         }
     } catch (error) {
-
+        log.error('completePacienteSP:error', pacienteSP, error, fakeRequest);
     }
     return newPaciente;
 
@@ -225,7 +228,7 @@ async function completePaciente(pacienteSP: any, paciente: IPaciente) {
 
         datosPaciente = await completeData(paciente, datosPaciente, newData);
     } catch (error) {
-
+        log.error('completePacienteSP:error', paciente, error, fakeRequest);
     }
     return datosPaciente;
 }
@@ -255,6 +258,7 @@ async function completeData(allData, dataInit = {}, newData) {
             }
         });
     } catch (error) {
+        log.error('completeData:error', allData, error, fakeRequest);
     }
 
     return datos;
@@ -382,7 +386,7 @@ async function createMatchControl(registros: any[], embActual, newDatosEmb, fech
             }
         }
     } catch (error) {
-
+        log.error('createMatchControl:error', registros, error, fakeRequest);
     }
     return newDatosEmb;
 }
