@@ -1,7 +1,7 @@
 import { ANDES_HOST, ANDES_KEY, fakeRequest } from '../config.private';
+import { msSipPlusPerinatalLog } from '../logger/msSipPlusPerinatal';
+const log = msSipPlusPerinatalLog.startTrace();
 const fetch = require('node-fetch');
-
-import { log } from '@andes/log';
 
 export async function getOrganizacionAndes(idOrganizacion) {
     const url = `${ANDES_HOST}/core/tm/organizaciones?ids=${idOrganizacion}`;
@@ -14,13 +14,15 @@ export async function getOrganizacionAndes(idOrganizacion) {
     };
     try {
         let response = await fetch(url, options);
-
-        const responseJson = await response.json();
-
-        return responseJson[0] || null;
+        try {
+            const responseJson = await response.json();
+            return responseJson[0] || null;
+        } catch (error) {
+            log.error('getOrganizacionAndes:error', { idOrganizacion, options, response }, error, fakeRequest);
+        }
     }
     catch (error) {
-        log(fakeRequest, 'microservices:integration:sip-plus', idOrganizacion, 'getOrganizacionAndes:error', error);
+        log.error('getOrganizacionAndes:error', { idOrganizacion, options }, error, fakeRequest);
     }
 
 }
