@@ -69,14 +69,16 @@ export class QueryRecupero {
         }
     }
 
-    async getOrdenDePrestacion(pool: any, dtoRecupero: IDtoRecupero) {
-        const query = 'SELECT TOP 1 * FROM dbo.FAC_Orden WHERE objectId = @objectId';
+    async getIdOrdenDePrestacion(pool: any, objectId) {
+        const query = 'SELECT TOP 1 idOrden FROM dbo.FAC_Orden WHERE objectId = @objectId';
         try {
             const resultado = await new sql.Request(pool)
-                .input('objectId', sql.VarChar(100), dtoRecupero.objectId)
+                .input('objectId', sql.VarChar(100), objectId)
                 .query(query);
-
-            return resultado.recordset.length;
+            if (resultado.recordset[0]) {
+                return resultado.recordset[0].idOrden;
+            }
+            return null;
         } catch (error) {
             log.error('query-recupero:getOrdenDePrestacion', { query }, error, userScheduler);
             return null;
@@ -149,7 +151,7 @@ export class QueryRecupero {
                 .input('fecha', sql.DateTime, new Date(dtoOrden.fecha))
                 .input('fechaPractica', sql.DateTime, new Date(dtoOrden.fechaPractica))
                 .input('idTipoPractica', sql.Int, dtoOrden.idTipoPractica)
-                .input('observaciones', sql.VarChar(500), dtoOrden.motivoConsulta)
+                .input('observaciones', sql.VarChar(500), dtoOrden.motivoConsulta || '')
                 .input('idObraSocial', sql.Int, dtoOrden.idObraSocial)
                 .input('idUsuarioRegistro', sql.Int, dtoOrden.idUsuarioRegistro)
                 .input('fechaRegistro', sql.DateTime, new Date(dtoOrden.fechaRegistro))

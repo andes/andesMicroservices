@@ -6,7 +6,7 @@ export interface IDtoFacturacion {
     {
         nombre: String;
         apellido: String;
-        dni: String;
+        documento: String;
         fechaNacimiento: Date;
         sexo: String;
     };
@@ -38,7 +38,7 @@ export interface IDtoFacturacion {
     {
         nombre: String;
         apellido: String;
-        dni: String;
+        documento: String;
         formacionGrado: String;
     };
     configAutomatica: any;

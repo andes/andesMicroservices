@@ -17,9 +17,9 @@ let queryRecupero = new QueryRecupero();
  * @param {*} datosConfiguracionAutomatica
  */
 export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
-    let existeOrden = await validaOrden(pool, dtoRecupero);
+    const idOrden = await queryRecupero.getIdOrdenDePrestacion(pool, dtoRecupero.objectId);
 
-    if (!existeOrden) {
+    if (!idOrden) {
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
         const request = await new sql.Request(transaction);
@@ -79,17 +79,4 @@ export async function facturaRecupero(pool, dtoRecupero: IDtoRecupero) {
             });
         }
     }
-}
-
-/* Valida si la orden de prestación ya fue creada en la BD de Recupero Finanicero */
-async function validaOrden(pool: any, dtoRecupero: IDtoRecupero): Promise<boolean> {
-    let existe = false;
-
-    let orden = await queryRecupero.getOrdenDePrestacion(pool, dtoRecupero);
-
-    if (orden > 0) {
-        existe = true;
-    }
-
-    return existe;
 }
