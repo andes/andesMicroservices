@@ -24,7 +24,7 @@ import { IDtoRecupero } from '../interfaces/IDtoRecupero';
  */
 export async function exportarFacturacion(pool, dtoFacturacion: IDtoFacturacion) {
     let querySumar = new QuerySumar();
-    let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.dni);
+    let afiliadoSumar: any = await querySumar.getAfiliadoSumar(pool, dtoFacturacion.paciente.documento);
 
     let facturacion = {
         /* Prestación Otoemisiones */
@@ -47,7 +47,7 @@ export async function exportarFacturacion(pool, dtoFacturacion: IDtoFacturacion)
         /* TODO: poner la expresión que corresponda */
         niño_sano: {
             term: 'niño sano',
-            sumar: async (arrayPrestacion, arrayConfiguracion) => {
+            sumar: (arrayPrestacion, arrayConfiguracion) => {
                 let dto = {
                     pool: pool,
                     dtoFacturacion: dtoFacturacion,
@@ -94,7 +94,7 @@ export async function exportarFacturacion(pool, dtoFacturacion: IDtoFacturacion)
         const configAutomatica = dtoFacturacion.configAutomatica;
         if (configAutomatica) {
             let queryRecupero = new QueryRecupero();
-            const idPaciente = await queryRecupero.getIdPacienteSips(pool, dtoFacturacion.paciente.dni);
+            const idPaciente = await queryRecupero.getIdPacienteSips(pool, dtoFacturacion.paciente.documento);
 
             if (idPaciente) {
                 dtoRecupero = {
@@ -104,7 +104,7 @@ export async function exportarFacturacion(pool, dtoFacturacion: IDtoFacturacion)
                     codigo: configAutomatica.recuperoFinanciero.codigo,
                     idServicio: configAutomatica.recuperoFinanciero.idServicio,
                     idPaciente,
-                    dniProfesional: dtoFacturacion.profesional.dni,
+                    dniProfesional: dtoFacturacion.profesional.documento,
                     codigoFinanciador: os,
                     idEfector: dtoFacturacion.organizacion.idSips,
                     motivoDeConsulta: dtoFacturacion.motivoConsulta,
@@ -137,7 +137,7 @@ export async function exportarFacturacion(pool, dtoFacturacion: IDtoFacturacion)
                 objectId: dtoFacturacion.turno._id,
                 cuie: dtoFacturacion.organizacion.cuie,
                 diagnostico: (main) ? main.diagnostico : null,
-                dniPaciente: dtoFacturacion.paciente.dni,
+                dniPaciente: dtoFacturacion.paciente.documento,
                 profesional: dtoFacturacion.profesional,
                 claveBeneficiario: afiliadoSumar.clavebeneficiario,
                 idAfiliado: afiliadoSumar.id_smiafiliados,

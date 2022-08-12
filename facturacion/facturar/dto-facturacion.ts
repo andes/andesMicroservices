@@ -4,132 +4,64 @@ import { getSnomed } from './../services/snomed.service';
 import { getPrestacion } from './../services/prestaciones.service';
 import { getConfigAutomatica } from './../services/config-factAutomatica.service';
 
-
-function facturacionAutomatica(datosFactura: any) {
-    let factura = {};
-    let facturaArray = [];
-
-    for (let x = 0; x < datosFactura.length; x++) {
-        factura = {
-            turno: {
-                _id: datosFactura[x].idTurno,
-                fechaTurno: datosFactura[x].fechaPrestacion,
-            },
-            idPrestacion: datosFactura[x].idPrestacion,
-            motivoConsulta: datosFactura[x].motivoDeConsulta,
-            paciente: {
-                nombre: datosFactura[x].paciente.nombre,
-                apellido: datosFactura[x].paciente.apellido,
-                dni: datosFactura[x].paciente.documento,
-                fechaNacimiento: datosFactura[x].paciente.fechaNacimiento,
-                sexo: datosFactura[x].paciente.sexo
-            },
-            prestacion: {
-                conceptId: datosFactura[x].prestacion.conceptId,
-                term: datosFactura[x].prestacion.term,
-                fsn: datosFactura[x].prestacion.fsn,
-                datosReportables: (datosFactura[x].datosReportables) ? datosFactura[x].datosReportables : null,
-            },
-            organizacion: {
-                nombre: datosFactura[x].organizacion.nombre,
-                cuie: datosFactura[x].organizacion.cuie,
-                idSips: datosFactura[x].organizacion.idSips
-            },
-            obraSocial: datosFactura[x].obraSocial,
-            profesional: (datosFactura[x].profesional) ? {
-                nombre: datosFactura[x].profesional.nombre,
-                apellido: datosFactura[x].profesional.apellido,
-                dni: datosFactura[x].profesional.dni,
-                formacionGrado: (datosFactura[x].profesional.formacionGrado.length > 0) ? datosFactura[x].profesional.formacionGrado.find(f => f.profesion.nombre).profesion.nombre.toLowerCase() : null
-            } : null,
-            configAutomatica: datosFactura[x].configAutomatica
-        };
-        facturaArray.push(factura);
-    }
-    return facturaArray;
-}
-
 export async function facturaBuscador(prestacion: any) {
-    let datos: any = await getDatos(prestacion);
-    let dtoDatos = {};
-    let dtoDatosArray = [];
+    const organizacion = await getOrganizacion(prestacion.organizacion._id);
+    const profesional: any = await getProfesionalPrestacion(prestacion);
+    const obraSocial = getObraSocial(prestacion);
+    const fechaPrestacion = prestacion.turno?.horainicio ? prestacion.turno.horaInicio : prestacion.fecha;
+    const turno =  {
+        _id: prestacion.turno?._id ? prestacion.turno._id : prestacion.idPrestacion,
+        fechaTurno: fechaPrestacion,
+    };
+    let dtoDatos = [];
 
-    let z = (datos[3]) ? datos[3].ejecucion.registros.length : 1;
-    for (let x = 0; x < z; x++) {
-
-        let idPrestacionEjecutada = (datos[3]) ? datos[3].ejecucion.registros[x].concepto.conceptId : null;
-        let idPrestacionTurneable = (datos[3]) ? datos[3].solicitud.tipoPrestacion.conceptId : null;
-        let configAuto: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada);
-
-        dtoDatos = {
-            idTurno: (prestacion.turno && prestacion.turno._id) ? prestacion.turno._id : prestacion.idPrestacion,
+    const _prestacion: any = await getPrestacion(prestacion.idPrestacion);
+    const idPrestacionTurneable = _prestacion?.solicitud.tipoPrestacion.conceptId;
+    
+    for (const registro of _prestacion.ejecucion.registros) {
+        const idPrestacionEjecutada = registro.concepto.conceptId;
+        const configAuto: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada);
+        const datosReportables = await getDatosReportables(_prestacion, configAuto);
+        const datos = {
+            turno,
             idPrestacion: prestacion.idPrestacion,
-            fechaPrestacion: (prestacion.turno && prestacion.turno.horainicio) ? prestacion.turno.horaInicio : prestacion.fecha,
-            organizacion: datos[0].organizacion,
-            obraSocial: (datos[1]) ? (datos[1]) : null,
-            profesional: (datos[2]) ? datos[2].profesional : null,
+            organizacion,
+            obraSocial,
+            profesional,
             paciente: prestacion.paciente,
-            prestacion: prestacion.tipoPrestacion,
-            configAutomatica: configAuto,
-            datosReportables: (datos[3]) ? await getDatosReportables(datos[3], configAuto) : null
+            prestacion: { ...prestacion.tipoPrestacion, datosReportables },
+            configAutomatica: configAuto
         };
-
-        dtoDatosArray.push(dtoDatos);
+        dtoDatos.push(datos);
     }
-    return await facturacionAutomatica(dtoDatosArray);
+    return dtoDatos;
 }
 
 export async function facturaTurno(prestacion: any) {
-    let datos: any = await getDatos(prestacion);
-    let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
+    const organizacion = await getOrganizacion(prestacion.organizacion._id);
+    const profesional: any = await getProfesionalPrestacion(prestacion);
+    const obraSocial = getObraSocial(prestacion);
     let fechaPrestacion = prestacion.fecha || prestacion.horaInicio;
     if (prestacion.turno && prestacion.turno.horaInicio) {
         fechaPrestacion = prestacion.turno.horaInicio;
     }
+    const turno =  {
+        _id: prestacion.id || prestacion._id || prestacion.idPrestacion,
+        fechaTurno: fechaPrestacion,
+    };
+    let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
     let dtoDatos = [{
-        idTurno: prestacion.id || prestacion._id || prestacion.idPrestacion,
+        turno,
         idPrestacion: prestacion.idPrestacion || prestacion.id,
-        fechaPrestacion,
-        organizacion: datos[0].organizacion,
-        obraSocial: (datos[1]) ? (datos[1]) : null,
-        profesional: datos[2].profesional,
+        organizacion,
+        obraSocial,
+        profesional,
         paciente: prestacion.paciente,
         prestacion: prestacion.tipoPrestacion,
-        motivoDeConsulta: (prestacion.motivoConsulta) ? prestacion.motivoConsulta : '',
+        motivoConsulta: (prestacion.motivoConsulta) ? prestacion.motivoConsulta : '',
         configAutomatica: configAuto,
-        datosReportables: null
     }];
-    return facturacionAutomatica(dtoDatos);
-}
-
-export async function facturaRup(prestacion: any) {
-    let datos: any = await getDatos(prestacion);
-    let configAuto: any = await getConfigAutomatica(prestacion.tipoPrestacion.conceptId, null);
-
-    let dtoDatos = {
-        idTurno: prestacion.data.solicitud.turno,
-        organizacion: datos[0].organizacion,
-        obraSocial: (datos[1]) ? (datos[1]) : null,
-        profesional: datos[2].profesional,
-        paciente: prestacion.data.paciente,
-        prestacion: prestacion.data.solicitud.tipoPrestacion,
-        configAutomatica: configAuto,
-        datosReportables: datos[3]
-    };
-
     return dtoDatos;
-}
-
-async function getDatos(prestacion) {
-    let _datosOrganizacion: any = getOrganizacion(prestacion.organizacion._id);
-    let _obraSocialPaciente: any = (prestacion.paciente.obraSocial) ? (prestacion.paciente.obraSocial) : null;
-    if (prestacion.obraSocial === 'prepaga' && prestacion.prepaga) {
-        _obraSocialPaciente = prestacion.prepaga;
-    }
-    let _datosProfesional: any = (prestacion.profesionales.length > 0) ? (prestacion.profesionales[0]._id) ? getProfesional(prestacion.profesionales[0]._id) : getProfesional(prestacion.profesionales[0].id) : null;
-    let _getDR = (prestacion.idPrestacion) ? getPrestacion(prestacion.idPrestacion) : null;
-
-    return await Promise.all([_datosOrganizacion, _obraSocialPaciente, _datosProfesional, _getDR]);
 }
 
 async function getDatosReportables(prestacion: any, configAuto: any) {
@@ -186,23 +118,19 @@ async function getDatosReportables(prestacion: any, configAuto: any) {
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {
-    return new Promise(async (resolve, reject) => {
-        let data = [];
+    let data = [];
 
-        prestacion.ejecucion.registros.forEach(async registro => {
-            // verificamos si el registro de la prestacion tiene alguno de
-            // los conceptos en su array de registros
-            let resultado = await matchConceptsFacturacion(registro, conceptos);
+    prestacion.ejecucion.registros.forEach(async reg => {
+        // verificamos si el registro de la prestacion tiene alguno de
+        // los conceptos en su array de registros
+        let registro = matchConceptsFacturacion(reg, conceptos);
 
-            if (resultado) {
-                // agregamos el resultado a a devolver
-                data.push({
-                    registro: resultado
-                });
-            }
-        });
-        resolve(data);
+        if (registro) {
+            // agregamos el resultado a a devolver
+            data.push({ registro });
+        }
     });
+    return data;
 }
 
 function matchConceptsFacturacion(registro, conceptos) {
@@ -212,7 +140,7 @@ function matchConceptsFacturacion(registro, conceptos) {
     // Si no es un array entra
     if (!Array.isArray(registro['registros']) || registro['registros'].length <= 0) {
         // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
-        if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
+        if (registro.concepto?.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
             match = registro;
         }
 
@@ -225,4 +153,23 @@ function matchConceptsFacturacion(registro, conceptos) {
         });
     }
     return match;
+}
+
+async function getProfesionalPrestacion(prestacion) {
+    if (prestacion.profesionales.length) {
+        let profesional = prestacion.profesionales[0];
+        const profesionalId = profesional._id || profesional.id;
+        profesional = await getProfesional(profesionalId);
+        profesional.formacionGrado = profesional.formacionGrado.length ? profesional.formacionGrado.find(f => f.profesion.nombre).profesion.nombre.toLowerCase() : null;
+        return profesional;
+    }
+    return null;
+}
+
+function getObraSocial(prestacion) {
+    let obraSocial = prestacion.paciente.obraSocial;
+    if (prestacion.obraSocial === 'prepaga' && prestacion.prepaga) {
+        obraSocial = prestacion.prepaga;
+    }
+    return obraSocial;
 }
