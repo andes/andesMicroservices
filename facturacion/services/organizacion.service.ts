@@ -6,14 +6,7 @@ export async function getOrganizacion(idOrganizacion) {
         const url = `${ANDES_HOST}/core/tm/organizaciones/${idOrganizacion}?token=${ANDES_KEY}`;
         request(url, (error, response, body) => {
             if (!error && response.statusCode >= 200 && response.statusCode < 300 && body) {
-                const organizacion = JSON.parse(body);
-                if (organizacion) {
-                    resolve({
-                        nombre: organizacion.nombre,
-                        cuie: organizacion.codigo.cuie,
-                        idSips: organizacion.codigo.sips
-                    });
-                }
+                resolve(JSON.parse(body));
             }
             reject('No se encuentra organización' + body);
         });

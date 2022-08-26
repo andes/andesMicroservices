@@ -1,14 +1,15 @@
 import { logDatabase, SipsDBConfiguration } from './config.private';
-import { facturaBuscador, facturaTurno } from './facturar/dto-facturacion';
+import { facturaTurno } from './facturar/dto-facturacion';
 import { Microservice } from '@andes/bootstrap';
 import { Connections } from '@andes/log';
 import { userScheduler } from './config.private';
 import { msFacturacionLog } from './logger/msFacturacion';
+const log = msFacturacionLog.startTrace();
 import { exportarFacturacion } from './configJson/configJson';
+import { facturacionSumar } from './facturar/sumar/factura-sumar';
 const sql = require('mssql')
 const pkg = require('./package.json');
 const ms = new Microservice(pkg);
-const log = msFacturacionLog.startTrace();
 
 const router = ms.router();
 
@@ -28,10 +29,11 @@ router.group('/facturacion', (group) => {
         
                 const event = req.body.event;
 
+                if (event === 'facturacion:factura:buscador') {
+                    return await facturacionSumar(pool, data);
+                }
+
                 switch (event) {
-                    case 'facturacion:factura:buscador':
-                        dtoFacturacion = await facturaBuscador(data);
-                        break;
                     case 'facturacion:factura:recupero_financiero':
                         dtoFacturacion = await facturaTurno(data);
                         break;
