@@ -40,7 +40,6 @@ export async function getDatosTurno(idTurno) {
     });
 }
 
-
 /**
  *
  *
@@ -96,6 +95,38 @@ export async function updateEstadoFacturacionSinTurno(idPrestacion, _estadoFactu
                 resolve(body);
             } else {
                 reject('No hace patch sin turno: ' + error);
+            }
+        });
+    });
+}
+
+export async function getDatosReportables(prestacion) {
+    const idPrestacionTurneable = prestacion.solicitud.tipoPrestacion.conceptId;
+    const configAutomatica = [];
+    for (const registro of prestacion.ejecucion.registros) {
+        const idPrestacionEjecutada = registro.concepto.conceptId;
+        const config: any = await getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada)
+
+        if (config && !configAutomatica.find(c => c._id === config._id)) {
+            configAutomatica.push(config);
+        }
+    }
+    return configAutomatica;
+} 
+
+export async function getConfigAutomatica(idPrestacionTurneable, idPrestacionEjecutada) {
+    return new Promise((resolve, reject) => {
+        const url = `${ANDES_HOST}/modules/facturacionAutomatica/configFacturacionAutomatica?idPrestacionTurneable=${idPrestacionTurneable}&idPrestacionEjecutada=${idPrestacionEjecutada}&token=${ANDES_KEY}`;
+        request(url, (error, response, body) => {
+            if (!error && response.statusCode >= 200 && response.statusCode < 300) {
+                const confAuto: any[] = JSON.parse(body);
+                if (confAuto && confAuto.length) {
+                    resolve(confAuto[0]);
+                } else {
+                    resolve(null);
+                }
+            } else {
+                reject('No se encuentra facturación: ' + body);
             }
         });
     });

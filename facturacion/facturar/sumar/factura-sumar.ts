@@ -1,164 +1,135 @@
-import * as sql from 'mssql';
-import { QuerySumar } from './query-sumar';
-import { IDtoFacturacion } from './../../interfaces/IDtoFacturacion';
-import { IDtoSumar } from './../../interfaces/IDtoSumar';
-import moment = require('moment');
-import 'moment/locale/es';
-import { updateEstadoFacturacionSinTurno, updateEstadoFacturacionConTurno, getDatosTurno } from '../../services/prestaciones.service';
-
-import { userScheduler } from './../../config.private';
-import { msFacturacionLog } from './../../logger/msFacturacion';
+import { userScheduler } from '../../config.private';
+import { getAfiliadoSumar, getComprobante, getNomencladorSumar, getPrestacionSips, insertComprobante, saveDatosReportablesSumar, savePrestacionSumar } from '../../facturar/sumar/query-sumar';
+import { getDatosReportables, getDatosTurno, getPrestacion, updateEstadoFacturacionConTurno, updateEstadoFacturacionSinTurno } from '../../services/prestaciones.service';
+import { msFacturacionLog } from '../../logger/msFacturacion';
+import { getOrganizacion } from '../../services/organizacion.service';
 const log = msFacturacionLog.startTrace();
+const sql = require('mssql');
 
-let querySumar = new QuerySumar();
-
-/**
- *
- *
- * @export
- * @param {*} pool
- * @param {IDtoSumar} dtoSumar
- * @param {*} datosConfiguracionAutomatica
- */
-export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
+export async function facturacionSumar(pool, data) {
+    let estado = 'Sin Comprobante';
     const transaction = new sql.Transaction(pool);
-    let _estado = 'Sin Comprobante';
-    let dtoComprobante, prestacion, datosReportables, estadoFacturacion;
+    await transaction.begin();
     try {
-        await transaction.begin();
         const request = await new sql.Request(transaction);
+        const objectId = data.turno?._id ? data.turno._id : data.idPrestacion;
+        const fechaPrestacion = data.turno?.horainicio ? data.turno.horaInicio : data.fecha;
+        const organizacion: any = await getOrganizacion(data.organizacion._id);
+        const cuie = organizacion.codigo.cuie;
+        const afiliadoSumar: any = await getAfiliadoSumar(pool, data.paciente.documento);
 
-        let idComprobante = await validaComprobante(pool, dtoSumar);
+        let idComprobante = await getComprobante(pool, objectId);
         if (!idComprobante) {
-            _estado = 'Comprobante sin prestacion';
-
-            dtoComprobante = {
-                cuie: dtoSumar.cuie,
-                fechaComprobante: moment(dtoSumar.fechaTurno).format('MM/DD/YYYY'),
-                claveBeneficiario: dtoSumar.claveBeneficiario,
-                idAfiliado: dtoSumar.idAfiliado,
-                fechaCarga: new Date(),
-                comentario: 'Carga Automática',
-                periodo: moment(dtoSumar.fechaTurno, 'YYYY/MM/DD').format('YYYY') + '/' + moment(dtoSumar.fechaTurno, 'YYYY/MM/DD').format('MM'),
-                activo: 'S',
-                idTipoPrestacion: 1,
-                objectId: dtoSumar.objectId
-            };
-
-            idComprobante = await querySumar.saveComprobanteSumar(request, dtoComprobante);
+            estado = 'Comprobante sin prestacion';
+            idComprobante = await insertComprobante(request, cuie, fechaPrestacion, afiliadoSumar, objectId);
         }
 
-        if (dtoSumar.datosReportables) {
-            let existePrestacion = await validaPrestacion(pool, dtoSumar);
+        const prestacion: any = await getPrestacion(data.idPrestacion);
+        const configuracionFacturacion = await getDatosReportables(prestacion);
+        if (configuracionFacturacion?.length) {
+            
+            const configuracionSumar = configuracionFacturacion[0].sumar;
+            const idNomenclador = configuracionSumar.idNomenclador;
+            const diagnostico = configuracionSumar.diagnostico.diagnostico;
+            let idPrestacion = await getPrestacionSips(pool, fechaPrestacion, afiliadoSumar.id_smiafiliados, idNomenclador);
+            if (!idPrestacion) {
+                let precioPrestacion: any = (await getNomencladorSumar(request, idNomenclador)).precio;
+                idPrestacion = await savePrestacionSumar(request, data.paciente, diagnostico, idComprobante, idNomenclador, precioPrestacion, fechaPrestacion, objectId);
 
-            if (!existePrestacion) {
-                let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
-
-                moment.locale('es');
-                prestacion = {
-                    idComprobante,
-                    idNomenclador: dtoSumar.idNomenclador,
-                    cantidad: 1,
-                    precioPrestacion: precioPrestacion.precio,
-                    idAnexo: 301,
-                    peso: 0,
-                    tensionArterial: '00/00',
-                    diagnostico: dtoSumar.diagnostico,
-                    edad: dtoSumar.edad,
-                    sexo: dtoSumar.sexo,
-                    fechaNacimiento: dtoSumar.fechaNacimiento,
-                    fechaPrestacion: moment(dtoSumar.fechaTurno).format('MM/DD/YYYY'),
-                    anio: dtoSumar.anio,
-                    mes: dtoSumar.mes,
-                    dia: dtoSumar.dia,
-                    objectId: dtoSumar.objectId
-                };
-
-                let newIdPrestacion = await querySumar.savePrestacionSumar(request, prestacion);
-
-                for (let x = 0; x < dtoSumar.datosReportables.length; x++) {
-                    let datosReportables = {
-                        idPrestacion: newIdPrestacion,
-                        idDatoReportable: dtoSumar.datosReportables[x].idDatoReportable,
-                        valor: dtoSumar.datosReportables[x].datoReportable
-                    };
-
-                    await querySumar.saveDatosReportablesSumar(request, datosReportables);
-                }
-                _estado = 'Comprobante con prestacion';
+                await saveDatosReportables(request, configuracionSumar, prestacion, idPrestacion);
+                estado = 'Comprobante con prestacion';
             }
         }
 
         await transaction.commit();
-
-        let turno: any;
-        if (dtoSumar.objectId) {
-            turno = await getDatosTurno(dtoSumar.objectId);
-        }
-
-        estadoFacturacion = {
-            tipo: 'sumar',
-            numeroComprobante: idComprobante,
-            estado: _estado
-        };
-
-        if (!turno) {
-            updateEstadoFacturacionSinTurno(dtoSumar.idPrestacion, estadoFacturacion);
-        } else {
-            let idTurno = dtoSumar.objectId;
-            let idAgenda = turno.idAgenda;
-            let idBloque = turno.idBloque;
-
-            updateEstadoFacturacionConTurno(idAgenda, idBloque, idTurno, estadoFacturacion);
-        }
+        await updateEstadoFacturacion(objectId, data.idPrestacion, idComprobante, estado);
 
     } catch (e) {
         transaction.rollback(error => {
-            log.error('facturaSumar:rollback crear comprobante sumar', { dtoComprobante, prestacion, datosReportables, estadoFacturacion }, e, userScheduler);
+            log.error('facturaSumar:rollback crear comprobante sumar', { data }, error, userScheduler);
         });
     }
 }
 
-/* Valida que los datos reportables cargados en RUP sean los mismos que están en la colección configFacturacionAutomatica */
-export function validaDatosReportables(dtoFacturacion: IDtoFacturacion) {
-    if (dtoFacturacion.prestacion.datosReportables) {
-        let drPrestacion: any = dtoFacturacion.prestacion.datosReportables.filter((obj: any) => obj !== null).map(obj => obj);
-        let drConfigAutomatica: any = dtoFacturacion.configAutomatica.sumar.datosReportables.map(obj => obj);
-        let valida = true;
+async function updateEstadoFacturacion(objectId, idPrestacion, idComprobante, estado) {
+    let turno: any;
+    if (objectId) {
+        turno = await getDatosTurno(objectId);
+    }
 
-        for (let x = 0; x < drConfigAutomatica.length; x++) {
-            for (let z = 0; z < drPrestacion.length; z++) {
-                if (drConfigAutomatica[x].valores[0].conceptId === drPrestacion[z].conceptId) {
-                    if (!drPrestacion[z].valor) {
-                        valida = false;
-                    }
+    const estadoFacturacion = {
+        tipo: 'sumar',
+        numeroComprobante: idComprobante,
+        estado
+    };
+    
+    if (!turno) {
+        updateEstadoFacturacionSinTurno(idPrestacion, estadoFacturacion);
+    } else {
+        updateEstadoFacturacionConTurno(turno.idAgenda, turno.idBloque, turno.id, estadoFacturacion);
+    }
+}
+
+async function saveDatosReportables(request, configuracionSumar, prestacion, idPrestacion) {
+    let { datosReportables } = configuracionSumar;
+    datosReportables = validar(datosReportables, prestacion.ejecucion.registros)
+    for (const dato of datosReportables) {
+        let reportable;
+        if (dato.fx && dato.fx.type === 'reduce') {
+            reportable = dato.fx.concepts.reduce((acc,e,i) => {
+                let reg = prestacion.ejecucion.registros.find(r => r.concepto.conceptId === Object.keys(e)[0]);
+                return `${acc}${Object.values(e)[0]}${dato.fx.values[reg.valor.id]}${dato.fx.concepts[i+1]?dato.fx.separator:''}`;                
+            }, '')
+        } else {
+            reportable = searchRegister(prestacion.ejecucion.registros, dato.conceptId)?.valor;
+        }
+        await saveDatosReportablesSumar(request, idPrestacion, dato.idDatoReportable, reportable);
+    }
+}
+
+function validar(datosReportables, registros) {
+    let datosValidados = [...datosReportables];
+
+    for (const dato of datosReportables) {
+        if (dato.validations) {
+            let valid = true;
+            const reg = searchRegister(registros, dato.conceptId);
+            for (const key of Object.keys(dato.validations)) {
+                const validationValue = dato.validations[key];
+                switch (key) {
+                    case 'concepts':
+                        valid = validationValue.includes(reg.valor.concept.conceptId);
+                        break;
+                    case 'lte':
+                        valid = reg.valor !== null && reg.valor !== undefined && reg.valor <= validationValue;
+                        break;
+                    case 'gte':
+                        valid = reg.valor !== null && reg.valor !== undefined && reg.valor >= validationValue;
+                        break;
+                }
+
+                if (!valid) {
+                    datosValidados.slice(datosValidados.indexOf(dato), 1);
                 }
             }
         }
-        return valida;
-    } else {
-        return false;
     }
+    return datosValidados;
 }
 
-/* Valida si el comprobante ya fue creado en la BD de SUMAR */
-async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let idComprobante: any = await querySumar.getComprobante(pool, dtoSumar);
-
-    if (idComprobante) {
-        return idComprobante;
-    } else {
-        return null;
+function searchRegister(regs, conceptId) {
+    let found = null;
+    let i = 0;
+    
+    while (!found && i < regs.length) {
+        let reg = regs[i];
+        if (reg.concepto.conceptId === conceptId) {
+            found = reg;
+        } else if (reg.registros.length) {
+            found = searchRegister(reg.registros, conceptId);
+        }
+        i++;
     }
-}
 
-/* Valida si la prestación ya fue creada en la BD de SUMAR desde ANDES */
-async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let idPrestacion: any = await querySumar.getPrestacionSips(pool, dtoSumar);
-
-    if (idPrestacion) {
-        return idPrestacion;
-    } else {
-        return null;
-    }
-}
+    return found;
+};
