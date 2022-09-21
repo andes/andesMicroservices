@@ -43,7 +43,7 @@ router.group('/facturacion', (group) => {
                         log.error('facturacion:create', { event, data }, 'Origen facturación inválido', userScheduler);
                         break;
                 }
-    
+
                 for (let x = 0; x < dtoFacturacion.length; x++) {
                     await exportarFacturacion(pool, dtoFacturacion[x]);
                 }
@@ -54,7 +54,7 @@ router.group('/facturacion', (group) => {
                 if (_pool?._connected) {
                     _pool.close();
                 }
-                return log.error('facturacion:create:error', { data: req.body, error }, userScheduler);
+                return log.error('facturacion:create:error', { data: req.body }, error, userScheduler);
             });
     });
 });

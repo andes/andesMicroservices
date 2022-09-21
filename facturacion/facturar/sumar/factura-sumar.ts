@@ -28,7 +28,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         await transaction.begin();
         const request = await new sql.Request(transaction);
 
-        let idComprobante = await validaComprobante(pool, dtoSumar);
+        let idComprobante = await querySumar.getComprobante(pool, dtoSumar);
         if (!idComprobante) {
             _estado = 'Comprobante sin prestacion';
 
@@ -49,7 +49,7 @@ export async function facturaSumar(pool: any, dtoSumar: IDtoSumar) {
         }
 
         if (dtoSumar.datosReportables) {
-            let existePrestacion = await validaPrestacion(pool, dtoSumar);
+            let existePrestacion = await querySumar.getPrestacionSips(pool, dtoSumar);
 
             if (!existePrestacion) {
                 let precioPrestacion: any = await querySumar.getNomencladorSumar(pool, dtoSumar.idNomenclador);
@@ -138,27 +138,5 @@ export function validaDatosReportables(dtoFacturacion: IDtoFacturacion) {
         return valida;
     } else {
         return false;
-    }
-}
-
-/* Valida si el comprobante ya fue creado en la BD de SUMAR */
-async function validaComprobante(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let idComprobante: any = await querySumar.getComprobante(pool, dtoSumar);
-
-    if (idComprobante) {
-        return idComprobante;
-    } else {
-        return null;
-    }
-}
-
-/* Valida si la prestación ya fue creada en la BD de SUMAR desde ANDES */
-async function validaPrestacion(pool: any, dtoSumar: IDtoSumar): Promise<boolean> {
-    let idPrestacion: any = await querySumar.getPrestacionSips(pool, dtoSumar);
-
-    if (idPrestacion) {
-        return idPrestacion;
-    } else {
-        return null;
     }
 }
