@@ -41,7 +41,7 @@ function matchPaciente(pacMpi, pacLab) {
         nombre: pacLab.nombre ? pacLab.nombre : '',
         apellido: pacLab.apellido ? pacLab.apellido : '',
         fechaNacimiento: pacLab.fechaNacimiento ? moment(pacLab.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
-        sexo: (pacLab.sexo === 'F' ? 'femenino' : (pacLab.sexo === 'M' ? 'masculino' : ''))
+        sexo: pacLab.sexo === 'indeterminado' ? 'otro' : pacLab.sexo
     };
     const match = new Matching();
     return match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
@@ -52,7 +52,11 @@ export async function importarDatos(paciente) {
         const pool = await new sql.ConnectionPool(connection).connect();
         let laboratorios: any = await operations.getEncabezados(pool, paciente);
 
-        if (laboratorios?.recordset?.length) {
+        // obtengo el paciente del SIPS central para realizar matching
+        let pacienteSips = await operations.getPacienteSIPS(pool, paciente);
+        const value = pacienteSips ? matchPaciente(paciente, pacienteSips) : 0;
+
+        if (value >= cota && laboratorios?.recordset?.length) {
             for (const lab of laboratorios?.recordset) {
                 try {
 
@@ -62,10 +66,7 @@ export async function importarDatos(paciente) {
                     let validado = true;
                     let hiv = false;
 
-                    const value = matchPaciente(paciente, lab);
-
-                    if (value >= cota && validado && details?.recordset) {
-
+                    if (validado && details?.recordset) {
                         details.recordset.forEach(detail => {
                             validado = validado && (detail.profesional_val !== '');
                             hiv = hiv || /hiv|vih/i.test(detail.item);
@@ -81,10 +82,9 @@ export async function importarDatos(paciente) {
                         const resultados = await operations.getImpresionResultados(pool, lab.idProtocolo, lab.idEfector);
                         const informe = new InformeLAB(resultados.recordset[0], resultados.recordset, 'Laboratorio');
                         fs.readFile((await informe.informe() as string), async (err, data) => {
-                            
-                            // if (err) {throw err; }
+
                             if (err) { return false; }
-                            
+
                             const file = 'data:application/pdf;base64,' + data.toString('base64');
 
                             const dto = {
@@ -103,29 +103,30 @@ export async function importarDatos(paciente) {
                             return await operations.postCDA(dto);
                         });
 
-                    } else {
-                        // Ver que hacer si no matchea TODO
-                        if (value < cota) {
-                            // logger('-----------------------------------');
-                            // logger(paciente.nombre, lab.nombre);
-                            // logger(paciente.apellido, lab.apellido);
-                            // logger(paciente.documento, lab.numeroDocumento);
-                            // logger(paciente.sexo, lab.sexo);
-                            // logger(paciente.fechaNacimiento, lab.fechaNacimiento);
-                        }
-
                     }
                 } catch (e) {
                     await log.error('cda-laboratorios:import:laboratorios', { error: e, paciente }, e.message, userScheduler);
-                    // No va return porque sigue con el proximo laboratorio dentro del for
-                    // return false;
                 }
+            }
+        } else {
+            // si no matchea se guarda en logs
+            if (pacienteSips && value < cota) {
+                let pacienteAndes = {
+                    id: paciente._id,
+                    documento: paciente.documento,
+                    estado: paciente.estado,
+                    nombre: paciente.nombre,
+                    apellido: paciente.apellido,
+                    sexo: paciente.sexo,
+                    genero: paciente.genero,
+                    fechaNacimiento: paciente.fechaNacimiento
+                };
+                await log.info('cda-laboratorios:importarDatos:notMatching', { matching: value, pacienteAndes, pacienteSips }, userScheduler);
             }
         }
         pool.close();
         return true;
     } catch (e) {
-        // logger('Error', e);
         await log.error('cda-laboratorios:import:laboratorios', { error: e, paciente }, e.message, userScheduler);
         if (e && e.error === 'sips-pdf') {
             return false;
