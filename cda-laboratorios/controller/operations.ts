@@ -33,10 +33,13 @@ export async function organizacionBySisaCode(sisa) {
 
 export async function getEncabezados(pool, paciente) {
     const documento = paciente.documento;
-    const query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
-        'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
-        'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
-        'where encabezado.numeroDocumento = ' + documento;
+    const sexo = paciente.sexo === 'femenino' ? 'F' : paciente.sexo === 'masculino' ? 'M' : 'I';
+
+    const query = `select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, 
+    encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, encabezado.numeroDocumento, 
+    encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado 
+    inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector 
+    where encabezado.numeroDocumento = '${documento}' and encabezado.sexo = '${sexo}'`;
     try {
         return await new sql.Request(pool).query(query);
     } catch (error) {
@@ -44,6 +47,25 @@ export async function getEncabezados(pool, paciente) {
         return null;
     }
 
+}
+
+export async function getPacienteSIPS(conexion, paciente: any) {
+    const documento = parseInt(paciente.documento, 10);
+    const sexo = paciente.sexo === 'otro' ? 'indeterminado' : paciente.sexo;
+    if (documento) {
+        const query = `SELECT TOP 1 idPaciente, apellido, P.nombre, numeroDocumento,fechaNacimiento, Lower(S.nombre) as sexo
+        FROM [SIPS].[dbo].[Sys_Paciente] as P inner join SIPS.dbo.Sys_Sexo as S on P.idSexo=S.idSexo
+        where numeroDocumento = '${documento}' and activo=1`;
+        try {
+            const result = await conexion.request().query(query);
+            return (result && result.recordset) ? result.recordset[0] : null;
+        } catch (error) {
+            await log.error('cda-laboratorios:query:LAB_getPacienteSIPS', { error, query, paciente }, error.message, userScheduler);
+            return null;
+        }
+    } else {
+        return null;
+    }
 }
 
 
