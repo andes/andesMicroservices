@@ -305,7 +305,9 @@ async function filtrarRegistros(registros) {
             registrosCtrol[mapeoRegistros[conceptId]] = Number(valor);
         }
         if (conceptId === '366321006') {
-            registrosCtrol.numGesta = getNumGesta(valor) || null
+            // 364323006: numero de embarazo (solo cuando es mayor a 10)
+            const numMayor10 = registros.find(reg => reg.concepto.conceptId === '364323006')?.valor || null;
+            registrosCtrol.numGesta = getNumGesta(valor, numMayor10);
         }
         else if (conceptId === '289434000') {
             registrosCtrol.movimientosFetales =
@@ -317,14 +319,19 @@ async function filtrarRegistros(registros) {
     return registrosCtrol;
 }
 
-
-function getNumGesta(valor) {
+/**
+ * Registra numero de embarazo, si es mayor a 10 (127374005) se carga su valor numérico, si no mapea con Snomed
+ * @param valor contiene concepto snomed
+ * @param numMayor10 contiene un numero, cuando el valor a mapear es mayor a 10 embarazos.
+ * @returns numero de embarazo
+ */
+function getNumGesta(valor, numMayor10 = null) {
     const conceptId = valor.conceptId;
     const gestas = {
         '29399001': 1, '199719009': 1, '127364007': 1, '53881005': 1,
         '127365008': 2, '127366009': 3, '127367000': 4, '127368005': 5,
         '127369002': 6, '127370001': 7, '127371002': 8, '127372009': 9,
-        '127373004': 10
+        '127373004': 10, '127374005': numMayor10
     }
     const numGesta = gestas[conceptId] || null;
     return numGesta;

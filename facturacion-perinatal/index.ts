@@ -40,7 +40,6 @@ router.group('/perinatalSql', (group) => {
                 }
             }
         } catch (e) {
-            console.log("ERROR => ", e);
             throw e;
         }
     });

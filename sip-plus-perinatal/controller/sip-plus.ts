@@ -4,7 +4,8 @@ import { IPaciente } from '../schemas/paciente';
 import { getMatching } from '../service/matchPerinatal';
 import { getOrganizacionAndes } from '../service/organizacion';
 import { IPerinatal, ISnomedConcept } from 'sip-plus-perinatal/schemas/perinatal';
-
+import { fakeRequest } from '../config.private';
+import { log } from '@andes/log';
 
 /**
  * Obtenemos todos los registros de la prestación
@@ -112,31 +113,30 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
     let newPaciente;
     try {
         // obtenemos el número de embarazo por el que se generó la prestación
-        let emb = registros.find(reg => reg.concepto.conceptId === '366321006');
-
+        const emb = registros.find(reg => reg.concepto.conceptId === '366321006');
+        // si no se genera un numero embarazo, no se realiza mapeo
         if (emb && emb.valor) {
-            const numEmbarazo = getNumGesta(emb.valor).toString();
-            // cargamos datos actuales de la madre al embarazo
-            newPaciente = await completePaciente(pacienteSP, paciente);
-            let embActivo: any = await embarazoActual(pacienteSP, numEmbarazo);
-            let embActual = embActivo ? embActivo.valor : {};
-
-            // completamos la ficha (embarazo) con datos del paciente
-            let newDatosEmb = await datosEmbarazo(paciente, embActual, organizacion);
-
-            // completamos ficha con datos de la prestación
-            newDatosEmb = await createMatchSnomed(registros, embActual, newDatosEmb);
-
-            // completamos en la ficha los datos de un nuevo control
-            newDatosEmb = await createMatchControl(registros, embActual, newDatosEmb, fecha, organizacion);
-
-            if (Object.keys(newPaciente).length || Object.keys(newDatosEmb).length) {
-                newPaciente["pregnancies"] = {};
-                newPaciente["pregnancies"][numEmbarazo] = newDatosEmb;
+            const regNumEmbarazo = registros.find(reg => reg.concepto.conceptId === '364323006');
+            const numEmbarazo = getNumGesta(emb.valor, regNumEmbarazo).toString();
+            if (numEmbarazo) {
+                // cargamos datos actuales de la madre al embarazo
+                newPaciente = await completePaciente(pacienteSP, paciente);
+                let embActivo: any = await embarazoActual(pacienteSP, numEmbarazo);
+                let embActual = embActivo ? embActivo.valor : {};
+                // completamos la ficha (embarazo) con datos del paciente
+                let newDatosEmb = await datosEmbarazo(paciente, embActual, organizacion);
+                // completamos ficha con datos de la prestación
+                newDatosEmb = await createMatchSnomed(registros, embActual, newDatosEmb);
+                // completamos en la ficha los datos de un nuevo control
+                newDatosEmb = await createMatchControl(registros, embActual, newDatosEmb, fecha, organizacion);
+                if (Object.keys(newPaciente).length || Object.keys(newDatosEmb).length) {
+                    newPaciente["pregnancies"] = {};
+                    newPaciente["pregnancies"][numEmbarazo] = newDatosEmb;
+                }
             }
         }
     } catch (error) {
-
+        log(fakeRequest, 'microservices:integration:sip-plus', { pacienteSP, paciente, registros, fecha, organizacion }, 'sip-plus:completePacienteSP', null, null, error);
     }
     return newPaciente;
 
@@ -146,9 +146,10 @@ export async function completePacienteSP(pacienteSP: IPaciente, paciente: IPacie
 /**
  * obtenemos el número de embarazo
  * @param concepto concepto snomed con el numero de embarazo
+ * @param regNumEmbarazo concepto snomed con el numero de embarazo (mayor a 10)
  * @returns numero de embarazo
  */
-function getNumGesta(concepto: ISnomedConcept) {
+function getNumGesta(concepto: ISnomedConcept, regNumEmbarazo = null) {
     const conceptId = concepto.conceptId;
     const conceptIdPrimerGesta = ['29399001', '199719009', '127364007', '53881005'];
     let numGesta = null;
@@ -175,7 +176,9 @@ function getNumGesta(concepto: ISnomedConcept) {
                 break;
             case '127373004': numGesta = 10;
                 break;
-            default:
+            //mas de 10 embarazos
+            case '127374005':
+                numGesta = regNumEmbarazo ? regNumEmbarazo.valor : null;
                 break;
         }
     }
