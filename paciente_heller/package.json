@@ -14,7 +14,7 @@
     "license": "ISC",
     "dependencies": {
         "@andes/bootstrap": "file:../bootstrap",
-        "@andes/fhir": "^1.0.1",
+        "@andes/fhir": "^1.11.1",
         "@andes/log": "^1.0.11",
         "@andes/match": "^1.1.12",
         "async": "^2.6.1",
@@ -25,6 +25,5 @@
         "mssql": "^4.1.0",
         "p-queue": "^3.0.0",
         "request": "^2.88.0"
-    },
-    "devDependencies": {}
+    }
 }
