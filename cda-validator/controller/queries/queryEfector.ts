@@ -1,11 +1,15 @@
-import * as ConfigPrivate from './../../config.private';
+import { staticConfiguration } from './../../config.private';
+import { IConnection, IQueryGuardia } from './../../schemas/queriesGuardia';
+import { getQueries } from './../../service/queriesGuardia'
+
 
 export function queryEfector(efector: any, paciente: any) {
+
     const connectionString = {
-        user: ConfigPrivate.staticConfiguration[efector].user,
-        password: ConfigPrivate.staticConfiguration[efector].password,
-        server: ConfigPrivate.staticConfiguration[efector].ip,
-        database: ConfigPrivate.staticConfiguration[efector].database,
+        user: staticConfiguration[efector].user,
+        password: staticConfiguration[efector].password,
+        server: staticConfiguration[efector].ip,
+        database: staticConfiguration[efector].database,
         requestTimeout: 30000
     };
 
@@ -44,4 +48,27 @@ WHERE   pac.numeroDocumento = '${dni}'`;
         connectionString,
         query
     };
+}
+
+
+// GUARDIAS
+/**
+ * Se obtienen queries a ejecutar en el "efector"
+ */
+export async function getQueriesGuardia(efector) {
+    const connectionString: IConnection = {
+        user: staticConfiguration[efector].user,
+        password: staticConfiguration[efector].password,
+        server: staticConfiguration[efector].ip,
+        database: staticConfiguration[efector].database,
+        formatDate: staticConfiguration[efector].formatDate,
+        requestTimeout: 30000
+    };
+    let arrayQueries: IQueryGuardia[] = await getQueries({ organizacion: { $in: [efector] } });
+    arrayQueries = arrayQueries.map((query) => {
+        query.connection = connectionString;
+        return query;
+    });
+    await Promise.all(arrayQueries);
+    return arrayQueries;
 }
