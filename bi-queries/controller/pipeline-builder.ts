@@ -23,7 +23,7 @@ export function createPipeline(queryData: IQuery, params: IParams[]) {
     if (queryData.argumentos && queryData.argumentos.length) {
         for (const arg of queryData.argumentos) {
             const valor = getValue(arg);
-            if (arg.key === 'organizacion') {
+            if (arg.key === 'organizacion' || arg.key === 'organizacionOrigen') {
                 // Saco el required o no dependiendo si el usuario tiene permiso para todas las organizaciones
                 const setRequired = totalOrganizaciones ? totalOrganizaciones.valor : false; // Esta comprobacion es por si la consulta viene de monitoreo
                 if (setRequired) { // Si tiene permiso para todas las organizacions cambio el requerido a false, caso contrario lo dejo como esta
