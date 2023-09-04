@@ -4,7 +4,7 @@ import { postProfesionalSISA, crearProfesionalSISA } from '../service/operacione
 export async function exportSISA(profesional) {
     let postsSISA = [];
 
-    if(isMatriculado(profesional)) {
+    if (isMatriculado(profesional)) {
         let formacionesGrado = profesional.formacionGrado.filter(async e => e.matriculado);
         for (let formacionGrado of formacionesGrado) {
             let profesionalSisa = await crearProfesionalSISA(profesional, formacionGrado);
