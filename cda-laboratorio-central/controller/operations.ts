@@ -20,12 +20,12 @@ export const fakeRequest = {
 }
 
 export async function organizacionBySisaCode(sisa) {
-    return new Promise( async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         if (cache[sisa]) {
             return resolve(cache[sisa]);
         } else {
             const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
-            const {error, statusCode, body} = await got(url, { responseType: 'json' });
+            const { error, statusCode, body } = await got(url, { responseType: 'json' });
             if (error) {
                 await log.error('cda-laboratorio-central:organizacionBySisaCode', { error, url }, error.message, userScheduler);
             } else if (statusCode >= 200 && statusCode < 300) {
@@ -97,8 +97,7 @@ export async function postCDA(data: any) {
         return (error || body);
     } catch (error) {
         // Suspendemos los logs del post por demasiados registros de 500 - prestación existente
-        // await log.error('cda-laboratorio-central:postCDA', { error, data, payload: error.response?.body }, error.message, userScheduler);
+        // await log.error('cda-laboratorio-central:postCDA', { error, options, payload: error.response?.body }, error.message, userScheduler);
         return error;
     }
-    
 }
