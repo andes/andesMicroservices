@@ -93,7 +93,7 @@ export async function getImpresionResultados(pool, idProtocolo, idEfector) {
 }
 
 export function postCDA(data: any) {
-    return new Promise( async (resolve: any, reject: any) => {
+    return new Promise(async (resolve: any, reject: any) => {
         const url = `${ANDES_HOST}/modules/cda/create`;
         const options = {
             url,

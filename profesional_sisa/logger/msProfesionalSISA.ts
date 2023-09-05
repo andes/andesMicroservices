@@ -9,6 +9,6 @@ export const msProfesionalSISA = new Logger({
     type: 'profesional-sisa',
     module: 'msProfesionalSISA',
     application: 'andes',
-    bucketBy: 'h',
+    bucketBy: 'd',
     bucketSize: 100
 });

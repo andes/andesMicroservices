@@ -11,7 +11,9 @@ router.post('/profesionalSISA', async (req: any, res) => {
     const profesional = req.body.data;
     if (profesional) {
         let prof = await operaciones.getProfesional(profesional._id);
-        await exportSISA(prof);
+        if (prof) {
+            await exportSISA(prof);
+        }
     }
 });
 

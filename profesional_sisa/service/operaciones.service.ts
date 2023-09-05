@@ -1,134 +1,160 @@
 import { ANDES_HOST, ANDES_KEY, SISA, userScheduler } from '../config.private';
 import moment = require('moment');
 import { msProfesionalSISA } from '../logger/msProfesionalSISA';
+import { handleHttpRequest } from './requestHandler';
 const log = msProfesionalSISA.startTrace();
-
-const fetch = require('node-fetch');
 
 export async function postProfesionalSISA(profesional: any) {
     const url = SISA.host;
-    const data = {
-        usuario: SISA.username,
-        clave: SISA.password,
-        profesional
-    };
-    const options = {
-        method: 'POST',
-        json: true,
-        body: data
-    };
-        
     try {
-        const { error, status, body } = await fetch(url, options);
-        if (status >= 200 && status < 300) {
-            return body;
+        const options = {
+            uri: url,
+            method: 'POST',
+            body: profesional,
+            headers: { APP_ID: SISA.API_ID, APP_KEY: SISA.API_KEY, 'Content-Type': 'application/json' },
+            json: true,
+        };
+        const resJson = await handleHttpRequest(options);
+
+        if (resJson && resJson.length > 0) {
+            const statusCode = resJson[0];
+            const body = resJson[1];
+            if (statusCode >= 200 && statusCode < 300 && body?.resultado != 'ERROR_DATOS') {
+                log.info('profesional_sisa:postProfesionalSISA', { options: options, data: body }, userScheduler);
+                return body;
+            } else {
+                return log.error('profesional_sisa:postProfesionalSISA', { options: options, error: body }, body.description, userScheduler);
+            }
         }
-        return (error || body);
     } catch (error) {
-        log.error('profesional_sisa:postProfesionalSISA', { error, options }, error.message, userScheduler);
+        log.error('profesional_sisa:postProfesionalSISA', { error, options: profesional }, error, userScheduler);
     }
-    
 }
 
 export async function getProfesional(idProfesional) {
     const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
+    //${ANDES_KEY}
     const options = {
+        uri: url,
         method: 'GET',
-        headers: {
-            Authorization: `JWT ${ANDES_KEY}`
-        }
+        headers: { Authorization: `JWT ${ANDES_KEY}`, 'Content-Type': 'application/json' },
+        json: true,
     };
-        
     try {
-        let response = await fetch(url, options);
-        const responseJson = await response.json();
-        if (responseJson._id) {
-            return responseJson;
+        const resJson = await handleHttpRequest(options);
+        if (resJson && resJson.length > 0) {
+            const statusCode = resJson[0];
+            const body = resJson[1];
+            if (statusCode >= 200 && statusCode < 300 && body?.resultado != 'ERROR_DATOS') {
+                return body;
+            } else {
+                log.error('profesional_sisa:getProfesional', { options, body }, 'unkown error', userScheduler);
+                return null;
+            }
         } else {
+            log.error('profesional_sisa:getProfesional', { options }, 'unkown error', userScheduler);
             return null;
         }
     } catch (error) {
-        log.error('profesional_sisa:getProfesional', { error, url, options }, error.message, userScheduler);
+        log.error('profesional_sisa:getProfesional', { error, url }, error.message, userScheduler);
     }
 }
 
 export async function getProfesion(codigo) {
     const url = `${ANDES_HOST}/core/tm/profesiones?codigo=${codigo}`;
     const options = {
+        uri: url,
         method: 'GET',
-        headers: {
-            Authorization: `JWT ${ANDES_KEY}`
-        }
+        headers: { Authorization: `JWT `, 'Content-Type': 'application/json' },
+        json: true,
     };
     try {
-        let response = await fetch(url, options);
-        const responseJson = await response.json();
-        if (responseJson.length) {
-            return responseJson[0];
+        const resJson = await handleHttpRequest(options);
+
+        if (resJson && resJson.length > 0) {
+            const statusCode = resJson[0];
+            const body = resJson[1];
+            if (statusCode >= 200 && statusCode < 300 && body?.resultado != 'ERROR_DATOS') {
+                return body;
+            } else {
+                log.error('profesional_sisa:getProfesion', { options, body }, 'unkown error', userScheduler);
+                return null;
+            }
         } else {
+            log.error('profesional_sisa:getProfesion', { options }, 'unkown error', userScheduler);
             return null;
         }
     } catch (error) {
-        log.error('profesional_sisa:getProfesion', { error, url, options }, error.message, userScheduler);
+        log.error('profesional_sisa:getProfesion', { error, url }, error.message, userScheduler);
     }
 }
 
 export async function crearProfesionalSISA(profesional, formacionGrado) {
     // Datos del profesional
-    let profesionalSisa = {};
-    profesionalSisa['APELLIDO'] = profesional.apellido;
-    profesionalSisa['NOMBRE'] = profesional.nombre;
-    profesionalSisa['ID_TIPODOC'] = 1;
-    profesionalSisa['NRODOC'] = parseInt(profesional.documento);
-    profesionalSisa['SEXO'] = (profesional.sexo === 'femenino' || profesional.sexo === 'Femenino') ? 'F' : 'M';
-    profesionalSisa['FECHA_NACIMIENTO'] = moment(profesional.fechaNacimiento).format('DD-MM-YYYY');
+    let profesionalSisa = {
+        profesional: {},
+        profesion: {},
+        matricula: {
+            emisor: {
+                domicilio: {}
+            }
+        }
+
+    };
+    profesionalSisa['profesional']['apellido'] = profesional.apellido;
+    profesionalSisa['profesional']['nombre'] = profesional.nombre;
+    profesionalSisa['profesional']['tipoDocumento'] = 1;
+    profesionalSisa['profesional']['numeroDocumento'] = parseInt(profesional.documento);
+    profesionalSisa['profesional']['sexo'] = (profesional.sexo === 'femenino' || profesional.sexo === 'Femenino') ? 'F' : (profesional.sexo === 'masculino' || profesional.sexo === 'Masculino') ? 'M' : 'X';
+    profesionalSisa['profesional']['fechaNacimiento'] = moment(profesional.fechaNacimiento).format('DD-MM-YYYY');
     const email = profesional.contactos.find(x => x.tipo === 'email' && x.valor);
-    profesionalSisa['EMAIL'] = email ? email.valor : '';
-    profesionalSisa['HABILITADO'] = profesional.habilitado ? 'SI' : 'NO';
-
+    profesionalSisa['profesional']['email'] = email ? email.valor : '';
+    profesionalSisa['profesional']['idPaisNacimiento'] = 200;
+    profesionalSisa['profesional']['idPais'] = 200;
+    profesionalSisa['profesional']['habilitado'] = 'SI';
     // Datos de la profesión
-    profesionalSisa['TITULO'] = formacionGrado ? formacionGrado.titulo : '';
-    
+    profesionalSisa['profesion']['titulo'] = formacionGrado ? formacionGrado.titulo : '';
     if (formacionGrado.entidadFormadora.codigo) {
-        profesionalSisa['ID_INSTITUCION_FORMADORA'] = parseInt(formacionGrado.entidadFormadora.codigo);
+        profesionalSisa['profesion']['idInstitucionFormadora'] = parseInt(formacionGrado.entidadFormadora.codigo);
     }
-    profesionalSisa['FECHA_TITULO'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
-    let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
+    profesionalSisa['profesion']['fechaTitulo'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
+    profesionalSisa['profesion']['idProfesionReferencia'] = parseInt(formacionGrado.profesion.profesionCodigoRef);
+    /*let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
     if (profesionDeReferencia?.profesionCodigoRef) {
-        profesionalSisa['ID_PROFESION_REFERENCIA'] = parseInt(profesionDeReferencia.profesionCodigoRef);
-    }
-
+        profesionalSisa['idProfesionReferencia'] = parseInt(formacionGrado.profesion.profesionCodigoRef);
+    }*/
+    profesionalSisa['profesion']['revalida'] = 'NO';
     // Datos de la matrícula
-    if (formacionGrado?.profesion?.codigo){
-        profesionalSisa['ID_PROFESION'] = parseInt(formacionGrado.profesion.codigo);
-    }
-    profesionalSisa['ID_PROVINCIA_MATRICULA'] = 15;
+
+    profesionalSisa['matricula']['fecha'] = moment(formacionGrado.fechaDeInscripcion).format('DD-MM-YYYY');
     if (formacionGrado?.matriculacion?.length && formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1]?.matriculaNumero) {
-        let matricula = formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1].matriculaNumero;
-        profesionalSisa['MATRICULA'] = parseInt(matricula);
+        let matricula = formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1];
+        profesionalSisa['matricula']['fechaFin'] = moment(matricula.fin).format('DD-MM-YYYY');
+        profesionalSisa['matricula']['codigo'] = parseInt(matricula.matriculaNumero);
     }
-    profesionalSisa['FECHA_MATRICULA'] = moment(formacionGrado.fechaDeInscripcion).format('DD-MM-YYYY');
-    profesionalSisa['ID_SITUACION_MATRICULA'] = 1;
-    profesionalSisa['REMATRICULACION'] = 'NO';
+    profesionalSisa['matricula']['rematriculacion'] = 'NO';
+    profesionalSisa['matricula']['idProvincia'] = 15;
+    if (formacionGrado?.profesion?.codigo) {
+        profesionalSisa['matricula']['idProfesion'] = parseInt(formacionGrado.profesion.codigo);
+    }
     const domicilio = profesional.domicilios.find(x => x.tipo === 'real');
-    profesionalSisa['CALLE'] = domicilio ? domicilio.valor : '';
-    profesionalSisa['CALLE_NRO'] = '-';
-    profesionalSisa['CALLE_PISO'] = '-';
-    profesionalSisa['CALLE_DPTO'] = '-';
-    profesionalSisa['ID_PROVINCIA_DOMICILIO'] = 15;
-    profesionalSisa['ID_PAIS_DOMICILIO'] = 200;
+    profesionalSisa['matricula']['emisor']['domicilio']['calle'] = domicilio ? domicilio.valor : '';
+    profesionalSisa['matricula']['emisor']['domicilio']['idProvincia'] = 15;
+    profesionalSisa['matricula']['emisor']['domicilio']['idPais'] = 200;
     const tel_celular = profesional.contactos.find(x => x.tipo === 'celular' && x.valor);
     const tel_fijo = profesional.contactos.find(x => x.tipo === 'fijo' && x.valor);
-    profesionalSisa['TIENE_TELEFONO'] = (tel_celular || tel_fijo || email) ? 'SI' : 'NO';
-    if (tel_fijo) {
-        profesionalSisa['ID_TIPO_TE1'] =  1;
-        profesionalSisa['TE1'] = tel_fijo.valor;
-    }
+    profesionalSisa['matricula']['emisor']['tieneTelefono'] = (tel_celular || tel_fijo) ? 'SI' : 'NO';
+    let j = 1;
+    profesional.contactos.forEach((cp, i) => {
+        if (cp.tipo === 'celular' || cp.tipo === 'fijo') {
+            let idTel = 'idTipoTelefono' + j;
+            let tel = 'telefono' + j;
+            j++;
+            profesionalSisa['matricula']['emisor'][idTel] = cp.tipo === 'fijo' ? 1 : 2;
+            profesionalSisa['matricula']['emisor'][tel] = cp.valor;
+        }
 
-    if (tel_celular) {
-        profesionalSisa['ID_TIPO_TE2'] =  2;
-        profesionalSisa['TE2'] = tel_celular.valor;
-    }
+    });
 
     return profesionalSisa;
 }
