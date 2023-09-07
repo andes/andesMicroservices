@@ -89,6 +89,36 @@ export async function getProfesion(codigo) {
     }
 }
 
+export async function getEntidadFormadora(idEntidad) {
+    const url = `${ANDES_HOST}/modules/matriculaciones/entidadesFormadoras/${idEntidad}`;
+    const options = {
+        uri: url,
+        method: 'GET',
+        headers: { Authorization: `JWT `, 'Content-Type': 'application/json' },
+        json: true,
+    };
+    try {
+        const resJson = await handleHttpRequest(options);
+
+        if (resJson && resJson.length > 0) {
+            const statusCode = resJson[0];
+            const body = resJson[1];
+            if (statusCode >= 200 && statusCode < 300 && body?.resultado != 'ERROR_DATOS') {
+                return body;
+            } else {
+                log.error('profesional_sisa:getEntidadFormadora', { options, body }, 'unkown error', userScheduler);
+                return null;
+            }
+        } else {
+            log.error('profesional_sisa:getEntidadFormadora', { options }, 'unkown error', userScheduler);
+            return null;
+        }
+    } catch (error) {
+        log.error('profesional_sisa:getEntidadFormadora', { error, url }, error.message, userScheduler);
+    }
+}
+
+
 export async function crearProfesionalSISA(profesional, formacionGrado) {
     // Datos del profesional
     let profesionalSisa = {
@@ -112,20 +142,26 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['profesional']['idPaisNacimiento'] = 200;
     profesionalSisa['profesional']['idPais'] = 200;
     profesionalSisa['profesional']['habilitado'] = 'SI';
-    // Datos de la profesión
     profesionalSisa['profesion']['titulo'] = formacionGrado ? formacionGrado.titulo : '';
+
+    profesionalSisa['profesion']['fechaTitulo'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
+
+    let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
+    if (profesionDeReferencia && profesionDeReferencia.length) {
+        profesionalSisa['profesion']['idProfesionReferencia'] = profesionDeReferencia[0].profesionCodigoRef ? profesionDeReferencia[0].profesionCodigoRef : '';
+    }
+
     if (formacionGrado.entidadFormadora.codigo) {
         profesionalSisa['profesion']['idInstitucionFormadora'] = parseInt(formacionGrado.entidadFormadora.codigo);
+    } else {
+        let entidadFormadora: any = await getEntidadFormadora(formacionGrado.entidadFormadora._id);
+        if (entidadFormadora && entidadFormadora.length) {
+            profesionalSisa['profesion']['idInstitucionFormadora'] = parseInt(entidadFormadora[0].codigo);
+        }
     }
-    profesionalSisa['profesion']['fechaTitulo'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
-    profesionalSisa['profesion']['idProfesionReferencia'] = parseInt(formacionGrado.profesion.profesionCodigoRef);
-    /*let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
-    if (profesionDeReferencia?.profesionCodigoRef) {
-        profesionalSisa['idProfesionReferencia'] = parseInt(formacionGrado.profesion.profesionCodigoRef);
-    }*/
     profesionalSisa['profesion']['revalida'] = 'NO';
-    // Datos de la matrícula
 
+    // Datos de la matrícula
     profesionalSisa['matricula']['fecha'] = moment(formacionGrado.fechaDeInscripcion).format('DD-MM-YYYY');
     if (formacionGrado?.matriculacion?.length && formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1]?.matriculaNumero) {
         let matricula = formacionGrado.matriculacion[formacionGrado.matriculacion.length - 1];
@@ -155,6 +191,5 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
         }
 
     });
-
     return profesionalSisa;
 }
