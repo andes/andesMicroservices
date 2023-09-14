@@ -182,12 +182,12 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['matricula']['emisor']['tieneTelefono'] = (tel_celular || tel_fijo) ? 'SI' : 'NO';
     let j = 1;
     profesional.contactos.forEach((cp, i) => {
-        if (cp.tipo === 'celular' || cp.tipo === 'fijo') {
+        if ((cp.tipo === 'celular' || cp.tipo === 'fijo') && (cp.valor.trim() != "")) {
             let idTel = 'idTipoTelefono' + j;
             let tel = 'telefono' + j;
             j++;
             profesionalSisa['matricula']['emisor'][idTel] = cp.tipo === 'fijo' ? 1 : 2;
-            profesionalSisa['matricula']['emisor'][tel] = cp.valor;
+            profesionalSisa['matricula']['emisor'][tel] = cp.valor.trim();
         }
 
     });
