@@ -2,6 +2,7 @@ import { getData } from './queries';
 import { IMapping, IQueryGuardia } from 'cda-validator/schemas/queriesGuardia';
 import { Matching } from '@andes/match';
 import { ConnectionPool, close } from 'mssql';
+import { importarCDA } from './import-cdaValidators';
 let moment = require('moment');
 
 
@@ -21,11 +22,13 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
             const pool = await new ConnectionPool(queryPaciente.connection).connect();
             queryPaciente = await execQueryPrincipal(pool, queryPaciente, documento);
             let pacienteSips = queryPaciente.result[0];
+            paciente['direccion'] = pacienteSips.direccion;
             if (pacienteSips) {
                 // MATCHING PACIENTE ANDES - SIPS
                 const cota = 0.95;
                 const match = matchPaciente(paciente, pacienteSips);
                 // si el paciente de Sips coinciden con el paciente Andes, se obtienen los datos de guardia
+
                 if (match >= cota) {
                     // INGRESOS en Guardias
                     let queryIngresos = queries.find(q => q.principal === true);
@@ -62,15 +65,15 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
                         });
                         await Promise.all(resultQuery);
                         const infoCDA = await dataCDA;
-                        //armado de cada CDA
+                        await importarCDA(infoCDA, paciente);
                     }
                 }
             }
+            await close();
         } catch (error) {
         }
     }
 }
-
 
 /**
  * Se ejecutan una query y de acuerdo a los datos obtenidos, 
