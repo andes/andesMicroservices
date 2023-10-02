@@ -3,8 +3,10 @@ import { IMapping, IQueryGuardia } from 'cda-validator/schemas/queriesGuardia';
 import { Matching } from '@andes/match';
 import { ConnectionPool, close } from 'mssql';
 import { importarCDA } from './import-cdaValidators';
+import { msCDAValidatorLog } from '../logger/msCDAValidator';
+import { userScheduler } from '../config.private';
 let moment = require('moment');
-
+const log = msCDAValidatorLog.startTrace();
 
 /**
  * ----- GUARDIAS ------
@@ -43,34 +45,55 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
 
                     // queries que dependen de la principal
                     const queriesEjecutar2 = getQueriesOrigin(nameQueryOrigin);
-
-                    for (let guardia of queryIngresos.result) {
-                        dataCDA = JSON.parse(JSON.stringify(guardia));
-                        // Se recorren y ejecutan todas las queries de nivel 2: dependen de la principal (ingresos)
-                        // para cada query, se recorren y ejecutan sus dependientes (nivel 3)
-                        // quizás se puede re-pensar esto de forma recursiva
-                        const resultQuery = queriesEjecutar2.map(async unaQuery => {
-                            const queriesEjecutar3 = getQueriesOrigin(unaQuery.nombre);
-                            let resultQuery2 = [];
-                            if (!queriesEjecutar3.length) {
-                                dataCDA = getDataQuery(dataCDA, guardia, unaQuery, nameQueryOrigin, null, pool);
-                            }
-                            else {
-                                resultQuery2 = queriesEjecutar3.map(async query => {
-                                    dataCDA = getDataQuery(dataCDA, guardia, unaQuery, nameQueryOrigin, query, pool);
-                                    return dataCDA;
-                                });
-                            }
-                            return dataCDA;
-                        });
-                        await Promise.all(resultQuery);
-                        const infoCDA = await dataCDA;
-                        await importarCDA(infoCDA, paciente);
+                    if (queryIngresos.result.length) {
+                        for (let guardia of queryIngresos.result) {
+                            dataCDA = JSON.parse(JSON.stringify(guardia));
+                            // Se recorren y ejecutan todas las queries de nivel 2: dependen de la principal (ingresos)
+                            // para cada query, se recorren y ejecutan sus dependientes (nivel 3)
+                            // quizás se puede re-pensar esto de forma recursiva
+                            const resultQuery = queriesEjecutar2.map(async unaQuery => {
+                                const queriesEjecutar3 = getQueriesOrigin(unaQuery.nombre);
+                                let resultQuery2 = [];
+                                if (!queriesEjecutar3.length) {
+                                    dataCDA = getDataQuery(dataCDA, guardia, unaQuery, nameQueryOrigin, null, pool);
+                                }
+                                else {
+                                    resultQuery2 = queriesEjecutar3.map(async query => {
+                                        dataCDA = getDataQuery(dataCDA, guardia, unaQuery, nameQueryOrigin, query, pool);
+                                        return dataCDA;
+                                    });
+                                }
+                                return dataCDA;
+                            });
+                            await Promise.all(resultQuery);
+                            const infoCDA = await dataCDA;
+                            await importarCDA(infoCDA, paciente);
+                        }
+                    } else {
+                        await log.info('guardia:query:notResult', { matching: match, pacienteSips }, userScheduler);
+                    }
+                } else {
+                    // si no matchea se guarda en logs
+                    if (pacienteSips && match < cota) {
+                        let pacienteAndes = {
+                            id: paciente._id,
+                            documento: paciente.documento,
+                            estado: paciente.estado,
+                            nombre: paciente.nombre,
+                            apellido: paciente.apellido,
+                            sexo: paciente.sexo,
+                            genero: paciente.genero,
+                            fechaNacimiento: paciente.fechaNacimiento
+                        };
+                        await log.info('guardia:importarDatos:notMatching', { matching: match, pacienteAndes, pacienteSips }, userScheduler);
                     }
                 }
+            } else {
+                await log.info('guardia:pacienteSips:notFound', { pacienteSips }, userScheduler);
             }
             await close();
         } catch (error) {
+            await log.error('guardia:import:guardias', { error, paciente }, error.message, userScheduler);
         }
     }
 }

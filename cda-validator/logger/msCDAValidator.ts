@@ -6,7 +6,7 @@ let logs: mongoose.Connection = mongoose.createConnection();
 logs = mongoose.createConnection(logDatabase.log.host, logDatabase.log.options);
 export const msCDAValidatorLog = new Logger({
     connection: logs,
-    type: 'cda-validator',
+    type: 'guardia',
     module: 'msCDAValidator',
     application: 'andes',
     bucketBy: 'h',
