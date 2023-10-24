@@ -1,5 +1,5 @@
 import { getData } from './queries';
-import { IMapping, IQueryGuardia } from 'cda-validator/schemas/queriesGuardia';
+import { IMapping, IQueryGuardia } from '../schemas/queriesGuardia';
 import { Matching } from '@andes/match';
 import { ConnectionPool, close } from 'mssql';
 import { importarCDA } from './import-cdaValidators';
@@ -15,17 +15,17 @@ const log = msCDAValidatorLog.startTrace();
  * @param paciente Andes
  */
 export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[], paciente) {
-    const documento = paciente.documento; // DNI ejemplo chosma 35864863 o  7569196
+    const documento = paciente.documento;
     if (queries && documento) {
         let dataCDA = null;
         try {
             close();
             let queryPaciente = queries.find(q => q.nombre === 'paciente');
             const pool = await new ConnectionPool(queryPaciente.connection).connect();
-            queryPaciente = await execQueryPrincipal(pool, queryPaciente, documento);
+            queryPaciente = await execQueryPrincipal(pool, efector, queryPaciente, documento);
             let pacienteSips = queryPaciente.result[0];
-            paciente['direccion'] = pacienteSips.direccion;
             if (pacienteSips) {
+                paciente['direccion'] = pacienteSips.direccion;
                 // MATCHING PACIENTE ANDES - SIPS
                 const cota = 0.95;
                 const match = matchPaciente(paciente, pacienteSips);
@@ -39,7 +39,7 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
                     const fechaDesde = queryIngresos.mapping.find(m => m.param === "fechaDesde")?.value || moment().subtract(3, 'months').toDate();
                     const fechaHasta = queryIngresos.mapping.find(m => m.param === "fechaHasta")?.value || moment().toDate();
 
-                    queryIngresos = await execQueryPrincipal(pool, queryIngresos, documento, fechaDesde, fechaHasta);
+                    queryIngresos = await execQueryPrincipal(pool, efector, queryIngresos, documento, fechaDesde, fechaHasta);
                     let nameQueryOrigin = queryIngresos.nombre;
                     const getQueriesOrigin = (nombre: string) => queries.filter(q => q.mapping.find(m => m.queryOrigin === nombre));
 
@@ -69,8 +69,6 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
                             const infoCDA = await dataCDA;
                             await importarCDA(infoCDA, paciente);
                         }
-                    } else {
-                        await log.info('guardia:query:notResult', { matching: match, pacienteSips }, userScheduler);
                     }
                 } else {
                     // si no matchea se guarda en logs
@@ -85,15 +83,13 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
                             genero: paciente.genero,
                             fechaNacimiento: paciente.fechaNacimiento
                         };
-                        await log.info('guardia:importarDatos:notMatching', { matching: match, pacienteAndes, pacienteSips }, userScheduler);
+                        await log.info('guardia:ejecutaCDAGuardia:notMatching', { efector, matching: match, pacienteAndes, pacienteSips }, userScheduler);
                     }
                 }
-            } else {
-                await log.info('guardia:pacienteSips:notFound', { pacienteSips }, userScheduler);
             }
             await close();
         } catch (error) {
-            await log.error('guardia:import:guardias', { error, paciente }, error.message, userScheduler);
+            await log.error('guardia:ejecutaCDAGuardia:ejecutarGuardias', { efector, paciente, dataCDA }, error.message, userScheduler);
         }
     }
 }
@@ -126,26 +122,32 @@ async function getDataQuery(dataCDA: any, dataOrigin: any, dataQuery: IQueryGuar
 /**
  * Ejecuta la query que realiza un filtro de fecha sobre los ingresos de guardia para un paciente
  */
-async function execQueryPrincipal(pool, queryPrincipal: IQueryGuardia, documento, fechaDesde = null, fechaHasta = null) {
-    const formatDate = queryPrincipal.connection.formatDate || 'MM-DD-YY';
-    queryPrincipal.mapping = queryPrincipal.mapping.map((map) => {
-        if (map.param === 'documento') { map.value = documento }
-        if (map.param === 'fechaDesde' && fechaDesde) { map.value = moment(fechaDesde).format(formatDate) }
-        if (map.param === 'fechaHasta' && fechaHasta) { map.value = moment(fechaHasta).format(formatDate) }
-        if (map.value) {
-            queryPrincipal.query = replaceDataQuery(queryPrincipal.query, map);
-        }
-        return map;
-    });
-    const resultado = await getData(pool, queryPrincipal.query);
-    queryPrincipal.result = resultado.recordset as any[] || [];
+async function execQueryPrincipal(pool, efector: string, queryPrincipal: IQueryGuardia, documento, fechaDesde = null, fechaHasta = null) {
+    try {
+        const formatDate = queryPrincipal.connection.formatDate || 'MM-DD-YY';
+        queryPrincipal.result = [];
+        queryPrincipal.mapping = queryPrincipal.mapping.map((map) => {
+            if (map.param === 'documento') { map.value = documento }
+            if (map.param === 'fechaDesde' && fechaDesde) { map.value = moment(fechaDesde).format(formatDate) }
+            if (map.param === 'fechaHasta' && fechaHasta) { map.value = moment(fechaHasta).format(formatDate) }
+            if (map.value) {
+                queryPrincipal.query = replaceDataQuery(queryPrincipal.query, map);
+            }
+            return map;
+        });
+        const resultado = await getData(pool, queryPrincipal.query);
+        queryPrincipal.result = resultado.recordset as any[];
+    }
+    catch (error) {
+        await log.error('guardia:ejecutaCDAGuardia:execQueryPrincipal', { efector, queryPrincipal, documento }, error.message, userScheduler);
+    }
     return queryPrincipal;
 }
 
 /**
  * Se completan los datos de cada elemento del arreglo de mapeos (mapping) para una query determinada
  * que dependa (o no) de los datos de una query ya ejecutada.
- * @param dataQuery contiene los datos de la query a analizar => PODRIA ENVIARSE SOLO EL ARRAY DE MAPPING
+ * @param dataQuery contiene los datos de la query a analizar
  * @param dataOrigin resultado de la query ejecutada
  * @param nombreQueryOrigin nombre de la query de donde es dataOrigin
  * @returns arreglo mapping con sus valores correspondientes

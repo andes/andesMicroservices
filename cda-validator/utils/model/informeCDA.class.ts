@@ -3,6 +3,9 @@ import * as path from 'path';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import { HTMLComponent } from './html-component.class';
+import { userScheduler } from '../../config.private';
+import { msCDAValidatorLog } from '../../logger/msCDAValidator';
+const log = msCDAValidatorLog.startTrace();
 
 export class InformeCDAPDF extends HTMLComponent {
     template = `
@@ -40,13 +43,17 @@ export class InformeCDAPDF extends HTMLComponent {
         };
         const html = await this.render();
         return new Promise((resolve, reject) => {
-            pdf.create(html, opciones).toFile((err, file) => {
-                if (err) {
-
-                    return reject(err);
-                }
-                return resolve(file.filename);
-            });
+            try {
+                pdf.create(html, opciones).toFile((err, file) => {
+                    if (err) {
+                        log.error('guardia:informe:pdf_toFile', { err }, err.message, userScheduler);
+                        return reject(err);
+                    }
+                    return resolve(file.filename);
+                });
+            } catch (err) {
+                log.error('guardia:informe:pdf_create', { err }, err.message, userScheduler);
+            }
         });
     }
 

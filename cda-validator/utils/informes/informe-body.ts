@@ -1,8 +1,11 @@
 import moment = require("moment");
-import { HTMLComponent } from "../model/html-component.class";
-
+import { HTMLComponent } from "./../model/html-component.class";
+import { msCDAValidatorLog } from './../../logger/msCDAValidator';
+import { userScheduler } from "./../../config.private";
+const log = msCDAValidatorLog.startTrace();
 export class InformeCDABody extends HTMLComponent {
   template = `
+  <div class="rectTitulo"><b><p>SERVICIO DE EMERGENCIA - REGISTRO DE GUARDIA</p></b></div>
   <div class="org"><b>{{efector}}</b></div>
   <div class="rectangulo"><b>PACIENTE</b></div>
   <div class="column">
@@ -454,8 +457,8 @@ export class InformeCDABody extends HTMLComponent {
     <!-- FIN DE REPETITIVA -->
 
     </br>
-    <div class="medicResp colDiag margenDerecho"><b>DIAGNÓSTICOS CIE10</b></div>
-    <div class="medicResp colEnfEgr"><b>DIAGNÓSTICOS CIE10</b></div>
+    <div class="medicResp colDiag margenDerecho"><b>MÉDICO RESPONSABLE</b></div>
+    <div class="medicResp colEnfEgr"><b>INFORMACIÓN DE EGRESO</b></div>
     <div class="clearfix"></div>
     <div class="col colDiag margenDerecho"><b>Nombre</b></div>
     <div class="col colEnferm"><b>Fecha</b></div>
@@ -469,7 +472,7 @@ export class InformeCDABody extends HTMLComponent {
     <div class="colFirma"><b>Firma y sello del profesional</b></div
     <div class="clearfix"></div>
   `;
-  constructor(public detalle, public paciente, public organizacion) {
+  constructor(public datosGuardia, public paciente, public organizacion) {
     super();
   }
 
@@ -481,144 +484,148 @@ export class InformeCDABody extends HTMLComponent {
     const procedimientosEnfermeria = [];
     const prescripciones = [];
     const diagnosticos = [];
-    if (this.detalle.anotacionesEnfermeria) {
-      this.detalle.anotacionesEnfermeria.forEach(anotacion => {
-        let item = {
-          fecha: (anotacion.fecha) ? moment(anotacion.fecha).format('DD/MM/YYYY HH:mm') : null,
-          enfermero: `${anotacion.enfermero[0].nombre} ${anotacion.enfermero[0].apellido}`,
-          tipo: anotacion.tipoAnotacion,
-          anotacion: anotacion.Observacion
-        };
-        anotaciones.push(item);
-      });
-    }
-
-    if (this.detalle.valoracionEnfermeria) {
-      this.detalle.valoracionEnfermeria.forEach(anotacionEnfermeria => {
-        let item = {
-          hora: (anotacionEnfermeria.fechaHora) ? moment(anotacionEnfermeria.fecha).format('DD/MM/YYYY HH:mm') : null,
-          tension: anotacionEnfermeria.tensionArterial,
-          fc: anotacionEnfermeria.frecuenciaCardiaca,
-          fr: anotacionEnfermeria.frecuenciaRespiratoria,
-          temp: anotacionEnfermeria.temperatura,
-          sat: anotacionEnfermeria.saturacionOxigeno,
-          glas_ocular: anotacionEnfermeria.glasgow_ocular,
-          glas_verbal: anotacionEnfermeria.glasgow_verbal,
-          glas_motor: anotacionEnfermeria.glasgow_motor,
-          peso: anotacionEnfermeria.peso,
-          pup_tam: anotacionEnfermeria.pupilas_tamano,
-          pup_react: anotacionEnfermeria.pupilas_reactividad,
-          pup_sim: anotacionEnfermeria.pupilas_simetria,
-          sensor: anotacionEnfermeria.sensorio,
-          sibilan: anotacionEnfermeria.sibilancia,
-          muscAcc: anotacionEnfermeria.muscAccesorio,
-          observaciones: anotacionEnfermeria.observaciones
-        }
-        valoracionEnfermeria.push(item);
-      });
-    }
-
-    if (this.detalle.interconsultas) {
-      this.detalle.interconsultas.forEach(interconsulta => {
-        let item = {
-          solicitadoDia: (interconsulta.fecha) ? moment(interconsulta.fecha).format('DD/MM/YYYY HH:mm') : null,
-          solicitadoPor: (interconsulta.usuarioSolicita) ? `${interconsulta.usuarioSolicita[0].nombre} ${interconsulta.usuarioSolicita[0].apellido}` : null,
-          practica: interconsulta.practica,
-          estado: interconsulta.estado,
-          informe: interconsulta.informeMedicoInterconsultor,
-          observacion: interconsulta.observaciones,
-        }
-        interconsultas.push(item);
-      });
-    }
-
-    if (this.detalle.estudios) {
-      this.detalle.estudios.forEach(estudio => {
-        let item = {
-          solicitadoDia: (estudio.fecha) ? moment(estudio.fecha).format('DD/MM/YYYY HH:mm') : null,
-          solicitadoPor: (estudio.usuarioSolicita) ? `${estudio.usuarioSolicita[0].nombre} ${estudio.usuarioSolicita[0].apellido}` : null,
-          practica: estudio.practica,
-          estado: estudio.estado,
-          informe: estudio.informeMedicoInterconsultor,
-          observacion: estudio.observaciones,
-        }
-        estudios.push(item);
-      });
-    }
-
-    if (this.detalle.procedimientosEnfermeria) {
-      this.detalle.procedimientosEnfermeria.forEach(procedimiento => {
-        let item = {
-          solicitadoDia: (procedimiento.fecha) ? moment(procedimiento.fecha).format('DD/MM/YYYY HH:mm') : null,
-          solicitadoPor: (procedimiento.usuarioSolicita) ? `${procedimiento.usuarioSolicita[0].nombre} ${procedimiento.usuarioSolicita[0].apellido}` : null,
-          practica: procedimiento.practica,
-          estado: procedimiento.estado,
-          informe: procedimiento.informeMedicoInterconsultor,
-          observacion: procedimiento.observaciones,
-        }
-        procedimientosEnfermeria.push(item);
-      });
-    }
-
-    if (this.detalle.prescripciones) {
-      this.detalle.prescripciones.forEach(prescrip => {
-        let item = {
-          fechaMedica: (prescrip.fecha) ? moment(prescrip.fecha).format('DD/MM/YYYY HH:mm') : null,
-          indicacion: prescrip.prescripcion,
-          medico: (prescrip.medico) ? `${prescrip.medico[0].nombre} ${prescrip.medico[0].apellido}` : null,
-          fechaEnfer: (prescrip.fechaRealizada) ? moment(prescrip.fechaRealizada).format('DD/MM/YYYY HH:mm') : null,
-          anotacion: prescrip.observacion,
-          enfermero: (prescrip.enfermero) ? `${prescrip.enfermero[0].nombre} ${prescrip.enfermero[0].apellido}` : null
-        }
-        prescripciones.push(item);
-      });
-    }
-
-    let item = {}
-    if (this.detalle.diagnosticos) {
-      this.detalle.diagnosticos.forEach(diagnostico => {
-        item = {
-          fecha: (diagnostico.fecha) ? moment(diagnostico.fecha).format('DD/MM/YYYY HH:mm') : null,
-          medico: `${diagnostico.audit_user[0].nombre} ${diagnostico.audit_user[0].apellido}`,
-          tipo: (diagnostico.tipoDiagnostico === 1) ? 'Principal' : 'Secundario',
-          diagnostico: `${diagnostico.CodigoCie} - ${diagnostico.DescCie}`
-        }
-      });
-    } else {
-      item = {
-        fecha: (this.detalle.fechaEgreso) ? moment(this.detalle.fechaEgreso).format('DD/MM/YYYY HH:mm') : null,
-        medico: this.detalle.medicoResp,
-        tipo: 'Principal',
-        diagnostico: this.detalle.CodigoCIE10
+    try {
+      if (this.datosGuardia.anotacionesEnfermeria) {
+        this.datosGuardia.anotacionesEnfermeria.forEach(anotacion => {
+          let item = {
+            fecha: (anotacion.fecha) ? moment(anotacion.fecha).utc().format('DD/MM/YYYY HH:mm') : null,
+            enfermero: `${anotacion.enfermero[0].nombre} ${anotacion.enfermero[0].apellido}`,
+            tipo: anotacion.tipoAnotacion,
+            anotacion: anotacion.Observacion
+          };
+          anotaciones.push(item);
+        });
       }
-    }
-    diagnosticos.push(item);
 
-    this.data = {
-      documento: this.detalle.documento,
-      historiaClinica: this.detalle.historiaID || this.detalle.hc_historia,
-      nombre: this.detalle.nombre,
-      edad: this.detalle.edad,
-      sexo: this.detalle.sexo,
-      domicilio: this.detalle.direccion || this.paciente.direccion,
-      obraSocial: this.detalle.obraSocial,
-      fechaNacimiento: (this.paciente.fechaNacimiento) ? moment(this.paciente.fechaNacimiento).format('DD/MM/YYYY') : null,
-      fechaIngreso: (this.detalle.fechaIngreso) ? moment(this.detalle.fechaIngreso).format('DD/MM/YY HH:mm') : null,
-      fechaAtencion: (this.detalle.fechaAtencion) ? moment(this.detalle.fechaAtencion).format('DD/MM/YY HH:mm') : null,
-      formaIngreso: this.detalle.tipoIngreso,
-      motivoConsulta: this.detalle.motivoConsulta || this.detalle.datosExtra[0].guardiaMotivoConsulta,
-      anotaciones,
-      valoracionEnfermeria,
-      interconsultas,
-      estudios,
-      procedimientosEnfermeria,
-      prescripciones,
-      diagnosticos,
-      medicoResp: this.detalle.medicoResp,
-      fechaEgreso: (this.detalle.fechaEgreso) ? moment(this.detalle.fechaEgreso).format('DD/MM/YY HH:mm') : null,
-      tipoEgreso: this.detalle.tipoEgreso,
-      observaciones: this.detalle.datosExtra[0].egresoObservacion,
-      efector: this.organizacion.nombre
+      if (this.datosGuardia.valoracionEnfermeria) {
+        this.datosGuardia.valoracionEnfermeria.forEach(anotacionEnfermeria => {
+          let item = {
+            hora: (anotacionEnfermeria.fechaHora) ? moment(anotacionEnfermeria.fechaHora).utc().format('DD/MM/YYYY HH:mm') : null,
+            tension: anotacionEnfermeria.tensionArterial,
+            fc: anotacionEnfermeria.frecuenciaCardiaca,
+            fr: anotacionEnfermeria.frecuenciaRespiratoria,
+            temp: anotacionEnfermeria.temperatura,
+            sat: anotacionEnfermeria.saturacionOxigeno,
+            glas_ocular: anotacionEnfermeria.glasgow_ocular,
+            glas_verbal: anotacionEnfermeria.glasgow_verbal,
+            glas_motor: anotacionEnfermeria.glasgow_motor,
+            peso: anotacionEnfermeria.peso,
+            pup_tam: anotacionEnfermeria.pupilas_tamano,
+            pup_react: anotacionEnfermeria.pupilas_reactividad,
+            pup_sim: anotacionEnfermeria.pupilas_simetria,
+            sensor: anotacionEnfermeria.sensorio,
+            sibilan: anotacionEnfermeria.sibilancia,
+            muscAcc: anotacionEnfermeria.muscAccesorio,
+            observaciones: anotacionEnfermeria.observaciones
+          }
+          valoracionEnfermeria.push(item);
+        });
+      }
+
+      if (this.datosGuardia.interconsultas) {
+        this.datosGuardia.interconsultas.forEach(interconsulta => {
+          let item = {
+            solicitadoDia: (interconsulta.fecha) ? moment(interconsulta.fecha).utc().format('DD/MM/YYYY HH:mm') : null,
+            solicitadoPor: (interconsulta.usuarioSolicita) ? `${interconsulta.usuarioSolicita[0].nombre} ${interconsulta.usuarioSolicita[0].apellido}` : null,
+            practica: interconsulta.practica,
+            estado: interconsulta.estado,
+            informe: interconsulta.informeMedicoInterconsultor,
+            observacion: interconsulta.observaciones,
+          }
+          interconsultas.push(item);
+        });
+      }
+
+      if (this.datosGuardia.estudios) {
+        this.datosGuardia.estudios.forEach(estudio => {
+          let item = {
+            solicitadoDia: (estudio.fecha) ? moment(estudio.fecha).utc().format('DD/MM/YYYY HH:mm') : null,
+            solicitadoPor: (estudio.usuarioSolicita) ? `${estudio.usuarioSolicita[0].nombre} ${estudio.usuarioSolicita[0].apellido}` : null,
+            practica: estudio.practica,
+            estado: estudio.estado,
+            informe: estudio.informeMedicoInterconsultor,
+            observacion: estudio.observaciones,
+          }
+          estudios.push(item);
+        });
+      }
+
+      if (this.datosGuardia.procedimientosEnfermeria) {
+        this.datosGuardia.procedimientosEnfermeria.forEach(procedimiento => {
+          let item = {
+            solicitadoDia: (procedimiento.fecha) ? moment(procedimiento.fecha).utc().format('DD/MM/YYYY HH:mm') : null,
+            solicitadoPor: (procedimiento.usuarioSolicita) ? `${procedimiento.usuarioSolicita[0].nombre} ${procedimiento.usuarioSolicita[0].apellido}` : null,
+            practica: procedimiento.practica,
+            estado: procedimiento.estado,
+            informe: procedimiento.informeMedicoInterconsultor,
+            observacion: procedimiento.observaciones,
+          }
+          procedimientosEnfermeria.push(item);
+        });
+      }
+
+      if (this.datosGuardia.prescripciones) {
+        this.datosGuardia.prescripciones.forEach(prescrip => {
+          let item = {
+            fechaMedica: (prescrip.fecha) ? moment(prescrip.fecha).utc().format('DD/MM/YYYY HH:mm') : null,
+            indicacion: prescrip.prescripcion,
+            medico: (prescrip.medico) ? `${prescrip.medico[0].nombre} ${prescrip.medico[0].apellido}` : null,
+            fechaEnfer: (prescrip.fechaRealizada) ? moment(prescrip.fechaRealizada).utc().format('DD/MM/YYYY HH:mm') : null,
+            anotacion: prescrip.observacion,
+            enfermero: (prescrip.enfermero) ? `${prescrip.enfermero[0].nombre} ${prescrip.enfermero[0].apellido}` : null
+          }
+          prescripciones.push(item);
+        });
+      }
+
+      let item = {}
+      if (this.datosGuardia.diagnosticos) {
+        this.datosGuardia.diagnosticos.forEach(diagnostico => {
+          item = {
+            fecha: (diagnostico.fecha) ? moment(diagnostico.fecha).utc().format('DD/MM/YYYY HH:mm') : null,
+            medico: `${diagnostico.audit_user[0].nombre} ${diagnostico.audit_user[0].apellido}`,
+            tipo: (diagnostico.tipoDiagnostico === 1) ? 'Principal' : 'Secundario',
+            diagnostico: `${diagnostico.CodigoCie} - ${diagnostico.DescCie}`
+          }
+        });
+      } else {
+        item = {
+          fecha: (this.datosGuardia.fechaEgreso) ? moment(this.datosGuardia.fechaEgreso).utc().format('DD/MM/YYYY HH:mm') : null,
+          medico: this.datosGuardia.medicoResp,
+          tipo: 'Principal',
+          diagnostico: this.datosGuardia.CodigoCIE10
+        }
+      }
+      diagnosticos.push(item);
+
+      this.data = {
+        documento: this.datosGuardia.documento,
+        historiaClinica: this.datosGuardia.historiaID || this.datosGuardia.hc_historia,
+        nombre: this.datosGuardia.nombre,
+        edad: this.datosGuardia.edad,
+        sexo: this.datosGuardia.sexo,
+        domicilio: this.datosGuardia.direccion || this.paciente.direccion,
+        obraSocial: this.datosGuardia.obraSocial,
+        fechaNacimiento: (this.paciente.fechaNacimiento) ? moment(this.paciente.fechaNacimiento).utc().format('DD/MM/YYYY') : null,
+        fechaIngreso: (this.datosGuardia.fechaIngreso) ? moment(this.datosGuardia.fechaIngreso).utc().format('DD/MM/YY HH:mm') : null,
+        fechaAtencion: (this.datosGuardia.fechaAtencion) ? moment(this.datosGuardia.fechaAtencion).utc().format('DD/MM/YY HH:mm') : null,
+        formaIngreso: this.datosGuardia.tipoIngreso,
+        motivoConsulta: this.datosGuardia.motivoConsulta || this.datosGuardia.datosExtra[0].guardiaMotivoConsulta,
+        anotaciones,
+        valoracionEnfermeria,
+        interconsultas,
+        estudios,
+        procedimientosEnfermeria,
+        prescripciones,
+        diagnosticos,
+        medicoResp: this.datosGuardia.medicoResp,
+        fechaEgreso: (this.datosGuardia.fechaEgreso) ? moment(this.datosGuardia.fechaEgreso).utc().format('DD/MM/YY HH:mm') : null,
+        tipoEgreso: this.datosGuardia.tipoEgreso,
+        observaciones: this.datosGuardia.datosExtra[0].egresoObservacion,
+        efector: this.organizacion.nombre
+      }
+    } catch (error) {
+      await log.error('guardia:informeBody', { error }, error.message, userScheduler);
     }
   }
 }

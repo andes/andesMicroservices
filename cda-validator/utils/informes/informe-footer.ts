@@ -6,7 +6,7 @@ export class InformeCDAFooter extends HTMLComponent {
     template = `
         <hr>
         <div class="foot">
-		    Impreso el día: {{fecha}}
+		    Generado el día: {{fecha}}
 	    </div>
     `;
     constructor() {

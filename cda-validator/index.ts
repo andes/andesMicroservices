@@ -5,8 +5,10 @@ import { efectores } from './constantes';
 import { queries } from './controller/queries/queries';
 import { IQueryGuardia } from './schemas/queriesGuardia';
 import { getQueriesGuardia } from './controller/queries/queryEfector';
-import { efectoresGuardia } from './config.private'
+import { efectoresGuardia, userScheduler, } from './config.private'
+import { msCDAValidatorLog } from './logger/msCDAValidator';
 
+const log = msCDAValidatorLog.startTrace();
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -60,8 +62,8 @@ router.group('/cda', (group) => {
             case 'mobile:patient:login':
                 paciente = data.pacientes[0];
                 break;
-            case 'mpi:patient:update':
-            case 'mpi:patient:create':
+            case 'mpi:pacientes:update':
+            case 'mpi:pacientes:create':
                 paciente = data;
                 break;
             default:
@@ -69,15 +71,16 @@ router.group('/cda', (group) => {
                 break;
         }
         try {
-            if (paciente && paciente.documento && paciente.estado === 'validado') {
+            const validado = paciente && (!paciente.estado || paciente.estado === 'validado');
+            if (validado && paciente.documento) {
                 for (const efector of efectoresGuardia) {
                     const queriesGuardia: IQueryGuardia[] = await getQueriesGuardia(efector);
                     await ejecutarGuardias(efector, queriesGuardia, paciente);
                 }
             }
         } catch (error) {
+            log.error('guardia:index', { error }, error.message, userScheduler);
         }
-
     });
 });
 

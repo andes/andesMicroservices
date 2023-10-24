@@ -6,21 +6,28 @@ const log = msCDAValidatorLog.startTrace();
 
 export async function postCDA(data: any) {
     const url = `${ANDES_HOST}/modules/cda/create`;
-
-    const response = await fetch(url, {
+    const options = {
+        url,
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `JWT ${ANDES_KEY}`
+            Authorization: `JWT ${ANDES_KEY}`
         }
-    });
-    const body = response.json();
-    if (response.status >= 200 && response.status < 300) {
-        return await body;
-    } else {
-        log.error('guardia:postGuardiasCDA', { response, body }, 'unkown error', userScheduler);
-        return null;
+    };
+    try {
+        let response = await fetch(url, options);
+        const responseJson = await response.json();
+
+        if (response.status >= 200 && response.status < 300) {
+            return await responseJson;
+        } else {
+            log.error('guardia:postCDA:statusError', { dataCDA: data, url }, { status: responseJson.error, message: responseJson.message }, userScheduler);
+            return null;
+        }
+    }
+    catch (error) {
+        log.error('guardia:postCDA', { error: error.message }, userScheduler);
     }
 }
 
