@@ -14,10 +14,16 @@
   "license": "ISC",
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
+    "@andes/log": "^2.2.5",
     "@andes/match": "^1.1.12",
+    "handlebars": "^4.7.6",
     "html-entities": "^1.2.1",
+    "html-pdf": "^2.2.0",
+    "logger": "^0.0.1",
     "moment": "^2.22.0",
+    "mongoose": "^5.10.9",
     "mssql": "^4.1.0",
-    "request": "^2.88.0"
+    "node-fetch": "^2.7.0",
+    "node-sass": "^7.0.1"
   }
 }

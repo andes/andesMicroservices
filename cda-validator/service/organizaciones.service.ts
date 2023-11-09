@@ -1,27 +1,26 @@
 import { ANDES_HOST, ANDES_KEY } from './../config.private';
-const request = require('request');
-
-const cache = {};
+import { userScheduler } from '../config.private';
+import { msCDAValidatorLog } from '../logger/msCDAValidator';
+const fetch = require('node-fetch');
+const log = msCDAValidatorLog.startTrace();
 
 export async function getOrganizacion(sisa) {
-    return new Promise((resolve, reject) => {
-        if (cache[sisa]) {
-            return resolve(cache[sisa]);
-        } else {
-            const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
-            request(url, (error, response, body) => {
-                if (!error && response.statusCode >= 200 && response.statusCode < 300) {
-                    const orgs: any[] = JSON.parse(body);
-                    if (orgs && orgs.length) {
-                        cache[sisa] = {
-                            _id: orgs[0].id,
-                            nombre: orgs[0].nombre,
-                        };
-                        return resolve(cache[sisa]);
-                    }
-                }
-                return reject(error || body);
-            });
+    const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}`;
+    const options = {
+        url,
+        method: 'GET',
+        headers: {
+            Authorization: `JWT ${ANDES_KEY}`
         }
-    });
+    };
+    try {
+        let response = await fetch(url, options);
+        const responseJson = await response.json();
+        return responseJson[0] || null;
+    }
+    catch (error) {
+        log.error('guardia:getOrganizacion', { error }, userScheduler);
+    }
 }
+
+
