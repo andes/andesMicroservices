@@ -10,5 +10,16 @@ export const msCDAValidatorLog = new Logger({
     module: 'msCDAValidator',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '1 M'
+});
+
+export const msCDAValidatorAmbulatorioLog = new Logger({
+    connection: logs,
+    type: 'ambulatorio',
+    module: 'msCDAValidator',
+    application: 'andes',
+    bucketBy: 'h',
+    bucketSize: 100,
+    expiredAt: '1 M'
 });

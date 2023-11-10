@@ -19,7 +19,7 @@ export async function getOrganizacion(sisa) {
         return responseJson[0] || null;
     }
     catch (error) {
-        log.error('guardia:getOrganizacion', { error }, userScheduler);
+        log.error('cda-validator:getOrganizacion', sisa, error, userScheduler);
     }
 }
 
