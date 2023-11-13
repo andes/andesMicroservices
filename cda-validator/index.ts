@@ -5,11 +5,10 @@ import { efectores } from './constantes';
 import { queries } from './controller/queries/queries';
 import { IQueryGuardia } from './schemas/queriesGuardia';
 import { getQueriesGuardia } from './controller/queries/queryEfector';
-import { efectoresGuardia, userScheduler, } from './config.private'
-import { msCDAValidatorLog, msCDAValidatorAmbulatorioLog } from './logger/msCDAValidator';
+import { efectoresGuardia, } from './config.private'
+import { msCDAValidatorLog } from './logger/msCDAValidator';
 
 const logGuardia = msCDAValidatorLog.startTrace();
-const logAmbularorio = msCDAValidatorAmbulatorioLog.startTrace();
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -29,29 +28,24 @@ router.group('/cda', (group) => {
         const data = req.body.data;
         let paciente;
         let efector = null;
-        try {
-            switch (event) {
-                case 'mobile:patient:login':
-                    paciente = data.pacientes[0];
-                    break;
-                case 'mpi:patient:update':
-                case 'mpi:patient:create':
-                    paciente = data;
-                    break;
-                default:
-                    paciente = data.paciente;
-                    break; 
+        switch (event) {
+            case 'mobile:patient:login':
+                paciente = data.pacientes[0];
+                break;
+            case 'mpi:patient:update':
+            case 'mpi:patient:create':
+                paciente = data;
+                break;
+            default:
+                paciente = data.paciente;
+                break;
         }
-            if (paciente) {
-                const invalidarCache = event === 'monitoreo:cda:create'; // un hack por ahora
-                for (efector of efectores) {
-                    const factory = queries(efector, paciente);
-                    await ejecutar(efector, factory, paciente, invalidarCache);
-                }
+        if (paciente) {
+            const invalidarCache = event === 'monitoreo:cda:create'; // un hack por ahora
+            for (efector of efectores) {
+                const factory = queries(efector, paciente);
+                await ejecutar(efector, factory, paciente, invalidarCache);
             }
-        } catch (error) {
-            logAmbularorio.error('ambulatorio:index', { paciente, efector, error }, error.message, userScheduler);
-
         }
     });
 
@@ -85,7 +79,7 @@ router.group('/cda', (group) => {
                 }
             }
         } catch (error) {
-            logGuardia.error('guardia:index', { error }, error.message, userScheduler);
+            // logGuardia.error('guardia:index', { error }, error.message, userScheduler);
         }
     });
 });
