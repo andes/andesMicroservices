@@ -18,10 +18,10 @@ export async function ejecutarGuardias(efector: string, queries: IQueryGuardia[]
     const documento = paciente.documento;
     if (queries && documento) {
         let dataCDA = null;
+        close();
+        let queryPaciente = queries.find(q => q.nombre === 'paciente');
+        const pool = await new ConnectionPool(queryPaciente.connection).connect();
         try {
-            close();
-            let queryPaciente = queries.find(q => q.nombre === 'paciente');
-            const pool = await new ConnectionPool(queryPaciente.connection).connect();
             queryPaciente = await execQueryPrincipal(pool, efector, queryPaciente, documento);
             let pacienteSips = queryPaciente.result[0];
             if (pacienteSips) {

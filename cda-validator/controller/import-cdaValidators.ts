@@ -11,7 +11,7 @@ export async function importarCDA(datosCDA, paciente) {
     try {
         if (datosEfector.efectorCodigoSisa) {
             const organizacion: any = await getOrganizacion(datosEfector.efectorCodigoSisa);
-            if (organizacion._id && organizacion.nombre) {
+            if (organizacion && organizacion._id && organizacion.nombre) {
                 const informe = new InformeCDA(datosCDA, paciente, organizacion);
                 readFile((await informe.informe() as string), async (err, data) => {
                     if (err) {
