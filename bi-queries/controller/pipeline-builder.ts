@@ -9,7 +9,7 @@ export function createPipeline(queryData: IQuery, params: IParams[]) {
         if (v) {
             if (arg.tipo === 'date') {
                 v.valor = moment(v.valor).toDate();
-            } else if (Types.ObjectId.isValid(v.valor) && new Types.ObjectId(v.valor).toString() === v.valor) {
+            } else if (Types.ObjectId.isValid(v.valor) && new Types.ObjectId(v.valor).toString() === v.valor && (arg.formato !== 'string')) {
                 v.valor = new Types.ObjectId(v.valor);
             }
         }
