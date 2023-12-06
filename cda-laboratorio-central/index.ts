@@ -33,7 +33,7 @@ router.group('/cda', (group) => {
                 paciente = data.paciente;
                 break;
         }
-        if (paciente?.documento !== '') {
+        if (paciente && paciente.estado && paciente.estado === 'validado') {
             queue.add(() => {
                 return importarDatos(paciente);
             });

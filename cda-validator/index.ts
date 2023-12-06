@@ -40,7 +40,7 @@ router.group('/cda', (group) => {
                 paciente = data.paciente;
                 break;
         }
-        if (paciente) {
+        if (paciente && paciente.estado && paciente.estado === 'validado') {
             const invalidarCache = event === 'monitoreo:cda:create'; // un hack por ahora
             for (efector of efectores) {
                 const factory = queries(efector, paciente);
@@ -71,8 +71,7 @@ router.group('/cda', (group) => {
                 break;
         }
         try {
-            const validado = paciente && (!paciente.estado || paciente.estado === 'validado');
-            if (validado && paciente.documento) {
+            if (paciente && paciente.estado && paciente.estado === 'validado') {
                 for (const efector of efectoresGuardia) {
                     const queriesGuardia: IQueryGuardia[] = await getQueriesGuardia(efector);
                     await ejecutarGuardias(efector, queriesGuardia, paciente);

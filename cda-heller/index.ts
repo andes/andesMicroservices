@@ -25,7 +25,7 @@ router.group('/cda', (group) => {
                     paciente = data.paciente;
                     break;
             }
-            if (paciente) {
+            if (paciente && paciente.estado && paciente.estado === 'validado') {
                 await ejecutaCDA.ejecutar(paciente);
                 await ejecutaCDA.ejecutarMysql(paciente);
             }
