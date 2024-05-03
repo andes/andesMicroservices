@@ -109,11 +109,11 @@ export class InformeCDAPDF extends HTMLComponent {
 }
 
 export function getAssetsURL(filename) {
-    return path.join(process.cwd(), filename);
+    return path.join(process.env.CDA_PATH, filename);
 }
 
 export function loadImage(filename) {
-    const realPath = path.join(process.cwd(), filename);
+    const realPath = path.join(process.env.CDA_PATH, filename);
     const image = fs.readFileSync(realPath);
     return image.toString('base64');
 }
