@@ -1,0 +1,22 @@
+{
+  "name": "sms",
+  "version": "1.0.0",
+  "description": "Servicio de notificaciones Whatsapp",
+  "main": "index.js",
+  "scripts": {
+    "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
+    "lint": "tslint --project .",
+    "tsc": "../node_modules/typescript/bin/tsc",
+    "tsc:w": "../node_modules/typescript/bin/tsc -w",
+    "node": "nodemon -q ./index.js"
+  },
+  "author": "Juan I. Ramirez",
+  "license": "ISC",
+  "dependencies": {
+    "@andes/bootstrap": "file:../bootstrap",
+    "moment": "^2.24.0",
+    "mssql": "^4.1.0",
+    "request": "^2.88.0",
+    "node-fetch": "^2.7.0"
+  }
+}
