@@ -1,4 +1,10 @@
-export const HOST = 'https://waapi.app/api/v1/instances/14333/client/action';
+export const HOST = '';
+export const WaApiKey = '';
+export const codPais = '54';
+export const codWaApi = '9';
+export const codServChat = 'c.us';
+export const codServGroup = 'g.us';
+export const MONGO_HOST = ''
 
 export const userScheduler = {
     user: {

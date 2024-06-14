@@ -1,12 +1,9 @@
 import { Microservice } from '@andes/bootstrap';
-import { notificacionesLog } from './logger/notificacionesLog'
 import { request } from './controller/notificaciones';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
 
-const fetch = require('node-fetch');
-const log = notificacionesLog.startTrace();
 const router = ms.router();
 
 router.group('/notificaciones', (group) => {
