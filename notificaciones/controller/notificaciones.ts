@@ -1,5 +1,5 @@
 import moment = require('moment');
-import * as config from '../config.private';
+import * as config from './../config.private';
 import { notificacionesLog } from '../logger/notificacionesLog';
 import { Prestaciones, Agendas, Constantes, IConstante } from '../schemas/schemas';
 import * as mongoose from 'mongoose';
@@ -92,8 +92,8 @@ async function verificarPrestacion(turnoId) {
 
 async function CuerpoMensaje() {
     try {
-        const result: IConstante = await Constantes.findOne({ nombre: 'turno-dacion' });
-        return result.key;
+        const result: IConstante = await Constantes.findOne({ key: 'turno-dacion' });
+        return result.nombre;
     } catch (error) {
         log.error(`notificaciones:cuerpoMensaje`, { error: error.message }, config.userScheduler);
         return '';

@@ -1,33 +1,31 @@
-import * as mongoose from 'mongoose';
-import { Document, Model } from 'mongoose';
+import { Schema, Model, model, Document } from 'mongoose';
 
-export const PrestacionSchema = new mongoose.Schema({
+export const PrestacionSchema = new Schema({
     inicio: String,
     solicitud: {
-        turno: mongoose.Schema.Types.ObjectId,
+        turno: Schema.Types.ObjectId,
         organizacion: { nombre: String },
         profesional: { nombre: String, apellido: String },
     }
 });
-export const Prestaciones = mongoose.model('prestacion', PrestacionSchema, 'prestaciones');
+export const Prestaciones = model('prestacion', PrestacionSchema, 'prestaciones');
 
-export interface IConstante {
-    key: string;
-    nombre: string;
-    source: string;
+export interface IConstante extends Document {
+    key: String;
+    nombre: String;
+    source: String;
     type: 'text' | 'number';
 }
-export interface ConstanteDocument extends IConstante, Document { };
-export const ConstanteSchema = new mongoose.Schema({
+export const ConstanteSchema = new Schema({
     key: String,
     nombre: String,
     source: String,
     type: String,
 });
-export const Constantes: Model<ConstanteDocument> = mongoose.model('constantes', ConstanteSchema, 'constantes');
+export const Constantes: Model<IConstante> = model<IConstante>('constantes', ConstanteSchema, 'constantes');
 
-export const agendaSchema = new mongoose.Schema({
+export const agendaSchema = new Schema({
     organizacion: { nombre: String },
     profesionales: [{ nombre: String, apellido: String }],
 });
-export const Agendas = mongoose.model('agenda', agendaSchema, 'agenda')
+export const Agendas = model('agenda', agendaSchema, 'agenda')
