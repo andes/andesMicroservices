@@ -11,9 +11,6 @@ mongoose.connect(config.MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser:
 const log = notificacionesLog.startTrace();
 const fetch = require('node-fetch');
 
-let profesionales: any;
-let organizacion: any;
-
 export async function request(req: any, method: string, path: string) {
     let body: any;
     let turnoId: any;
@@ -29,8 +26,9 @@ export async function request(req: any, method: string, path: string) {
     try {
         if (path === 'send-message') {
             if (body.tipoTurno === 'gestion') {
-                if (verificarPrestacion(turnoId)) {
-                    const message = replaceLabels(await CuerpoMensaje(), body);
+                const dataParaTurno = await verificarPrestacion(turnoId);
+                if (dataParaTurno) {
+                    const message = replaceLabels(await CuerpoMensaje(), body, dataParaTurno.profesionales, dataParaTurno.organizacion);
                     const chatId = `${config.codPais}${config.codWaApi}${paciente.telefono}@${config.codServChat}`;
                     body = { message, chatId };
                 } else {
@@ -73,7 +71,8 @@ export async function request(req: any, method: string, path: string) {
 async function verificarPrestacion(turnoId) {
     try {
         const agenda: any[] = await Agendas.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(turnoId) });
-        profesionales = '';
+        let profesionales = '';
+        let organizacion = '';
         if (agenda[0].profesionales.length) {
             for (const prof of agenda[0].profesionales) {
                 profesionales += `${prof.nombre} ${prof.apellido}, `;
@@ -83,10 +82,10 @@ async function verificarPrestacion(turnoId) {
         }
         organizacion = agenda[0].organizacion.nombre;
         const result: any[] = await Prestaciones.find({ 'solicitud.turno': turnoId });
-        return result.length ? result[0].inicio === 'top' ? true : false : false;
+        return result.length ? result[0].inicio === 'top' ? { profesionales, organizacion } : null : null;
     } catch (error) {
-        log.error(`notificaciones:verificarPrestacion`, { error: error.message }, config.userScheduler);
-        return false;
+        log.error('notificaciones:verificarPrestacion', { error: error.message }, config.userScheduler);
+        return null;
     }
 }
 
@@ -100,7 +99,7 @@ async function CuerpoMensaje() {
     }
 }
 
-function replaceLabels(texto: String, body: any) {
+function replaceLabels(texto: String, body: any, profesionales: any, organizacion: any) {
     texto = texto.replace('#nombrePaciente#', body.paciente.nombreCompleto)
         .replace('#tipoPrestacion#', body.tipoPrestacion.nombre)
         .replace('#fecha#', moment(body.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'))

@@ -9,19 +9,23 @@ const router = ms.router();
 router.group('/notificaciones', (group) => {
 
     group.post('/sendMessage', async (req, res) => {
-        res.json(await request(req, "POST", "send-message"));
+        res.send({ message: 'ok' });
+        await request(req, "POST", "send-message");
     });
 
     group.get('/fetchMessages', async (req, res) => {
-        res.json(await request(req, 'POST', 'fetch-messages'))
+        res.send({ message: 'ok' });
+        await request(req, 'POST', 'fetch-messages');
     });
 
     group.post('/sendMedia', async (req, res) => {
-        res.json(await request(req, 'POST', 'send-media'));
+        res.send({ message: 'ok' });
+        await request(req, 'POST', 'send-media');
     });
 
     group.post('/sendLocation', async (req, res) => {
-        res.json(await request(req, "POST", 'send-location'))
+        res.send({ message: 'ok' });
+        await request(req, "POST", 'send-location')
     });
 
 });
