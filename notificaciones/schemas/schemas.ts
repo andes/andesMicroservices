@@ -27,5 +27,10 @@ export const Constantes: Model<IConstante> = model<IConstante>('constantes', Con
 export const agendaSchema = new Schema({
     organizacion: { nombre: String },
     profesionales: [{ nombre: String, apellido: String }],
+    espacioFisico: {
+        nombre: String,
+        detalle: String,
+        descripcion: String
+    }
 });
 export const Agendas = model('agenda', agendaSchema, 'agenda')

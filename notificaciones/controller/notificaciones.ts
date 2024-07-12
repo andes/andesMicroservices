@@ -18,27 +18,20 @@ export async function request(req: any, method: string, path: string) {
     let body: any;
     let turnoId: any;
     let paciente: any;
-
-    if (path === 'send-message') {
-        body = req.body.data;
-        turnoId = body.id;
-        paciente = body.paciente;
-    } else {
-        body = req.body;
-    }
     try {
         if (path === 'send-message') {
-            if (body.tipoTurno === 'gestion') {
-                if (verificarPrestacion(turnoId)) {
-                    const message = replaceLabels(await CuerpoMensaje(), body);
-                    const chatId = `${config.codPais}${config.codWaApi}${paciente.telefono}@${config.codServChat}`;
-                    body = { message, chatId };
-                } else {
-                    return 'Turno no es de top';
-                }
+            body = req.body.data;
+            turnoId = body.id;
+            paciente = body.paciente;
+            if (body.tipoTurno === 'gestion' && moment(body.horaInicio).toDate() > moment().toDate() && paciente.telefono && await verificarPrestacion(turnoId)) {
+                const message = replaceLabels(await CuerpoMensaje(), body);
+                const chatId = `${config.codPais}${config.codWaApi}${paciente.telefono}@${config.codServChat}`;
+                body = { message, chatId };
             } else {
-                return 'Turno no es con llave (gestión)';
+                return;
             }
+        } else {
+            body = req.body;
         }
         const url = `${config.HOST}/${path}`;
         const options = {
@@ -53,13 +46,14 @@ export async function request(req: any, method: string, path: string) {
         let response = await fetch(url, options);
         const responseJson = await response.json();
         if (responseJson.data.status === 'error') {
-            log.error(`notificaciones:${path}:statusError`, { data: req.body.data, url }, { status: responseJson.error, message: responseJson.message }, config.userScheduler);
+            log.error(`notificaciones:${path}:statusError`, { data: req.body.data, url }, { status: responseJson.data.status, message: responseJson.data }, config.userScheduler);
             return responseJson;
         } else {
             if (response.status >= 200 && response.status < 300) {
+                log.info('notificaciones:sendMessage', responseJson);
                 return responseJson;
             } else {
-                log.error(`notificaciones:${path}:statusError`, { data: req.body, url }, { status: responseJson.error, message: responseJson.message }, config.userScheduler);
+                log.error(`notificaciones:${path}:statusError`, { data: req.body, url }, { status: response.status, message: responseJson.data }, config.userScheduler);
                 return responseJson;
             }
         }
@@ -72,18 +66,21 @@ export async function request(req: any, method: string, path: string) {
 
 async function verificarPrestacion(turnoId) {
     try {
-        const agenda: any[] = await Agendas.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(turnoId) });
-        profesionales = '';
-        if (agenda[0].profesionales.length) {
-            for (const prof of agenda[0].profesionales) {
+        const agenda: any = await Agendas.findOne({ 'bloques.turnos._id': mongoose.Types.ObjectId(turnoId) });
+        profesionales = 'con el profesional ';
+        if (agenda.profesionales.length) {
+            for (const prof of agenda.profesionales) {
                 profesionales += `${prof.nombre} ${prof.apellido}, `;
             }
         } else {
-            profesionales = '(no asignado), ';
+            profesionales = '';
         }
-        organizacion = agenda[0].organizacion.nombre;
-        const result: any[] = await Prestaciones.find({ 'solicitud.turno': turnoId });
-        return result.length ? result[0].inicio === 'top' ? true : false : false;
+        organizacion = agenda.organizacion.nombre;
+        if (agenda.espacioFisico.nombre) {
+            organizacion += `, ${agenda.espacioFisico.nombre}`
+        }
+        const result: any = await Prestaciones.findOne({ 'solicitud.turno': turnoId });
+        return result ? result.inicio === 'top' ? true : false : false;
     } catch (error) {
         log.error('notificaciones:verificarPrestacion', { error: error.message }, config.userScheduler);
         return false;
@@ -101,10 +98,12 @@ async function CuerpoMensaje() {
 }
 
 function replaceLabels(texto: String, body: any) {
-    texto = texto.replace('#nombrePaciente#', body.paciente.nombreCompleto)
+    let nombrePaciente = `${body.paciente.apellido}, `;
+    nombrePaciente += body.paciente.alias ? body.paciente.alias : body.paciente.nombre;
+    texto = texto.replace('#nombrePaciente#', nombrePaciente)
         .replace('#tipoPrestacion#', body.tipoPrestacion.nombre)
         .replace('#fecha#', moment(body.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'))
-        .replace('#profesional#', profesionales ? profesionales : '(no asignado)')
-        .replace('#organizacion#', organizacion ? organizacion : '(no definido)');
+        .replace('#profesional#', profesionales)
+        .replace('#organizacion#', organizacion);
     return texto;
 }
