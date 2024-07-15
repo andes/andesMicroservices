@@ -23,8 +23,11 @@ export async function request(req: any, method: string, path: string) {
             body = req.body.data;
             turnoId = body.id;
             paciente = body.paciente;
-            if (body.tipoTurno === 'gestion' && moment(body.horaInicio).toDate() > moment().toDate() && paciente.telefono && await verificarPrestacion(turnoId)) {
-                const message = replaceLabels(await CuerpoMensaje(), body);
+            const mensaje = await cuerpoMensaje();
+            const fechaMayor = moment(body.horaInicio).toDate() > moment().toDate();
+            const tipoTurno = body.tipoTurno === 'gestion';
+            if (mensaje && tipoTurno && fechaMayor && paciente.telefono && await verificarPrestacion(turnoId)) {
+                const message = replaceLabels(mensaje, body);
                 const chatId = `${config.codPais}${config.codWaApi}${paciente.telefono}@${config.codServChat}`;
                 body = { message, chatId };
             } else {
@@ -44,22 +47,18 @@ export async function request(req: any, method: string, path: string) {
             }
         };
         let response = await fetch(url, options);
-        const responseJson = await response.json();
-        if (responseJson.data.status === 'error') {
-            log.error(`notificaciones:${path}:statusError`, { data: req.body.data, url }, { status: responseJson.data.status, message: responseJson.data }, config.userScheduler);
-            return responseJson;
+        const { status, statusText } = response;
+        if (status < 200 || status >= 300) {
+            log.error('send-message:request:statusError', { data: req.body.data, url }, { status, statusText }, config.userScheduler);
+            return { status };
         } else {
-            if (response.status >= 200 && response.status < 300) {
-                log.info('notificaciones:sendMessage', responseJson);
-                return responseJson;
-            } else {
-                log.error(`notificaciones:${path}:statusError`, { data: req.body, url }, { status: response.status, message: responseJson.data }, config.userScheduler);
-                return responseJson;
-            }
+            const responseJson = await response.json();
+            log.info('send-message:request:sendMessage', responseJson);
+            return responseJson;
         }
     }
     catch (error) {
-        log.error(`notificaciones:${path}`, { error: error.message }, config.userScheduler);
+        log.error('request:error', body, { error: error.message }, config.userScheduler);
         return error;
     }
 }
@@ -79,20 +78,26 @@ async function verificarPrestacion(turnoId) {
         if (agenda.espacioFisico.nombre) {
             organizacion += `, ${agenda.espacioFisico.nombre}`
         }
-        const result: any = await Prestaciones.findOne({ 'solicitud.turno': turnoId });
-        return result ? result.inicio === 'top' ? true : false : false;
+        const prestacion: any = await Prestaciones.findOne({ 'solicitud.turno': turnoId });
+
+        if (!prestacion) {
+            log.error('verificarPrestacion:null', { turno: turnoId, agenda: agenda.id, prestacion }, { error: "prestacion no encontrada" }, config.userScheduler);
+        }
+        return prestacion?.inicio === 'top';
     } catch (error) {
-        log.error('notificaciones:verificarPrestacion', { error: error.message }, config.userScheduler);
+        log.error('verificarPrestacion', { turno: turnoId, }, { error: error.message }, config.userScheduler);
         return false;
     }
 }
 
-async function CuerpoMensaje() {
+async function cuerpoMensaje() {
+    let constante;
+    const key = 'turno-dacion';
     try {
-        const result: IConstante = await Constantes.findOne({ key: 'turno-dacion' });
-        return result.nombre;
+        const constante: IConstante = await Constantes.findOne({ key });
+        return constante.nombre;
     } catch (error) {
-        log.error(`notificaciones:cuerpoMensaje`, { error: error.message }, config.userScheduler);
+        log.error(`cuerpoMensaje`, { constante, key }, { error: error.message }, config.userScheduler);
         return '';
     }
 }
