@@ -11,8 +11,6 @@ mongoose.connect(config.MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser:
 const log = notificacionesLog.startTrace();
 const fetch = require('node-fetch');
 
-let profesionales: any;
-let organizacion: any;
 
 export async function request(req: any, method: string, path: string) {
     let body: any;
@@ -26,8 +24,9 @@ export async function request(req: any, method: string, path: string) {
             const mensaje = await cuerpoMensaje();
             const fechaMayor = moment(body.horaInicio).toDate() > moment().toDate();
             const tipoTurno = body.tipoTurno === 'gestion';
-            if (mensaje && tipoTurno && fechaMayor && paciente.telefono && await verificarPrestacion(turnoId)) {
-                const message = replaceLabels(mensaje, body);
+            const dataTurno = await verificarPrestacion(turnoId);
+            if (mensaje && tipoTurno && fechaMayor && paciente.telefono && dataTurno.organizacion) {
+                const message = replaceLabels(mensaje, body, dataTurno);
                 const chatId = `${config.codPais}${config.codWaApi}${paciente.telefono}@${config.codServChat}`;
                 body = { message, chatId };
             } else {
@@ -64,30 +63,33 @@ export async function request(req: any, method: string, path: string) {
 }
 
 async function verificarPrestacion(turnoId) {
+    let profesionales = '';
+    let organizacion;
     try {
         const agenda: any = await Agendas.findOne({ 'bloques.turnos._id': mongoose.Types.ObjectId(turnoId) });
-        profesionales = 'con el profesional ';
-        if (agenda.profesionales.length) {
-            for (const prof of agenda.profesionales) {
-                profesionales += `${prof.nombre} ${prof.apellido}, `;
+        if (agenda) {
+            if (agenda.profesionales.length) {
+                profesionales = 'con el/los profesionales ';
+                for (const prof of agenda.profesionales) {
+                    profesionales += `${prof.nombre} ${prof.apellido}, `;
+                }
             }
-        } else {
-            profesionales = '';
+            organizacion = agenda.organizacion?.nombre;
+            if (agenda.espacioFisico?.nombre) {
+                organizacion += `, ${agenda.espacioFisico.nombre}`
+            }
+            return {
+                profesionales,
+                organizacion
+            };
         }
-        organizacion = agenda.organizacion.nombre;
-        if (agenda.espacioFisico.nombre) {
-            organizacion += `, ${agenda.espacioFisico.nombre}`
+        else {
+            log.error('verificarPrestacion:agenda', { turno: turnoId, agenda }, { error: "agenda no encontrada" }, config.userScheduler);
         }
-        const prestacion: any = await Prestaciones.findOne({ 'solicitud.turno': turnoId });
-
-        if (!prestacion) {
-            log.error('verificarPrestacion:null', { turno: turnoId, agenda: agenda.id, prestacion }, { error: "prestacion no encontrada" }, config.userScheduler);
-        }
-        return prestacion?.inicio === 'top';
     } catch (error) {
         log.error('verificarPrestacion', { turno: turnoId, }, { error: error.message }, config.userScheduler);
-        return false;
     }
+    return null;
 }
 
 async function cuerpoMensaje() {
@@ -102,13 +104,13 @@ async function cuerpoMensaje() {
     }
 }
 
-function replaceLabels(texto: String, body: any) {
+function replaceLabels(texto: String, body: any, dataTurno) {
     let nombrePaciente = `${body.paciente.apellido}, `;
     nombrePaciente += body.paciente.alias ? body.paciente.alias : body.paciente.nombre;
     texto = texto.replace('#nombrePaciente#', nombrePaciente)
         .replace('#tipoPrestacion#', body.tipoPrestacion.nombre)
         .replace('#fecha#', moment(body.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'))
-        .replace('#profesional#', profesionales)
-        .replace('#organizacion#', organizacion);
+        .replace('#profesional#', dataTurno.profesionales)
+        .replace('#organizacion#', dataTurno.organizacion);
     return texto;
 }
