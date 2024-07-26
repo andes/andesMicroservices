@@ -54,13 +54,12 @@ export async function request(req: any, method: string, path: string) {
 }
 
 async function cuerpoMensaje(keyMensaje) {
-    let constante;
     const key = keyMensaje;
     try {
         const constante: IConstante = await Constantes.findOne({ key });
         return constante.nombre;
     } catch (error) {
-        log.error(`cuerpoMensaje`, { constante, key }, { error: error.message }, config.userScheduler);
+        log.error(`cuerpoMensaje`, { key }, { error: error.message }, config.userScheduler);
         return '';
     }
 }
