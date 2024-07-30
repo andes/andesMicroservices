@@ -1,7 +1,7 @@
 import moment = require('moment');
 import * as config from './../config.private';
 import { notificacionesLog } from '../logger/notificacionesLog';
-import { Prestaciones, Agendas, Constantes, IConstante } from '../schemas/schemas';
+import { Constantes, IConstante } from '../schemas/schemas';
 import * as mongoose from 'mongoose';
 
 mongoose.connect(config.MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true })
@@ -14,24 +14,15 @@ const fetch = require('node-fetch');
 
 export async function request(req: any, method: string, path: string) {
     let body: any;
-    let turnoId: any;
-    let paciente: any;
     try {
         if (path === 'send-message') {
             body = req.body.data;
-            turnoId = body.id;
-            paciente = body.paciente;
-            const mensaje = await cuerpoMensaje();
-            const fechaMayor = moment(body.horaInicio).toDate() > moment().toDate();
-            const tipoTurno = body.tipoTurno === 'gestion';
-            const dataTurno = await verificarPrestacion(turnoId);
-            if (mensaje && tipoTurno && fechaMayor && paciente.telefono && dataTurno.organizacion) {
-                const message = replaceLabels(mensaje, body, dataTurno);
-                const chatId = `${config.codPais}${config.codWaApi}${paciente.telefono}@${config.codServChat}`;
-                body = { message, chatId };
-            } else {
-                return;
-            }
+            const constante = await cuerpoMensaje(body.mensaje)
+
+            const message = replaceTemplate(constante, body);
+            const chatId = `${config.codPais}${config.codWaApi}${body.telefono}@${config.codServChat}`;
+            body = { message, chatId };
+
         } else {
             body = req.body;
         }
@@ -62,55 +53,18 @@ export async function request(req: any, method: string, path: string) {
     }
 }
 
-async function verificarPrestacion(turnoId) {
-    let profesionales = '';
-    let organizacion;
-    try {
-        const agenda: any = await Agendas.findOne({ 'bloques.turnos._id': mongoose.Types.ObjectId(turnoId) });
-        if (agenda) {
-            if (agenda.profesionales.length) {
-                profesionales = 'con el/los profesionales ';
-                for (const prof of agenda.profesionales) {
-                    profesionales += `${prof.nombre} ${prof.apellido}, `;
-                }
-            }
-            organizacion = agenda.organizacion?.nombre;
-            if (agenda.espacioFisico?.nombre) {
-                organizacion += `, ${agenda.espacioFisico.nombre}`
-            }
-            return {
-                profesionales,
-                organizacion
-            };
-        }
-        else {
-            log.error('verificarPrestacion:agenda', { turno: turnoId, agenda }, { error: "agenda no encontrada" }, config.userScheduler);
-        }
-    } catch (error) {
-        log.error('verificarPrestacion', { turno: turnoId, }, { error: error.message }, config.userScheduler);
-    }
-    return null;
-}
-
-async function cuerpoMensaje() {
-    let constante;
-    const key = 'turno-dacion';
+async function cuerpoMensaje(keyMensaje) {
+    const key = keyMensaje;
     try {
         const constante: IConstante = await Constantes.findOne({ key });
         return constante.nombre;
     } catch (error) {
-        log.error(`cuerpoMensaje`, { constante, key }, { error: error.message }, config.userScheduler);
+        log.error(`cuerpoMensaje`, { key }, { error: error.message }, config.userScheduler);
         return '';
     }
 }
 
-function replaceLabels(texto: String, body: any, dataTurno) {
-    let nombrePaciente = `${body.paciente.apellido}, `;
-    nombrePaciente += body.paciente.alias ? body.paciente.alias : body.paciente.nombre;
-    texto = texto.replace('#nombrePaciente#', nombrePaciente)
-        .replace('#tipoPrestacion#', body.tipoPrestacion.nombre)
-        .replace('#fecha#', moment(body.horaInicio).locale('es').format('dddd DD [de] MMMM [de] YYYY [a las] HH:mm [Hs.]'))
-        .replace('#profesional#', dataTurno.profesionales)
-        .replace('#organizacion#', dataTurno.organizacion);
-    return texto;
+function replaceTemplate(template, variables) {
+    const mens = template.replace(/#(.*?)#/g, (match, p1) => variables[p1.trim()] || match);
+    return mens;
 }
