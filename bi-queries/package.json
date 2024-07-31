@@ -10,7 +10,7 @@
     "tsc:w": "../node_modules/typescript/bin/tsc -w",
     "node": "nodemon -q ./index.js"
   },
-  "author": "Celeste Ramos y Luis Parada",
+  "author": "ANDES",
   "license": "ISC",
   "dependencies": {
     "@andes/bootstrap": "file:../bootstrap",
