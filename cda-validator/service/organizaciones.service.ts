@@ -1,10 +1,11 @@
 import { ANDES_HOST, ANDES_KEY } from './../config.private';
 import { userScheduler } from '../config.private';
-import { msCDAValidatorLog } from '../logger/msCDAValidator';
+import { msCDAValidatorLog, msCDAValidatorAmbulatorioLog } from '../logger/msCDAValidator';
 const fetch = require('node-fetch');
-const log = msCDAValidatorLog.startTrace();
+const logGuardia = msCDAValidatorLog.startTrace();
+const logAmb = msCDAValidatorAmbulatorioLog.startTrace();
 
-export async function getOrganizacion(sisa) {
+export async function getOrganizacion(sisa, ambito = 'ambulatorio') {
     const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}`;
     const options = {
         url,
@@ -19,7 +20,12 @@ export async function getOrganizacion(sisa) {
         return responseJson[0] || null;
     }
     catch (error) {
-        log.error('cda-validator:getOrganizacion', sisa, error, userScheduler);
+        if (ambito = 'ambulatorio') {
+            logAmb.error('cda-validator:getOrganizacion', sisa, error, userScheduler);
+        }
+        else {
+            logGuardia.error('cda-validator:getOrganizacion', sisa, error, userScheduler);
+        }
     }
 }
 

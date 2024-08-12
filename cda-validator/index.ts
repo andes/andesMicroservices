@@ -7,6 +7,7 @@ import { IQueryGuardia } from './schemas/queriesGuardia';
 import { getQueriesGuardia } from './controller/queries/queryEfector';
 import { efectoresGuardia, } from './config.private'
 import { msCDAValidatorLog } from './logger/msCDAValidator';
+import { userScheduler } from './config.private';
 
 const logGuardia = msCDAValidatorLog.startTrace();
 
@@ -79,7 +80,7 @@ router.group('/cda', (group) => {
                 }
             }
         } catch (error) {
-            // logGuardia.error('guardia:index', { error }, error.message, userScheduler);
+            logGuardia.error('guardia:index', { error }, error.message, userScheduler);
         }
     });
 });
