@@ -80,7 +80,7 @@ router.group('/cda', (group) => {
                 }
             }
         } catch (error) {
-            logGuardia.error('guardia:index', { error }, error.message, userScheduler);
+            // logGuardia.error('guardia:index', { error }, error.message, userScheduler);
         }
     });
 });
