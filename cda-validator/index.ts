@@ -1,13 +1,11 @@
 import { Microservice } from '@andes/bootstrap';
 import { ejecutar } from './controller/ejecutaCDA';
 import { ejecutarGuardias } from './controller/ejecutaCDAGuardia';
-import { efectores } from './constantes';
 import { queries } from './controller/queries/queries';
 import { IQueryGuardia } from './schemas/queriesGuardia';
 import { getQueriesGuardia } from './controller/queries/queryEfector';
-import { efectoresGuardia, } from './config.private'
+import { efectoresGuardia, efectores } from './config.private'
 import { msCDAValidatorLog } from './logger/msCDAValidator';
-import { userScheduler } from './config.private';
 
 const logGuardia = msCDAValidatorLog.startTrace();
 
@@ -44,8 +42,11 @@ router.group('/cda', (group) => {
         if (paciente) {
             const invalidarCache = event === 'monitoreo:cda:create'; // un hack por ahora
             for (efector of efectores) {
-                const factory = queries(efector, paciente);
-                await ejecutar(efector, factory, paciente, invalidarCache);
+                try {
+                    const factory = queries(efector, paciente);
+                    await ejecutar(efector, factory, paciente, invalidarCache);
+                } catch (error) {
+                }
             }
         }
     });
