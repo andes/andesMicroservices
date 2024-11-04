@@ -1,29 +1,36 @@
-import moment = require('moment');
 import * as config from './../config.private';
 import { notificacionesLog } from '../logger/notificacionesLog';
 import { Constantes, IConstante } from '../schemas/schemas';
-import * as mongoose from 'mongoose';
 
+import * as mongoose from 'mongoose';
 mongoose.connect(config.MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true })
-    .then(() => console.log('Conexion Exitosa BD Mongo: '))
+    .then(() => console.log('Conexion Exitosa BD Mongo'))
     .catch(err => console.log('Error Conexion BD Mongo', err));
 
 const log = notificacionesLog.startTrace();
 const fetch = require('node-fetch');
 
 export async function request(req: any, method: string, path: string) {
+    let url: string;
     let body: any;
+    let ultNum: string;
+    const paths = ['send-message', 'send-reminder', 'send-survey']
+    let host: string;
     try {
-        if (path === 'send-message') {
+        if (paths.includes(path)) {
             body = req.body.data;
             const constante = await cuerpoMensaje(body.mensaje)
             const message = replaceTemplate(constante, body);
             const chatId = `${config.codPais}${config.codWaApi}${body.telefono}@${config.codServChat}`;
+            ultNum = body.telefono.slice(-1);
             body = { message, chatId };
+            path = paths[0];
         } else {
             body = req.body;
+            ultNum = body.chatId.slice(-6).substring(0, 1);
         }
-        const url = `${config.HOST}/${path}`;
+        host = ['0', '1', '2'].includes(ultNum) ? config.HOST1 : ['3', '4', '5'].includes(ultNum) ? config.HOST2 : config.HOST3;
+        url = `${host}/${path}`;
         const options = {
             url,
             method,
@@ -37,7 +44,7 @@ export async function request(req: any, method: string, path: string) {
         const { status, statusText } = response;
         const responseJson = await response.json();
         if (status < 200 || status >= 300) {
-            log.error('send-message:request:statusError', { data: req.body.data, url }, { status, statusText }, config.userScheduler);
+            log.error(`${path}:request:statusError`, { data: req.body.data, url }, { status, statusText }, config.userScheduler);
             return { status };
         } else {
             if (responseJson.data.status === 'error') {
@@ -67,6 +74,6 @@ async function cuerpoMensaje(keyMensaje) {
 }
 
 function replaceTemplate(template, variables) {
-    const mens = template.replace(/#(.*?)#/g, (_match, p1) => variables[p1.trim()]);
+    const mens = template.replace(/#(.*?)#/g, (_match: any, p1: any) => variables[p1.trim()]);
     return mens;
 }
