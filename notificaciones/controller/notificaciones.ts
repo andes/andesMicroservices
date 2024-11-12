@@ -5,12 +5,11 @@ import { Constantes, IConstante } from '../schemas/schemas';
 import * as mongoose from 'mongoose';
 
 mongoose.connect(config.MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true })
-    .then(() => console.log('Conexion Exitosa BD Mongo: ' + config.MONGO_HOST))
+    .then(() => console.log('Conexion Exitosa BD Mongo: '))
     .catch(err => console.log('Error Conexion BD Mongo', err));
 
 const log = notificacionesLog.startTrace();
 const fetch = require('node-fetch');
-
 
 export async function request(req: any, method: string, path: string) {
     let body: any;
@@ -18,11 +17,9 @@ export async function request(req: any, method: string, path: string) {
         if (path === 'send-message') {
             body = req.body.data;
             const constante = await cuerpoMensaje(body.mensaje)
-
             const message = replaceTemplate(constante, body);
             const chatId = `${config.codPais}${config.codWaApi}${body.telefono}@${config.codServChat}`;
             body = { message, chatId };
-
         } else {
             body = req.body;
         }
@@ -38,13 +35,18 @@ export async function request(req: any, method: string, path: string) {
         };
         let response = await fetch(url, options);
         const { status, statusText } = response;
+        const responseJson = await response.json();
         if (status < 200 || status >= 300) {
             log.error('send-message:request:statusError', { data: req.body.data, url }, { status, statusText }, config.userScheduler);
             return { status };
         } else {
-            const responseJson = await response.json();
-            log.info('send-message:request:sendMessage', responseJson);
-            return responseJson;
+            if (responseJson.data.status === 'error') {
+                log.error('send-message:request:error', { data: req.body.data, url }, responseJson.data, config.userScheduler);
+                return { status };
+            } else {
+                log.info('send-message:request:sendMessage', responseJson);
+                return responseJson;
+            }
         }
     }
     catch (error) {
@@ -65,6 +67,6 @@ async function cuerpoMensaje(keyMensaje) {
 }
 
 function replaceTemplate(template, variables) {
-    const mens = template.replace(/#(.*?)#/g, (match, p1) => variables[p1.trim()] || match);
+    const mens = template.replace(/#(.*?)#/g, (_match, p1) => variables[p1.trim()]);
     return mens;
 }
