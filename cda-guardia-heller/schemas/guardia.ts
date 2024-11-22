@@ -1,5 +1,5 @@
 export interface IGuardia {
-    id: any,
+    id?: string,
     file: any;             //archivo PDF de guardia binary.
     fecha: Date;
     paciente: {

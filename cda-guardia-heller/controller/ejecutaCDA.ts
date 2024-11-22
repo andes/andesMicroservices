@@ -1,41 +1,31 @@
-import * as Verificator from '../controller/verificaCDA';
+import { verificarDatos } from '../controller/verificaCDA';
 import { postCDA } from '../services/cda.service';
-import { userScheduler } from '../config.private';
-import { msCDAValidatorLog } from '../logger/msCDAValidator';
+import { userScheduler } from './../config.private';
+import { msCDAGuardiaHellerLog } from '../logger/msCDAGuardiaHeller';
 
-let moment = require('moment');
-const logGuardia = msCDAValidatorLog.startTrace();
+const logGuardia = msCDAGuardiaHellerLog.startTrace();
 
-export async function ejecutar(efector: string, paciente: any, cleanCache: any, data: any, token: any) {
+export async function crearGuardia(efector: string, paciente: any, data: any, token: any) {
     let ret: any;
     try {
-        let dataVerif = await Verificator.verificar(data, token);
-        if (dataVerif.verif && (checkCache(efector, paciente, dataVerif.dto.fecha) || cleanCache)) {
-            const dto = dataVerif.dto;
-            ret = await postCDA(dto, token);
+        let dataVerif = await verificarDatos(data, token);
+        if (dataVerif.status == 200) {
+            ret = await postCDA(dataVerif.dto, token);
+            if (ret.cda) {
+                //si devuelve paciente es porque lo crea, si no lo devuelve es porque ya existía el CDA
+                return {
+                    verif: true,
+                    cda: ret.cda,
+                    msgError: (ret.paciente) ? "CDA generado con exito" : "CDA existente",
+                    data: (ret.paciente) ? dataVerif.dto : ret.cda
+                };
+            }
         } else {
-            ret = dataVerif.msgError;
+            ret = { verif: false, msgError: dataVerif.msg, status: dataVerif.status };
         }
-        const maxDate = moment().toDate();
-        setCache(efector, paciente, maxDate);
         return ret;
     } catch (error) {
-        logGuardia.error('guardia-heller:ejecutaCDA:ejecutar', { paciente, efector, error }, error.message, userScheduler);
+        logGuardia.error('guardia-heller:ejecutaCDA:crearGuardia', { paciente, efector, error }, error.message, userScheduler);
         return { dto: null, verif: false, msgError: error.message };
     }
-}
-
-const cachePacienteFecha: { [key: string]: Date } = {};
-
-function setCache(efector: string, paciente, fecha: Date) {
-    cachePacienteFecha[efector + '-' + paciente.id] = fecha;
-}
-
-function checkCache(efector: string, paciente, fecha: Date) {
-    if (!cachePacienteFecha[efector + '-' + paciente.id]) {
-        return true;
-    } else if (cachePacienteFecha[efector + '-' + paciente.id].getTime() < fecha.getTime()) {
-        return true;
-    }
-    return false;
 }
