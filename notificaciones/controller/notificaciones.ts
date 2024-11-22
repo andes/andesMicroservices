@@ -51,6 +51,8 @@ export async function request(req: any, method: string, path: string) {
                 log.error('send-message:request:error', { data: req.body.data, url }, responseJson.data, config.userScheduler);
                 return { status };
             } else {
+                responseJson.idTurno = req.body?.data?.idTurno;
+                responseJson.idPaciente = req.body?.data?.idPaciente;
                 log.info('send-message:request:sendMessage', responseJson);
                 return responseJson;
             }
