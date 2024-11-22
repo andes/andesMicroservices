@@ -1,0 +1,23 @@
+{
+    "name": "cda-guardia-heller",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
+        "lint": "tslint --project .",
+        "tsc": "../node_modules/typescript/bin/tsc",
+        "tsc:w": "../node_modules/typescript/bin/tsc -w",
+        "node": "nodemon -q ./index.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@andes/bootstrap": "file:../bootstrap",
+        "@andes/match": "^1.1.12",
+        "@andes/log": "^2.2.5",
+        "moment": "^2.22.0",
+        "node-fetch": "^2.7.0",
+        "node-sass": "^7.0.1"
+    }
+}
