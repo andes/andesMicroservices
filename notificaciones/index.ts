@@ -13,6 +13,16 @@ router.group('/notificaciones', (group) => {
         await request(req, "POST", "send-message");
     });
 
+    group.post('/sendReminder', async (req, res) => {
+        res.send({ message: 'ok' });
+        await request(req, "POST", "send-reminder");
+    });
+
+    group.post('/sendSurvey', async (req, res) => {
+        res.send({ message: 'ok' });
+        await request(req, "POST", "send-survey");
+    });
+
     group.get('/fetchMessages', async (req, res) => {
         res.json(await request(req, 'POST', 'fetch-messages'));
     });
