@@ -9,5 +9,6 @@ export const notificacionesLog = new Logger({
     module: 'msNotificaciones',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '3 M',
 });
