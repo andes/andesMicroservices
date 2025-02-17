@@ -19,7 +19,7 @@ export async function request(req: any, method: string, path: string) {
     try {
         if (paths.includes(path)) {
             body = req.body.data;
-            const constante = await cuerpoMensaje(body.mensaje)
+            const constante = await cuerpoMensaje(body.mensaje);
             const message = replaceTemplate(constante, body);
             const chatId = `${config.codPais}${config.codWaApi}${body.telefono}@${config.codServChat}`;
             ultNum = body.telefono.slice(-1);
@@ -51,7 +51,24 @@ export async function request(req: any, method: string, path: string) {
                 log.error('send-message:request:error', { data: req.body.data, url }, responseJson.data, config.userScheduler);
                 return { status };
             } else {
-                log.info('send-message:request:sendMessage', responseJson);
+                responseJson.idTurno = req.body?.data?.idTurno;
+                responseJson.idPaciente = req.body?.data?.idPaciente;
+                const data = {
+                    idTurno: req.body?.data?.idTurno,
+                    idPaciente: req.body?.data?.idPaciente,
+                    status: responseJson.data.status,
+                    tipoMensaje: req.body?.data?.mensaje,
+                    mensaje: responseJson.data.data.body,
+                    instanceId: responseJson.data.instanceId,
+                    telefono: req.body?.data?.telefono,
+                    nombrePaciente: req.body?.data?.nombrePaciente,
+                    tipoPrestacion: req.body?.data?.tipoPrestacion,
+                    fecha: req.body?.data?.fecha,
+                    profesional: req.body?.data?.profesional,
+                    organizacion: req.body?.data?.organizacion,
+
+                }
+                log.info('send-message:request:sendMessage', data);
                 return responseJson;
             }
         }
