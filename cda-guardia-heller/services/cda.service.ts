@@ -25,12 +25,12 @@ export async function postCDA(data: any, token: any) {
                 paciente: responseJson.paciente
             };
         } else {
-            log.error('guardia-heller:postCDA:statusError', { dataCDA: data, url }, { status: response.error, message: response.message }, userScheduler);
-            return { status: response.status, error: "Error al generar CDA: " + response.statusText };
+            log.error('guardia-heller:postCDA:statusError', { dataCDA: data, url }, { status: response.error, message: response.message ? response.message : response }, userScheduler);
+            return { status: response.status, error: `Error al generar CDA: ${response.statusText}` };
         }
     }
     catch (error) {
-        log.error('guardia-heller:postCDA', { error: error.message }, userScheduler);
-        return { status: 500, error: error.message };
+        log.error('guardia-heller:postCDA', { error }, userScheduler);
+        return { status: 500, error };
     }
 }
