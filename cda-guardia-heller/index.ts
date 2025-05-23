@@ -2,7 +2,7 @@ import { Microservice } from '@andes/bootstrap';
 import { crearGuardia } from './controller/ejecutaCDA';
 import { userScheduler, organizacion, tipoPrestacion, tokenCDA, tokenHeller } from './config.private';
 import { msCDAGuardiaHellerLog } from './logger/msCDAGuardiaHeller';
-import { getGuardiasHeller, pdfToBase64 } from './controller/verificaCDA';
+import { getGuardiasHeller } from './controller/verificaCDA';
 import axios from "axios";
 
 let pkg = require('./package.json');
@@ -15,8 +15,8 @@ const logGuardia = msCDAGuardiaHellerLog.startTrace();
 router.group('/cda', (group) => {
     group.post('/guardia', async (req: any, res) => {
         let verif = null;
+        const paciente = req.body.data.paciente;
         try {
-            const paciente = req.body.data.paciente;
             const respGet = await getGuardiasHeller(paciente, tokenHeller);
             for (const resp of respGet) {
                 const url = resp.data.file;
@@ -42,7 +42,7 @@ router.group('/cda', (group) => {
                         verif = await crearGuardia(efector, paciente, data, tokenCDA);
                     }
                 } catch (error) {
-                    logGuardia.error('guardia:index', resp, error.message, userScheduler);
+                    logGuardia.error('guardia:index', paciente, error.message, userScheduler);
                 }
             }
             if (verif === null) {
@@ -56,7 +56,7 @@ router.group('/cda', (group) => {
             }
         } catch (error) {
             const msgError = error.message ? error.message : error
-            logGuardia.error('guardia:index', { error }, msgError, userScheduler);
+            logGuardia.error('guardia:index', paciente, msgError, userScheduler);
             res.status(500).json({ error: msgError });
         }
     });
