@@ -16,7 +16,7 @@ router.group('/cda', (group) => {
     group.post('/guardia', async (req: any, res) => {
         let verif;
         try {
-            const paciente = req.body.data;
+            const paciente = req.body.data.paciente;
             const respGet = await getGuardiasHeller(paciente, tokenHeller);
             for (const resp of respGet) {
                 const url = resp.data.file;
