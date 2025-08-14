@@ -5,7 +5,7 @@ const request = require('request');
 const cache = {};
 import { msCDALaboratoriosLog } from '../logger/msCDALaboratorios';
 const log = msCDALaboratoriosLog.startTrace();
-import { userScheduler, idEfectoresSIL2 } from './../config.private';
+import { userScheduler,  efectoresFiltradosSIL2 } from './../config.private';
 
 export async function organizacionBySisaCode(sisa) {
     return new Promise((resolve, reject) => {
@@ -13,7 +13,7 @@ export async function organizacionBySisaCode(sisa) {
             return resolve(cache[sisa]);
         } else {
             const url = `${ANDES_HOST}/core/tm/organizaciones?sisa=${sisa}&token=${ANDES_KEY}`;
-            request(url, (error, response, body) => {
+             request(url, (error, response, body) => {
                 if (!error && response.statusCode >= 200 && response.statusCode < 300) {
                     const orgs: any[] = JSON.parse(body);
                     if (orgs && orgs.length) {
@@ -35,9 +35,21 @@ export async function getEncabezados(pool, paciente) {
     const documento = paciente.documento;
     const sexo = paciente.sexo === 'femenino' ? 'F' : paciente.sexo === 'masculino' ? 'M' : 'I';
     let filterEfectores = '';
-    if (idEfectoresSIL2?.length) {
-        const idsSil2 = idEfectoresSIL2.toString();
-        filterEfectores = `and encabezado.idEfector not in (${idsSil2})`;
+  
+    if(efectoresFiltradosSIL2?.length) {
+        filterEfectores += `and (`;
+        efectoresFiltradosSIL2.forEach(element => {
+            if(element.fechaHasta != "") {
+                //a fechaHasta sacar los guiones para que no falle la consulta
+                element.fechaHasta = element.fechaHasta.replace(/-/g, '');
+                filterEfectores += `  (encabezado.idEfector=${element.idSips} and encabezado.fecha1 <  '${element.fechaHasta}') or`;
+            }
+            
+        });
+        //Borro el ultimo 'or' agregado
+        filterEfectores = filterEfectores.slice(0, -2);
+        filterEfectores += ` )`;
+
     }
     const query = `select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, 
     encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, encabezado.numeroDocumento, 
