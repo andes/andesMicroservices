@@ -12,7 +12,7 @@ const router = ms.router();
 router.get('/queries', async (req, res, next) => {
     const Query = mongoose.model('queries');
     const activas = { 'inactiva.estado': { $ne: true } };
-    const query = {...req.query, ...activas};
+    const query = { ...req.query, ...activas };
     const queries = await Query.find(query);
     return res.json(queries);
 });
@@ -172,7 +172,6 @@ router.post('/queries/:id/delete', async (req, res, next) => {
 });
 
 router.patch('/queries/:id', async (req, res, next) => {
-    console.log(req.body);
     try {
         const Query = mongoose.model('queries');
         const id = req.params.id;
@@ -193,7 +192,6 @@ router.patch('/queries/:id', async (req, res, next) => {
 
         return res.json(query);
     } catch (e) {
-        console.error(e);
         return res.status(500).json({ error: e.message });
     }
 });
