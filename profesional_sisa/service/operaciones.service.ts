@@ -15,7 +15,6 @@ export async function postProfesionalSISA(profesional: any) {
             json: true,
         };
         const resJson = await handleHttpRequest(options);
-
         if (resJson && resJson.length > 0) {
             const statusCode = resJson[0];
             const body = resJson[1];
@@ -33,7 +32,6 @@ export async function postProfesionalSISA(profesional: any) {
 
 export async function getProfesional(idProfesional) {
     const url = `${ANDES_HOST}/core/tm/profesionales/${idProfesional}`;
-    //${ANDES_KEY}
     const options = {
         uri: url,
         method: 'GET',
@@ -129,7 +127,6 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
                 domicilio: {}
             }
         }
-
     };
     profesionalSisa['profesional']['apellido'] = profesional.apellido;
     profesionalSisa['profesional']['nombre'] = profesional.nombre;
@@ -138,12 +135,13 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
     profesionalSisa['profesional']['sexo'] = (profesional.sexo === 'femenino' || profesional.sexo === 'Femenino') ? 'F' : (profesional.sexo === 'masculino' || profesional.sexo === 'Masculino') ? 'M' : 'X';
     profesionalSisa['profesional']['fechaNacimiento'] = moment(profesional.fechaNacimiento).format('DD-MM-YYYY');
     const email = profesional.contactos.find(x => x.tipo === 'email' && x.valor);
-    profesionalSisa['profesional']['email'] = email ? email.valor : '';
+    if (validarEmail(email.valor)) {
+        profesionalSisa['profesional']['email'] = email.valor;
+    }
     profesionalSisa['profesional']['idPaisNacimiento'] = 200;
     profesionalSisa['profesional']['idPais'] = 200;
     profesionalSisa['profesional']['habilitado'] = 'SI';
     profesionalSisa['profesion']['titulo'] = formacionGrado ? formacionGrado.titulo : '';
-
     profesionalSisa['profesion']['fechaTitulo'] = moment(formacionGrado.fechaEgreso).format('DD-MM-YYYY');
 
     let profesionDeReferencia: any = await getProfesion(formacionGrado.profesion.codigo);
@@ -192,4 +190,42 @@ export async function crearProfesionalSISA(profesional, formacionGrado) {
 
     });
     return profesionalSisa;
+}
+
+export async function patchProfesional(id, cambios) {
+    const body = {
+        op: 'upConfigSIISA',
+        data: cambios
+    }
+    const url = `${ANDES_HOST}/core/tm/profesionales/${id}`;
+    const options = {
+        uri: url,
+        method: 'PATCH',
+        headers: { Authorization: `JWT ${ANDES_KEY}`, 'Content-Type': 'application/json' },
+        body,
+        json: true,
+    };
+    try {
+        const resJson = await handleHttpRequest(options);
+        if (resJson && resJson.length > 0) {
+            const statusCode = resJson[0];
+            const body = resJson[1];
+            if (statusCode >= 200 && statusCode < 300 && body?.resultado != 'ERROR_DATOS') {
+                return body;
+            } else {
+                log.error('profesional_sisa:getProfesional', { options, body }, 'unkown error', userScheduler);
+                return null;
+            }
+        } else {
+            log.error('profesional_sisa:getProfesional', { options }, 'unkown error', userScheduler);
+            return null;
+        }
+    } catch (error) {
+        log.error('profesional_sisa:getProfesional', { error, url }, error.message, userScheduler);
+    }
+}
+
+function validarEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
 }
