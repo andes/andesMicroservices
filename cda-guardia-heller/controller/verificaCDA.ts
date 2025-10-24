@@ -1,14 +1,14 @@
 import { IGuardia } from 'cda-guardia-heller/schemas/guardia';
 import { getPacienteAndes } from '../services/paciente';
-import { userScheduler } from '../config.private';
+import { userScheduler, HELLER_HOST, tipoPrestacion } from '../config.private';
 import { msCDAGuardiaHellerLog } from '../logger/msCDAGuardiaHeller';
 import * as moment from 'moment';
 
+const fetch = require('node-fetch');
 const logGuardia = msCDAGuardiaHellerLog.startTrace();
-
+const axios = require('axios');
 
 export async function verificarDatos(registro: any, token: any) {
-
     let dto: IGuardia = {
         id: null,
         paciente: null,
@@ -17,12 +17,12 @@ export async function verificarDatos(registro: any, token: any) {
         file: null,
         organizacion: null,
         cie10: null,
-        tipoPrestacion: '50849002',
+        tipoPrestacion,
         confidencialidad: 'N'
     };
     let respuesta = { status: 200, msg: "", dto };
     try {
-        if (registro.idGuardia && registro.fechaIngreso && registro.file && registro.cie10 && registro.paciente && registro.profesional) {
+        if (registro.idGuardia && registro.fechaIngreso && registro.file && registro.paciente && registro.profesional) {
             let fecha = moment(registro.fechaIngreso) || null;
             if (fecha.isValid()) {
                 dto['fecha'] = fecha.toDate();
@@ -35,7 +35,6 @@ export async function verificarDatos(registro: any, token: any) {
                         dto['id'] = registro.idGuardia ? (registro.idGuardia).toString() : null;
                         dto['file'] = registro.file;
                         dto['cie10'] = registro.cie10;
-
                     } else {
                         respuesta.msg = 'Error en datos del profesional incompletos';
                         respuesta.status = 404;
@@ -59,9 +58,6 @@ export async function verificarDatos(registro: any, token: any) {
             if (!registro.file) {
                 respError = 'file';
             }
-            if (!registro.cie10) {
-                respError = 'cie10';
-            }
             if (!registro.paciente) {
                 respError = 'paciente';
             }
@@ -74,8 +70,8 @@ export async function verificarDatos(registro: any, token: any) {
         }
     } catch (error) {
         respuesta.status = 500;
-        respuesta.msg = "Error al procesar datos: " + error;
-        logGuardia.error('guardia-heller:verificarCDA:verificarDatos', { dto, error }, error.message, userScheduler);
+        respuesta.msg = `Error al procesar datos: ${error}`;
+        logGuardia.error('cda-guardia-heller:verificarCDA', { dto, error }, error.message ? error.message : error, userScheduler);
     }
     return respuesta;
 }
@@ -132,4 +128,39 @@ function vProfesional(registro: IGuardia) {
         return profesional;
     }
     return null;
+}
+
+export async function getGuardiasHeller(paciente, token) {
+    let qs;
+    let res = [];
+    if (paciente.documento) {
+        qs = paciente.documento;
+        const url = `${HELLER_HOST}?id=${qs}&token=${token}`;
+        const options = {
+            url,
+            method: 'GET',
+        }
+        try {
+            const response = await fetch(url, options);
+            if (response.status >= 200 && response.status < 300) {
+                res = await response.json();
+            } else {
+                logGuardia.error('cda-guardia-heller:getGuardiasHeller', { paciente, url }, { status: response.error, message: response.message ? response.message : response }, userScheduler);
+                res.push({ status: response.status, message: `Error al generar CDA: ${response.statusText}` });
+            }
+        }
+        catch (error) {
+            logGuardia.error('getGuardiasHeller', { paciente }, error, userScheduler);
+            res.push({ message: error, status: 500 });
+        }
+    }
+    return res;
+}
+
+export async function pdfToBase64(url) {
+    const response = await axios.get(url, {
+        responseType: 'arraybuffer' // Importante para obtener los bytes
+    });
+    const base64 = Buffer.from(response.data, 'binary').toString('base64');
+    return base64;
 }

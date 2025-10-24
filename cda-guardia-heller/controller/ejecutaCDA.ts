@@ -25,7 +25,8 @@ export async function crearGuardia(efector: string, paciente: any, data: any, to
         }
         return ret;
     } catch (error) {
-        logGuardia.error('guardia-heller:ejecutaCDA:crearGuardia', { paciente, efector, error }, error.message, userScheduler);
-        return { dto: null, verif: false, msgError: error.message };
+        const msgError = error.message ? error.message : error
+        logGuardia.error('guardia-heller:ejecutaCDA:crearGuardia', { paciente, efector, error }, msgError, userScheduler);
+        return { dto: null, verif: false, msgError: msgError };
     }
 }
