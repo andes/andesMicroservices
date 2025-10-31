@@ -10,6 +10,7 @@ export type IQuery = {
         key: string;
         label: string;
         tipo: string;
+        formato?: string,
         required: boolean;
         subquery: any;
     }[];
@@ -48,6 +49,7 @@ export const QuerySchema = new mongoose.Schema({
         key: String,
         label: String,
         tipo: String,
+        formato: String,
         required: Boolean,
         subquery: mongoose.SchemaTypes.Mixed,
 
