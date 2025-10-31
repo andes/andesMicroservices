@@ -14,7 +14,7 @@ const logGuardia = msCDAGuardiaHellerLog.startTrace();
 
 router.group('/cda', (group) => {
     group.post('/guardia', async (req: any, res) => {
-        let verif;
+        let verif = null;
         try {
             const paciente = req.body.data.paciente;
             const respGet = await getGuardiasHeller(paciente, tokenHeller);
@@ -45,10 +45,14 @@ router.group('/cda', (group) => {
                     logGuardia.error('guardia:index', resp, error.message, userScheduler);
                 }
             }
-            if (verif.verif) {
-                res.status(200).json({ mensage: verif.msgError, cda: verif.data });
+            if (verif === null) {
+                res.status(200).json({ message: 'El paciente no tiene registros de guardia' });
             } else {
-                res.status(400).json(verif);
+                if (verif.verif) {
+                    res.status(201).json({ message: verif.msgError, cda: verif.data });
+                } else {
+                    res.status(400).json(verif);
+                }
             }
         } catch (error) {
             const msgError = error.message ? error.message : error
@@ -56,7 +60,6 @@ router.group('/cda', (group) => {
             res.status(500).json({ error: msgError });
         }
     });
-
 });
 
 ms.add(router);
