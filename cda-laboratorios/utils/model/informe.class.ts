@@ -5,7 +5,7 @@ import * as pdf from 'html-pdf';
 import { HTMLComponent } from './html-component.class';
 
 export class InformePDF extends HTMLComponent {
- 
+
     template = `
     <!DOCTYPE html>
     <html>
@@ -39,19 +39,19 @@ export class InformePDF extends HTMLComponent {
     style: string;
     stylesUrl: string[];
 
-
-    async informe(options: pdf.CreateOptions = null) {
+    // devuelve buffer
+    async informeBase64(options: pdf.CreateOptions = null): Promise<string> {
         const opciones = {
             ...this.getDefaultOptions(),
             ...(options || {})
         };
+
         const html = await this.render();
-        return new Promise((resolve, reject) => {
-            pdf.create(html, opciones).toFile((err, file) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(file.filename);
+
+        return new Promise<string>((resolve, reject) => {
+            pdf.create(html, opciones).toBuffer((err: any, buffer: Buffer) => {
+                if (err) return reject(err);
+                resolve(buffer.toString('base64'));
             });
         });
     }
@@ -73,7 +73,7 @@ export class InformePDF extends HTMLComponent {
             data.css = this.renderSCSS();
         }
         this.data = data;
-}
+    }
 
     private renderSCSS() {
         const styles = this.stylesUrl.map((file) => {

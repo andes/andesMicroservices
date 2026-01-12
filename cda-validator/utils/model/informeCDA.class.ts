@@ -35,21 +35,23 @@ export class InformeCDAPDF extends HTMLComponent {
     style: string;
     stylesUrl: string[];
 
-
-    async informe(options: pdf.CreateOptions = null) {
+    // devuelve buffer
+    async informeBase64(options: pdf.CreateOptions = null): Promise<string> {
         const opciones = {
             ...this.getDefaultOptions(),
             ...(options || {})
         };
+
         const html = await this.render();
-        return new Promise((resolve, reject) => {
+
+        return new Promise<string>((resolve, reject) => {
             try {
-                pdf.create(html, opciones).toFile((err, file) => {
+                pdf.create(html, opciones).toBuffer((err: any, buffer: Buffer) => {
                     if (err) {
                         log.error('guardia:informe:pdf_toFile', { err }, err.message, userScheduler);
                         return reject(err);
                     }
-                    return resolve(file.filename);
+                    resolve(buffer.toString('base64'));
                 });
             } catch (err) {
                 log.error('guardia:informe:pdf_create', { err }, err.message, userScheduler);

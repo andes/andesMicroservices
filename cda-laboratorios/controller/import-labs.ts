@@ -1,11 +1,9 @@
-import { conSql } from '../config.private';
+import { conSql, userScheduler } from '../config.private';
 import * as moment from 'moment';
 import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as operations from './operations';
-import * as fs from 'fs';
 import { InformeLAB } from '../utils/informes/informe-lab';
-import { userScheduler } from '../config.private';
 import { msCDALaboratoriosLog } from '../logger/msCDALaboratorios';
 const log = msCDALaboratoriosLog.startTrace();
 
@@ -81,27 +79,23 @@ export async function importarDatos(paciente) {
 
                         const resultados = await operations.getImpresionResultados(pool, lab.idProtocolo, lab.idEfector);
                         const informe = new InformeLAB(resultados.recordset[0], resultados.recordset, 'Laboratorio');
-                        fs.readFile((await informe.informe() as string), async (err, data) => {
+                        const base64 = await informe.informeBase64();
+                        const file = 'data:application/pdf;base64,' + base64;
 
-                            if (err) { return false; }
+                        const dto = {
+                            id: lab.idProtocolo,
+                            organizacion: organizacion._id,
+                            fecha: fecha.toDate(),
+                            tipoPrestacion: '4241000179101',
+                            paciente,
+                            confidencialidad: hiv ? 'R' : 'N',
+                            profesional,
+                            cie10: 'Z01.7',
+                            file,
+                            texto: 'Exámen de Laboratorio'
+                        };
 
-                            const file = 'data:application/pdf;base64,' + data.toString('base64');
-
-                            const dto = {
-                                id: lab.idProtocolo,
-                                organizacion: organizacion._id,
-                                fecha: fecha.toDate(),
-                                tipoPrestacion: '4241000179101',
-                                paciente,
-                                confidencialidad: hiv ? 'R' : 'N',
-                                profesional,
-                                cie10: 'Z01.7',
-                                file,
-                                texto: 'Exámen de Laboratorio'
-                            };
-
-                            return await operations.postCDA(dto);
-                        });
+                        return await operations.postCDA(dto);
 
                     }
                 } catch (e) {
