@@ -12,17 +12,14 @@ export async function getOrganizacionAndes(idOrganizacion) {
             Authorization: `JWT ${ANDES_KEY}`
         }
     };
+
     try {
-        let response = await fetch(url, options);
-        try {
-            const responseJson = await response.json();
-            return responseJson[0] || null;
-        } catch (error) {
-            log.error('getOrganizacionAndes:error', { idOrganizacion, options, response }, error, fakeRequest);
-        }
-    }
-    catch (error) {
+        const response = await fetch(url, options);
+        const responseJson = await response.json();
+        return responseJson[0] || null;
+    } catch (error) {
         log.error('getOrganizacionAndes:error', { idOrganizacion, options }, error, fakeRequest);
+        return null;
     }
 
 }

@@ -31,37 +31,37 @@ const options = (method = 'GET', body = null) => {
 
 export async function getPacienteSP(paciente: any) {
     const documento = paciente.documento || '';
-    if (documento) {
-        try {
-            let response = await fetch(`${url}${documento}`, options('GET'));
-            try {
-                if (response.status >= 200 && response.status < 300) {
-                    let responseJson = await response.json();
+    if (!documento) {
+        return { paciente: null };
+    }
 
-                    const keyResponse = Object.keys(responseJson).length || null;
-                    if (keyResponse) {
-                        return { paciente: responseJson };
-                    }
-                    else {
-                        return { paciente: null };
+    try {
+        const response = await fetch(`${url}${documento}`, options('GET'));
 
-                    }
-                }
-                if (response.status === 404) {
-                    // paciente no encontrado
-                    return { paciente: null };
-
-                }
-            } catch (error) {
-                log.error('getPacienteSP:error', { paciente, response }, error, fakeRequest);
-                return null;
+        if (!response.ok) {
+            if (response.status === 404) {
+                // Paciente no encontrado
+                return { paciente: null };
             }
 
-        } catch (error) {
-            log.error('getPacienteSP:error', { paciente }, error, fakeRequest);
+            throw new Error(`HTTP ${response.status}`);
         }
+
+        const responseJson = await response.json();
+
+        return responseJson && Object.keys(responseJson).length
+            ? { paciente: responseJson }
+            : { paciente: null };
+
+    } catch (error) {
+        log.error(
+            'getPacienteSP:error',
+            { documento, url },
+            error,
+            fakeRequest
+        );
+        return { paciente: null };
     }
-    return null;
 }
 
 export async function postPacienteSP(documento: string = '', pacienteSP) {
@@ -70,18 +70,17 @@ export async function postPacienteSP(documento: string = '', pacienteSP) {
             const body = JSON.stringify(pacienteSP);
             let optionsPost: any = options('POST', body);
             let response: any = await fetch(`${url}${documento}`, optionsPost);
-            try {
-                if (response.status >= 200 && response.status < 300) {
-                    return { paciente: optionsPost.body };
-                }
+
+            if (!response.ok) {
                 if (response.status === 404) {
-                    // paciente no encontrado
+                    // Paciente no encontrado
                     return { paciente: null };
                 }
-            } catch (error) {
-                log.error('postPacienteSP:error', { pacienteSP, response }, error, fakeRequest);
-                return null;
+
+                throw new Error(`HTTP ${response.status}`);
             }
+
+            return { paciente: optionsPost.body };
 
         } catch (error) {
             log.error('postPacienteSP:error', { pacienteSP }, error, fakeRequest);

@@ -13,20 +13,24 @@ export async function getPaciente(idPaciente) {
         }
     };
     try {
-        let response = await fetch(url, options);
-        try {
-            const responseJson = await response.json();
-            if (responseJson._id) {
-                return responseJson;
-            } else {
-                return null;
-            }
-        }catch (error) {
-            log.error('getPaciente:error', { idPaciente, options, response }, error, fakeRequest);
+        const response = await fetch(url, options);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
-    }
-    catch (error) {
-        log.error('getPaciente:error', { idPaciente, options }, error, fakeRequest);
+
+        const responseJson = await response.json();
+
+        return responseJson?._id ? responseJson : null;
+
+    } catch (error) {
+        log.error(
+            'getPaciente:error',
+            { idPaciente, options, url },
+            error,
+            fakeRequest
+        );
+        return null;
     }
 
 }

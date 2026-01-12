@@ -15,37 +15,48 @@ mongoose.connect(MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true }
 export async function getMatching(tipoMatch = null) {
     const tipo: string = tipoMatch || 'paciente';
     const source = `andes:${tipo}`;
+
     try {
         const dataMapped = await QueryMapping.find({ source, target: "sip+" });
+        const results = dataMapped
+            .map(elemMap => createDataMap(elemMap, tipo))
+            .filter(Boolean);
 
-        return dataMapped.map(elemMap => {
-            try {
-                let sipPlus = {
-                    code: elemMap['targetValue']['code'],
-                    type: elemMap['targetValue']['type']
-                }
-                const key = (tipo.includes('snomed')) ? elemMap['sourceValue']['key'] : elemMap['sourceValue'];
-
-                let dataMap: IPerinatal = { key, sipPlus, tipoMatch };
-                // si el tipo de mapeo contiene conceptos Snomed, entonces se obtienen sus datos
-                if (tipo.includes('snomed')) {
-                    dataMap.concepto = elemMap['sourceValue']['concepto'];
-                    if (elemMap['sourceValue']['valor']) {
-                        dataMap.sipPlus.valor = elemMap['targetValue']['valor'];
-                    }
-                    if (elemMap['targetValue']['extra']) {
-                        dataMap.sipPlus.extra = elemMap['targetValue']['extra'];
-                    }
-                }
-                return dataMap;
-            } catch (error) {
-                log.error('getMatching:error', { dataMapped, source}, error, fakeRequest);
-                return null;
-            }
-        });
-
+        return results;
     } catch (error) {
-        log.error('getMatching:error',source, error, fakeRequest);
+        log.error('getMatching:error', source, error, fakeRequest);
+        return [];
     }
-    return [];
+}
+
+function createDataMap(elemMap: any, tipo: string): IPerinatal | null {
+
+    try {
+        const sipPlus = {
+            code: elemMap['targetValue']['code'],
+            type: elemMap['targetValue']['type']
+        };
+
+        const key = tipo.includes('snomed')
+            ? elemMap['sourceValue']['key']
+            : elemMap['sourceValue'];
+
+        const dataMap: IPerinatal = { key, sipPlus, tipoMatch: tipo };
+
+        if (tipo.includes('snomed')) {
+            dataMap.concepto = elemMap['sourceValue']['concepto'];
+
+            if (elemMap['sourceValue']['valor']) {
+                dataMap.sipPlus.valor = elemMap['targetValue']['valor'];
+            }
+
+            if (elemMap['targetValue']['extra']) {
+                dataMap.sipPlus.extra = elemMap['targetValue']['extra'];
+            }
+        }
+        return dataMap;
+    } catch (error) {
+        log.error('createDataMap:error', { elemMap, tipo }, error, fakeRequest);
+        return null;
+    }
 }

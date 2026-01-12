@@ -7,8 +7,9 @@ logs = mongoose.createConnection(logDatabase.log.host, logDatabase.log.options);
 export const msSipPlusPerinatalLog = new Logger({
     connection: logs,
     type: 'msSipPlusPerinatal',
-    module: 'msSipPlusPerinatal',
+    module: 'perinatal',
     application: 'andes',
     bucketBy: 'h',
-    bucketSize: 100
+    bucketSize: 100,
+    expiredAt: '3 M'
 });
