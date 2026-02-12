@@ -6,6 +6,12 @@ export type IPedidoSolic = {
         nombre: string;
     };
     descripcion: string;
+    efector: {
+        id: number;
+        nombre: string;
+    };
+    efectorParticular?: string;
+    paciente: any;
     adjuntos: {
         nombre: string;
         path: string;
@@ -23,6 +29,12 @@ export const PedidoSolicSchema = new mongoose.Schema(
             nombre: { type: String, required: true }
         },
         descripcion: { type: String, required: true },
+        efector: {
+            id: { type: Number, required: true },
+            nombre: { type: String, required: true }
+        },
+        efectorParticular: { type: String },
+        paciente: { type: mongoose.Schema.Types.ObjectId, ref: 'solicitudPac' },
         adjuntos: [
             {
                 nombre: String,
