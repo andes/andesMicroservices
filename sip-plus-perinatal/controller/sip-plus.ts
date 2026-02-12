@@ -252,7 +252,7 @@ async function completeData(allData, dataInit = {}, newData) {
             if (valor) {
                 const type = data.sipPlus.type.toUpperCase();
                 datos[data.sipPlus.code] = (type === 'TEXT')
-                    ? valor.toString() :
+                    ? valor.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, ""):
                     (type === 'NUMERIC') ? parseInt(valor, 10) :
                         (type === 'DATE') ? moment(valor).format('DD/MM/YY') : valor;
             }
@@ -390,12 +390,22 @@ async function createMatchControl(registros: any[], embActual, newDatosEmb, fech
     return newDatosEmb;
 }
 
+function sanitizeText(input: string): string {
+    return input
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newData) {
     matchPrenatal.forEach(idMatch => {
         const reg = registros.find(reg => reg.concepto.conceptId === idMatch.concepto.conceptId);
         if (reg && reg.valor) {
             const type = idMatch.sipPlus.type.toUpperCase();
-            let valorSP = null;
+            let valorSP: string | number | null = null;
             if (type === 'DATE') {
                 valorSP = moment(reg.valor.toString()).format('DD/MM/YY');
             }
@@ -405,18 +415,12 @@ async function mappingSnomed(matchPrenatal: IPerinatal[], registros: any[], newD
             if (type === 'TEXT') {
                 let arrayKeyValor = Object.keys(reg.valor);
                 if ((typeof reg.valor !== 'string') && arrayKeyValor.length) {
-
                     const valor = idMatch.sipPlus.valor ? idMatch.sipPlus.valor.find(v => v.id === reg.valor.id) : null;
                     valorSP = valor ? valor.label.toString() : null;
                 }
                 else {
-                    // eliminamos texto HTML si lo tiene
-                    valorSP = reg.valor.replace(/(<([^>]+)>)/gi, '');
-                    if (idMatch.sipPlus.extra) {
-                        // verificamos si se restringe por longitud de caracteres
-                        const length = idMatch.sipPlus.extra.length || valorSP.length;
-                        valorSP = valorSP.substr(0, length);
-                    }
+                    const limpio = sanitizeText(reg.valor.toString());
+                    valorSP = idMatch.sipPlus.extra?.length ? limpio.slice(0, idMatch.sipPlus.extra.length) : limpio;
                 }
             }
             if (valorSP) {
