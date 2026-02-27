@@ -1,6 +1,7 @@
 import * as config from './../config.private';
 import { notificacionesLog } from '../logger/notificacionesLog';
 import { Constantes, IConstante } from '../schemas/schemas';
+import { sendMail } from '../utils/mail';
 
 import * as mongoose from 'mongoose';
 mongoose.connect(config.MONGO_HOST, { useUnifiedTopology: true, useNewUrlParser: true })
@@ -17,7 +18,27 @@ export async function request(req: any, method: string, path: string) {
     const paths = ['send-message', 'send-reminder', 'send-survey']
     let host: string;
     try {
-        if (paths.includes(path)) {
+        if (path === 'webhook') {
+            url = config.HOSTW2;
+            const event = req.body.event;
+            let descriptiveMessage = `Evento WhatsApp: ${event}.`;
+
+            if (event === 'disconnected') {
+                descriptiveMessage = 'El servicio de WhatsApp se ha desconectado.';
+            } else if (event === 'authenticated') {
+                descriptiveMessage = 'El servicio de WhatsApp se ha autenticado correctamente.';
+            } else if (event === 'qr') {
+                descriptiveMessage = 'Se ha generado un nuevo código QR para WhatsApp.';
+            } else if (event === 'ready') {
+                descriptiveMessage = 'El servicio de WhatsApp está listo para usar.';
+            }
+
+            const fromPhone = req.body.data?.from_phone;
+            const deviceText = fromPhone ? ` Evento recibido desde dispositivo : ${fromPhone}` : '';
+            descriptiveMessage += deviceText;
+
+            body = { message: descriptiveMessage };
+        } else if (paths.includes(path)) {
             body = req.body.data;
             const constante = await cuerpoMensaje(body.mensaje);
             const message = replaceTemplate(constante, body);
@@ -25,12 +46,14 @@ export async function request(req: any, method: string, path: string) {
             ultNum = body.telefono.slice(-1);
             body = { message, chatId };
             path = paths[0];
+            host = ['0', '1', '2'].includes(ultNum) ? config.HOST1 : ['3', '4', '5'].includes(ultNum) ? config.HOST2 : config.HOST3;
+            url = `${host}/${path}`;
         } else {
             body = req.body;
             ultNum = body.chatId.slice(-6).substring(0, 1);
+            host = ['0', '1', '2'].includes(ultNum) ? config.HOST1 : ['3', '4', '5'].includes(ultNum) ? config.HOST2 : config.HOST3;
+            url = `${host}/${path}`;
         }
-        host = ['0', '1', '2'].includes(ultNum) ? config.HOST1 : ['3', '4', '5'].includes(ultNum) ? config.HOST2 : config.HOST3;
-        url = `${host}/${path}`;
         const options = {
             url,
             method,
@@ -47,6 +70,31 @@ export async function request(req: any, method: string, path: string) {
             log.error(`${path}:request:statusError`, { data: req.body.data, url }, { status, statusText }, config.userScheduler);
             return { status };
         } else {
+            if (path === 'webhook') {
+                log.info('webhook:received', { body: req.body });
+                try {
+                    const event = req.body.event;
+                    const subjects = {
+                        'disconnected': 'WhatsApp Desconectado',
+                        'authenticated': 'WhatsApp Autenticado',
+                        'qr': 'WhatsApp QR Code',
+                        'ready': 'WhatsApp Listo'
+                    };
+                    const subject = subjects[event] || 'Evento WhatsApp Recibido';
+
+                    await sendMail({
+                        from: config.EMAIL_CONFIG.user,
+                        to: 'aldo.emanuel.matamala@gmail.com',
+                        subject,
+                        text: body.message,
+                        html: `<p>${body.message}</p>`
+                    });
+                    log.info('webhook:emailSent', { to: 'aldo.emanuel.matamala@gmail.com' });
+                } catch (emailError) {
+                    log.error('webhook:emailError', { error: emailError.message }, {}, config.userScheduler);
+                }
+                return responseJson;
+            }
             if (responseJson.data.status === 'error') {
                 log.error('send-message:request:error', { data: req.body.data, url }, responseJson.data, config.userScheduler);
                 return { status };

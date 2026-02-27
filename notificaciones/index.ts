@@ -1,5 +1,7 @@
 import { Microservice } from '@andes/bootstrap';
 import { request } from './controller/notificaciones';
+import * as config from './config.private';
+import * as crypto from 'crypto';
 
 let pkg = require('./package.json');
 let ms = new Microservice(pkg);
@@ -33,6 +35,28 @@ router.group('/notificaciones', (group) => {
 
     group.post('/sendLocation', async (req, res) => {
         res.json(await request(req, "POST", 'send-location'))
+    });
+
+    group.post('/webhook', async (req, res) => {
+        console.log('webhook', req.body);
+        let signature = req.headers['x-webhook-signature'] as string;
+        if (!signature) {
+            return res.status(401).send({ status: 'error', message: 'Missing signature' });
+        }
+        signature = signature.replace('sha256=', '');
+        if (req.body?.event && req.body?.event === 'test') {
+            return res.status(200).send({ status: 'ok' });
+        }
+
+        const hmac = crypto.createHmac('sha256', config.WEBHOOK_SECRET);
+        const digest = hmac.update(JSON.stringify(req.body)).digest('hex');
+
+        if (signature !== digest) {
+            return res.status(401).send({ status: 'error', message: 'Invalid signature' });
+        }
+
+        res.status(200).send({ status: 'ok' });
+        return await request(req, "POST", "webhook");
     });
 
 });
