@@ -65,12 +65,15 @@ export async function importarDatos(paciente) {
 
                     let validado = true;
                     let hiv = false;
+                    let hpv = false;
 
                     if (validado && details?.recordset) {
                         details.recordset.forEach(detail => {
                             validado = validado && (detail.profesional_val !== '');
                             hiv = hiv || /hiv|vih/i.test(detail.item);
                         });
+
+                        hpv = hpv || /hpv|hpv/i.test(details.recordset[0].grupo);
 
                         const fecha = moment(lab.fecha, 'DD/MM/YYYY');
 
@@ -94,6 +97,7 @@ export async function importarDatos(paciente) {
                                 tipoPrestacion: '4241000179101',
                                 paciente,
                                 confidencialidad: hiv ? 'R' : 'N',
+                                confidencialidadHPV: hpv,
                                 profesional,
                                 cie10: 'Z01.7',
                                 file,
