@@ -1,4 +1,4 @@
-import { Microservice } from '@andes/bootstrap';
+import { Microservice, Middleware } from '@andes/bootstrap';
 import { MONGO_HOST } from './config.private';
 import { buscarRecetas } from './controllers/recetasController';
 
@@ -25,7 +25,7 @@ mongoose.connection.once('open', () => {
 
     router.group('/recetas', (group: any) => {
 
-        group.get('/', async (req: any, res: any) => {
+        group.get('/', Middleware.authenticate(), async (req: any, res: any) => {
             const result = await buscarRecetas(req);
             if (result instanceof Error) return handleError(res, result);
             res.json(result);
