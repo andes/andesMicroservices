@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as nodeFetch from 'node-fetch';
-import { Receta, generarIdDesdeFecha } from '../models/receta-schema';
+import { Receta, RecetaInsumo, generarIdDesdeFecha } from '../models/receta-schema';
 import { informarLog } from '../logs/recetaLogs';
 import { ParamsIncorrect } from './recetas.error';
 import { sistemasExternos } from '../config.private';
@@ -34,7 +34,6 @@ async function httpGet(url: string, token?: string) {
         clearTimeout(timeout);
     }
 }
-
 
 // -------------------------
 // Consulta estado de dispensa en sifaho o recetar
@@ -112,6 +111,14 @@ async function dispensar(receta: any, operacion: string, dataDispensa: any, sist
                 cantidadEnvases: med.cantidadEnvases || null,
                 presentacion: med.presentacion || null,
             }));
+        } else if (dataDispensa?.insumos?.length) {
+            dispensa.insumos = dataDispensa.insumos.map((ins: any) => ({
+                insumo: ins.insumo || {},
+                descripcion: ins.insumo?.nombre || '',
+                cantidad: ins.cantidad || null,
+                cantidadEnvases: ins.cantidadEnvases || null,
+                observacion: ins.observacion || null,
+            }));
         }
 
         dispensa.organizacion = dataDispensa.organizacion || null;
@@ -180,44 +187,58 @@ async function registrarAppNotificadas(req: any, recetas: any[], sistema: string
 }
 
 // -------------------------
+// Funciones auxiliares compartidas
+// -------------------------
+
+function buildPacienteOptions(params: any): any {
+    const pacienteId = params.pacienteId || null;
+    const documento = params.documento || null;
+    const sexo = params.sexo || null;
+
+    if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
+        throw new ParamsIncorrect();
+    }
+
+    const options: any = {};
+    const paramMap: any = {
+        id: '_id',
+        pacienteId: 'paciente.id',
+        documento: 'paciente.documento',
+        sexo: 'paciente.sexo'
+    };
+
+    for (const key of Object.keys(paramMap)) {
+        if (params[key]) {
+            options[paramMap[key]] = key === 'id' ? Types.ObjectId(params[key]) : params[key];
+        }
+    }
+
+    if (Object.keys(options).length === 0) throw new ParamsIncorrect();
+    return options;
+}
+
+function buildEstadoDispensaOption(params: any, options: any) {
+    if (params.estadoDispensa) {
+        const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
+        options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
+    } else {
+        options['estadoDispensaActual.tipo'] = 'sin-dispensa';
+    }
+}
+
+// -------------------------
 // Buscar recetas de un paciente
 // -------------------------
 
 export async function buscarRecetas(req: any) {
-    const options: any = {};
     const params = req.params.id ? req.params : req.query;
     const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
-    const pacienteId = params.pacienteId || null;
-    const documento = params.documento || null;
-    const sexo = params.sexo || null;
     const user = req.user;
+    let options: any = {};
 
     try {
-        if ((!pacienteId && (!documento || !sexo)) || (pacienteId && !Types.ObjectId.isValid(pacienteId))) {
-            throw new ParamsIncorrect();
-        }
-
-        const paramMap: any = {
-            id: '_id',
-            pacienteId: 'paciente.id',
-            documento: 'paciente.documento',
-            sexo: 'paciente.sexo'
-        };
-
-        for (const key of Object.keys(paramMap)) {
-            if (params[key]) {
-                options[paramMap[key]] = key === 'id' ? Types.ObjectId(params[key]) : params[key];
-            }
-        }
-
-        if (Object.keys(options).length === 0) throw new ParamsIncorrect();
-
-        if (params.estadoDispensa) {
-            const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
-            options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
-        } else {
-            options['estadoDispensaActual.tipo'] = 'sin-dispensa';
-        }
+        options = buildPacienteOptions(params);
+        buildEstadoDispensaOption(params, options);
 
         const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
         const fechaFin = params.fechaFin
@@ -278,7 +299,7 @@ export async function buscarRecetas(req: any) {
         }
         recetas = recetasActualizadas;
 
-        // Registrar app noonsoletificada si es sifaho o recetar
+        // Registrar app notificada si es sifaho o recetar
         if (user?.type === 'app-token') {
             const sistema = user.app?.nombre?.toLowerCase();
             recetas = sistema ? await registrarAppNotificadas(req, recetas, sistema) : [];
@@ -288,6 +309,50 @@ export async function buscarRecetas(req: any) {
 
     } catch (err) {
         await informarLog.error('buscarRecetas', { params, options }, err, req);
+        return err;
+    }
+}
+
+// -------------------------
+// Buscar recetas de insumos de un paciente
+// -------------------------
+
+export async function buscarRecetasInsumos(req: any) {
+    const params = req.params.id ? req.params : req.query;
+    const user = req.user;
+    let options: any = {};
+
+    try {
+        options = buildPacienteOptions(params);
+
+        if (params.tipo) options['insumo.tipo'] = params.tipo;
+        if (params.estado) options['estadoActual.tipo'] = params.estado;
+
+        buildEstadoDispensaOption(params, options);
+
+        if (params.fechaInicio || params.fechaFin) {
+            const fechaInicio = params.fechaInicio
+                ? moment(params.fechaInicio).startOf('day').toDate()
+                : moment().subtract(1, 'years').startOf('day').toDate();
+            const fechaFin = params.fechaFin
+                ? moment(params.fechaFin).endOf('day').toDate()
+                : moment().endOf('day').toDate();
+            options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+        }
+
+        let recetasInsumos: any = await RecetaInsumo.find(options);
+        if (!recetasInsumos.length) return [];
+
+        // Registrar app notificada si es sifaho o recetar
+        if (user?.type === 'app-token') {
+            const sistema = user.app?.nombre?.toLowerCase();
+            recetasInsumos = sistema ? await registrarAppNotificadas(req, recetasInsumos, sistema) : [];
+        }
+
+        return recetasInsumos;
+
+    } catch (err) {
+        await informarLog.error('buscarRecetasInsumos', { params, options }, err, req);
         return err;
     }
 }

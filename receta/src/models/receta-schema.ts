@@ -111,6 +111,27 @@ const medicamentoSubschema = new mongoose.Schema({
     numero: Number
 }, { autoIndex: false });
 
+const codigoSchema = {
+    fuente: String,
+    valor: String
+};
+
+const insumoSubschema = new mongoose.Schema({
+    id: String,
+    nombre: String,
+    codigo: [codigoSchema],
+    tipo: {
+        type: String,
+        enum: ['dispositivo', 'nutricion', 'magistral']
+    },
+    cantidad: Number,
+    unidades: String,
+    tratamientoProlongado: Boolean,
+    tiempoTratamiento: mongoose.SchemaTypes.Mixed,
+    ordenTratamiento: Number,
+    especificacion: String
+}, { _id: false, autoIndex: false });
+
 export function generarIdDesdeFecha(fecha = new Date()) {
     const pad = (num: number, size: number) => num.toString().padStart(size, '0');
     const id = String(
@@ -125,6 +146,8 @@ export function generarIdDesdeFecha(fecha = new Date()) {
     );
     return id;
 }
+
+// ---- Schema receta medicamento ----
 
 export const recetaSchema = new mongoose.Schema({
     idReceta: String,
@@ -188,3 +211,49 @@ export const RecetasParametrosSchema = new mongoose.Schema({
     observacion: String
 }, { autoIndex: false });
 export const RecetasParametros = mongoose.model('recetasParametros', RecetasParametrosSchema, 'recetasParametros');
+
+// ---- Schema receta insumo ----
+
+export const recetaInsumoSchema = new mongoose.Schema({
+    organizacion: organizacionSchema,
+    profesional: ProfesionalSubSchema,
+    fechaRegistro: Date,
+    fechaPrestacion: Date,
+    idPrestacion: String,
+    idRegistro: String,
+    diagnostico: mongoose.SchemaTypes.Mixed,
+    insumo: insumoSubschema,
+    dispensa: [{
+        idDispensaApp: String,
+        fecha: Date,
+        insumos: [{
+            cantidad: Number,
+            descripcion: String,
+            insumo: mongoose.SchemaTypes.Mixed,
+            cantidadEnvases: Number,
+            observacion: String
+        }],
+        organizacion: organizacionSchema,
+    }],
+    estados: [estadosSchema],
+    estadoActual: estadosSchema,
+    estadosDispensa: [estadoDispensaSchema],
+    estadoDispensaActual: estadoDispensaSchema,
+    paciente: PacienteSubSchema,
+    renovacion: String,
+    appNotificada: [appNotificadaSchema],
+    origenExterno: origenExternoSchema
+}, { timestamps: true, autoIndex: false });
+
+recetaInsumoSchema.pre('save', function (next) {
+    const recetaInsumo: any = this;
+    if (recetaInsumo.estados && recetaInsumo.estados.length > 0) {
+        recetaInsumo.estadoActual = recetaInsumo.estados[recetaInsumo.estados.length - 1];
+    }
+    if (recetaInsumo.estadosDispensa && recetaInsumo.estadosDispensa.length > 0) {
+        recetaInsumo.estadoDispensaActual = recetaInsumo.estadosDispensa[recetaInsumo.estadosDispensa.length - 1];
+    }
+    next();
+});
+
+export const RecetaInsumo = mongoose.model('recetasInsumo', recetaInsumoSchema, 'recetasInsumo');

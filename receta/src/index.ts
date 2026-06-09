@@ -1,6 +1,6 @@
 import { Microservice, Middleware } from '@andes/bootstrap';
 import { MONGO_HOST } from './config.private';
-import { buscarRecetas } from './controllers/recetasController';
+import { buscarRecetas, buscarRecetasInsumos } from './controllers/recetasController';
 
 import * as mongoose from 'mongoose';
 
@@ -27,6 +27,16 @@ mongoose.connection.once('open', () => {
 
         group.get('/', Middleware.authenticate(), async (req: any, res: any) => {
             const result = await buscarRecetas(req);
+            if (result instanceof Error) return handleError(res, result);
+            res.json(result);
+        });
+
+    });
+
+    router.group('/recetasInsumos', (group: any) => {
+
+        group.get('/', Middleware.authenticate(), async (req: any, res: any) => {
+            const result = await buscarRecetasInsumos(req);
             if (result instanceof Error) return handleError(res, result);
             res.json(result);
         });
