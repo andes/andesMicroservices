@@ -11,13 +11,9 @@
         "emitDecoratorMetadata": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
-        "noEmitOnError": false
+        "noEmitOnError": false,
+        "noImplicitAny": false
     },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "**/*.js"
-    ]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "**/*.js"]
 }
