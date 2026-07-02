@@ -1,11 +1,11 @@
 import * as moment from 'moment';
-import { BaseRecetaService } from './BaseRecetaService';
+import { BaseRecetaService, ESTADOS_RECETA_VALIDOS, TIPOS_INSUMO_VALIDOS, validarValoresPermitidos } from './BaseRecetaService';
 import { RecetaInsumo } from '../models/receta-schema';
 import { informarLog } from '../logs/recetaLogs';
 
 export class RecetaInsumoService extends BaseRecetaService {
 
-    async buscar(req: any) {
+    async buscar(req: any): Promise<any> {
         const params = req.params.id ? req.params : req.query;
         const user = req.user;
         let options: any = {};
@@ -13,8 +13,14 @@ export class RecetaInsumoService extends BaseRecetaService {
         try {
             options = this.buildPacienteOptions(params);
 
-            if (params.tipo) options['insumo.tipo'] = params.tipo;
-            if (params.estado) options['estadoActual.tipo'] = params.estado;
+            if (params.tipo) {
+                validarValoresPermitidos([params.tipo], TIPOS_INSUMO_VALIDOS, 'tipo');
+                options['insumo.tipo'] = params.tipo;
+            }
+            if (params.estado) {
+                validarValoresPermitidos([params.estado], ESTADOS_RECETA_VALIDOS, 'estado');
+                options['estadoActual.tipo'] = params.estado;
+            }
 
             this.buildEstadoDispensaOption(params, options);
 

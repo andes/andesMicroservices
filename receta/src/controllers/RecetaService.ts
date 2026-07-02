@@ -5,60 +5,15 @@ import { informarLog } from '../logs/recetaLogs';
 
 export class RecetaService extends BaseRecetaService {
 
-    async buscar(req: any) {
+    async buscar(req: any): Promise<any> {
         const params = req.params.id ? req.params : req.query;
-        const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
         const user = req.user;
         let options: any = {};
 
         try {
             options = this.buildPacienteOptions(params);
             this.buildEstadoDispensaOption(params, options);
-
-            const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
-            const fechaFin = params.fechaFin
-                ? moment(params.fechaFin).endOf('day').toDate()
-                : moment().endOf('day').toDate();
-            const fechaInicio = params.fechaInicio
-                ? moment(params.fechaInicio).startOf('day').toDate()
-                : moment(fechaFin).subtract(1, 'years').startOf('day').toDate();
-
-            if (estadoArray.length) {
-                const condiciones: any[] = [];
-
-                if (estadoArray.includes('pendiente')) {
-                    condiciones.push({
-                        'estadoActual.tipo': 'pendiente',
-                        fechaRegistro: {
-                            $gte: fechaInicio,
-                            $lte: params.fechaFin ? fechaFin : moment().add(10, 'days').endOf('day').toDate()
-                        }
-                    });
-                }
-
-                if (estadoArray.includes('vigente')) {
-                    const fInicio = params.fechaInicio ? fechaInicio : fechaVencimiento;
-                    condiciones.push({
-                        'estadoActual.tipo': 'vigente',
-                        fechaRegistro: params.fechaFin ? { $gte: fInicio, $lte: fechaFin } : { $gte: fInicio }
-                    });
-                }
-
-                const includeOtros = estadoArray.filter((e: string) => e !== 'pendiente' && e !== 'vigente');
-                if (includeOtros.length) {
-                    condiciones.push({
-                        'estadoActual.tipo': { $in: includeOtros },
-                        fechaRegistro: { $gte: fechaInicio, $lte: fechaFin }
-                    });
-                }
-
-                if (condiciones.length) options['$or'] = condiciones;
-            } else {
-                options['estadoActual.tipo'] = { $nin: ['eliminada'] };
-                if (user?.type === 'app-token') {
-                    options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
-                }
-            }
+            this.buildEstadoFechaOptions(params, options, user);
 
             let recetas: any = await Receta.find(options);
             if (!recetas.length) return [];
@@ -83,6 +38,75 @@ export class RecetaService extends BaseRecetaService {
 
         } catch (err) {
             await informarLog.error('buscarRecetas', { params, options }, err, req);
+            return err;
+        }
+    }
+
+    async verificarRecetaExistente(req: any) {
+        const { documento, conceptId, sexo } = req.query;
+
+        try {
+            if (!documento || !conceptId || !sexo) {
+                throw new Error('Se requieren documento, conceptId y sexo');
+            }
+
+            const { RecetasParametros } = require('../models/receta-schema');
+            const parametro: any = await RecetasParametros.findOne({ key: 'fechaLimite' });
+            const days = (parametro && parametro.value) ? Number(parametro.value) : 30;
+            const fechaLimite = moment().subtract(days, 'days').startOf('day').toDate();
+
+            const receta: any = await Receta.findOne({
+                'paciente.documento': documento,
+                'paciente.sexo': sexo,
+                'medicamento.concepto.conceptId': conceptId,
+                'estadoActual.tipo': { $in: ['vigente', 'pendiente'] },
+                'estadoDispensaActual.tipo': { $nin: ['dispensada'] },
+                $or: [
+                    { 'estadoActual.tipo': 'vigente', fechaRegistro: { $gte: fechaLimite } },
+                    { 'estadoActual.tipo': 'pendiente', fechaRegistro: { $lte: moment().add(10, 'days').endOf('day').toDate() } }
+                ]
+            }).sort({ fechaRegistro: -1 });
+
+            return { existe: !!receta, receta: receta || null };
+
+        } catch (err) {
+            await informarLog.error('verificarRecetaExistente', { documento, conceptId, sexo }, err, req);
+            return err;
+        }
+    }
+
+    async buscarPorProfesional(req: any) {
+        const { id } = req.params;
+        const { estadoReceta, desde, hasta, origenExternoApp, excluirEstado } = req.query;
+
+        try {
+            if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+                throw new Error('Id de profesional inválido');
+            }
+
+            const filter: any = { 'profesional.id': require('mongoose').Types.ObjectId(id) };
+
+            if (estadoReceta) filter['estadoActual.tipo'] = estadoReceta;
+
+            if (desde || hasta) {
+                filter['fechaRegistro'] = {};
+                if (desde) filter['fechaRegistro'].$gte = moment(desde).startOf('day').toDate();
+                if (hasta) filter['fechaRegistro'].$lte = moment(hasta).endOf('day').toDate();
+            }
+
+            if (origenExternoApp) filter['origenExterno.app'] = origenExternoApp;
+
+            if (excluirEstado) {
+                const estados = typeof excluirEstado === 'string'
+                    ? excluirEstado.split(',').map((e: string) => e.trim())
+                    : Array.isArray(excluirEstado) ? excluirEstado : [excluirEstado];
+                filter['estadoActual.tipo'] = { $nin: estados };
+            }
+
+            return await Receta.find(filter);
+
+        } catch (err) {
+            await informarLog.error('buscarPorProfesional', { id, query: req.query }, err, req);
             return err;
         }
     }

@@ -7,19 +7,31 @@ import { sistemasExternos } from '../config.private';
 
 const { Types } = mongoose;
 
+// Valores permitidos según los enums definidos en receta-schema.ts
+export const ESTADOS_RECETA_VALIDOS = ['pendiente', 'vigente', 'finalizada', 'vencida', 'suspendida', 'rechazada', 'eliminada'];
+export const ESTADOS_DISPENSA_VALIDOS = ['sin-dispensa', 'dispensada', 'dispensa-parcial'];
+export const TIPOS_INSUMO_VALIDOS = ['dispositivo', 'nutricion', 'magistral'];
+
+export function validarValoresPermitidos(valores: string[], permitidos: string[], nombreParametro: string) {
+    const invalido = valores.find(v => !permitidos.includes(v));
+    if (invalido) {
+        throw new ParamsIncorrect(`Valor no permitido para ${nombreParametro}: "${invalido}"`);
+    }
+}
+
 export abstract class BaseRecetaService {
 
     // -------------------------
     // Método abstracto — cada subclase implementa su lógica de búsqueda
     // -------------------------
 
-    abstract buscar(req: any);
+    abstract buscar(req: any): Promise<any>;
 
     // -------------------------
     // HTTP GET con timeout usando node-fetch
     // -------------------------
 
-    protected async httpGet(url: string, token?: string) {
+    protected async httpGet(url: string, token?: string): Promise<any> {
         const headers: any = {};
         if (token) headers['Authorization'] = `JWT ${token}`;
 
@@ -222,12 +234,128 @@ export abstract class BaseRecetaService {
         return options;
     }
 
+    protected buildEstadoFechaOptions(params: any, options: any, user: any) {
+        const fechaVencimiento = moment().subtract(30, 'days').startOf('day').toDate();
+        const estadoArray = params.estado ? params.estado.replace(/ /g, '').split(',') : [];
+        if (estadoArray.length) validarValoresPermitidos(estadoArray, ESTADOS_RECETA_VALIDOS, 'estado');
+
+        const fechaFin = params.fechaFin
+            ? moment(params.fechaFin).endOf('day').toDate()
+            : moment().endOf('day').toDate();
+        const fechaInicio = params.fechaInicio
+            ? moment(params.fechaInicio).startOf('day').toDate()
+            : moment(fechaFin).subtract(1, 'years').startOf('day').toDate();
+
+        if (estadoArray.length) {
+            const condiciones: any[] = [];
+
+            if (estadoArray.includes('pendiente')) {
+                condiciones.push({
+                    'estadoActual.tipo': 'pendiente',
+                    fechaRegistro: {
+                        $gte: fechaInicio,
+                        $lte: params.fechaFin ? fechaFin : moment().add(10, 'days').endOf('day').toDate()
+                    }
+                });
+            }
+
+            if (estadoArray.includes('vigente')) {
+                const fInicio = params.fechaInicio ? fechaInicio : fechaVencimiento;
+                condiciones.push({
+                    'estadoActual.tipo': 'vigente',
+                    fechaRegistro: params.fechaFin ? { $gte: fInicio, $lte: fechaFin } : { $gte: fInicio }
+                });
+            }
+
+            const includeOtros = estadoArray.filter((e: string) => e !== 'pendiente' && e !== 'vigente');
+            if (includeOtros.length) {
+                condiciones.push({
+                    'estadoActual.tipo': { $in: includeOtros },
+                    fechaRegistro: { $gte: fechaInicio, $lte: fechaFin }
+                });
+            }
+
+            if (condiciones.length) options['$or'] = condiciones;
+        } else {
+            options['estadoActual.tipo'] = { $nin: ['eliminada'] };
+            if (user?.type === 'app-token') {
+                options['fechaRegistro'] = { $gte: fechaInicio, $lte: fechaFin };
+            }
+        }
+    }
+
     protected buildEstadoDispensaOption(params: any, options: any) {
         if (params.estadoDispensa) {
             const estadoDispensaArray = params.estadoDispensa.replace(/ /g, '').split(',');
+            validarValoresPermitidos(estadoDispensaArray, ESTADOS_DISPENSA_VALIDOS, 'estadoDispensa');
             options['estadoDispensaActual.tipo'] = { $in: estadoDispensaArray };
         } else {
             options['estadoDispensaActual.tipo'] = 'sin-dispensa';
+        }
+    }
+
+    // -------------------------
+    // Fetch receipt status — consultado por recetar/sifaho
+    // Busca en medicamentos e insumos y devuelve estado de dispensa
+    // -------------------------
+
+    async fetchReceiptStatus(req: any) {
+        const { recetaId, patientId, documento, sexo } = req.query;
+
+        try {
+            // Búsqueda por recetaId específico
+            if (recetaId) {
+                if (!Types.ObjectId.isValid(recetaId)) {
+                    throw new ParamsIncorrect('recetaId inválido');
+                }
+
+                const options: any = { _id: Types.ObjectId(recetaId) };
+                if (patientId && Types.ObjectId.isValid(patientId)) {
+                    options['paciente.id'] = Types.ObjectId(patientId);
+                }
+
+                const { Receta, RecetaInsumo } = require('../models/receta-schema');
+                let receta: any = await Receta.findOne(options);
+                if (!receta) receta = await RecetaInsumo.findOne(options);
+
+                if (!receta) {
+                    return { recetaId, dispensas: [], estado: 'sin-dispensa' };
+                }
+
+                return {
+                    recetaId,
+                    dispensas: receta.dispensa || [],
+                    estado: receta.estadoDispensaActual?.tipo || 'sin-dispensa'
+                };
+            }
+
+            // Búsqueda por documento y sexo
+            if (documento && sexo) {
+                const { Receta, RecetaInsumo } = require('../models/receta-schema');
+                const options: any = {
+                    'paciente.documento': documento,
+                    'paciente.sexo': sexo
+                };
+
+                this.buildEstadoDispensaOption(req.query, options);
+                this.buildEstadoFechaOptions(req.query, options, req.user);
+
+                const recetas: any = await Receta.find(options);
+                const insumos: any = await RecetaInsumo.find(options);
+                const todas = [...recetas, ...insumos];
+
+                return todas.map((r: any) => ({
+                    recetaId: r._id,
+                    dispensas: r.dispensa || [],
+                    estado: r.estadoDispensaActual?.tipo || 'sin-dispensa'
+                }));
+            }
+
+            throw new ParamsIncorrect('Se requiere recetaId o documento+sexo');
+
+        } catch (err) {
+            await informarLog.error('fetchReceiptStatus', { recetaId, patientId, documento, sexo }, err, req);
+            return err;
         }
     }
 }
