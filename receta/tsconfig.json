@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2017",
+        "outDir": "./",
+        "rootDir": "./src",
+        "strict": false,
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "noEmitOnError": false,
+        "noImplicitAny": false
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "**/*.js"]
+}
