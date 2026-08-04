@@ -4,13 +4,7 @@ Librería compartida de autenticación y autorización para los microservicios d
 
 ## Configuración inicial
 
-### 1. Crear el archivo de configuración
-
-Copiar el archivo de ejemplo y completar los valores reales:
-
-```bash
-cp auth.example.ts auth.ts
-```
+### 1. Completar el archivo de configuración
 
 Editar `auth.ts` y completar:
 
@@ -24,7 +18,7 @@ export const RedisConfig = {
 };
 ```
 
-> ⚠️ `auth.ts` está en `.gitignore` — porque contiene datos sensibles.
+> ⚠️ estos datos son de caracter sensibles y no deben subirse a github.
 
 ### 2. Compilar el bootstrap
 
@@ -59,80 +53,79 @@ router.get('/ruta', Middleware.authenticate(), async (req, res) => {
 
 ### Autenticación con carga de permisos (user-token-2)
 
-Cada microservicio define los permisos requeridos para cada ruta según su dominio. Los permisos disponibles están en la API de ANDES.
-
-```typescript
 router.get('/ruta',
     Middleware.authenticate({ recoverPayload: true }),
-    Middleware.authorize(['modulo:permiso']),
-    async (req, res) => {
-        // req.user.permisos contiene los permisos del usuario
-    }
-);
-```
-
-Por ejemplo:
-- `bi-queries` → `Middleware.authorize(['visualizacionInformacion:biQueries'])`
-- `ms-recetas` → `Middleware.authorize(['recetas:read'])`
-- `ms-notificaciones` → `Middleware.authorize(['notificaciones:read'])`
-
-
-### Solo verificar app-token (sifaho/recetar)
-
-```typescript
-router.get('/ruta',
-    Middleware.authenticate(),
-    appTokenProtected,  // middleware propio del microservicio
+    Middleware.authorizeByKey('nombre-del-microservicio'),
     async (req, res) => { ... }
 );
 ```
+---
+
+## Flujo de control de permisos
+
+### Para app-token (Sifaho, Recetar, etc.)
+
+Request con app-token
+        ↓
+smartAuth — decodifica el token
+        ↓
+appTokenProtected — verifica que el token esté activo en authApps (BD)
+        ↓
+authorizeByKey('ms-recetas')
+    ├── Busca permisos requeridos en Redis (cache, TTL 1 hora)
+    ├── Si no está en cache → consulta colección microserviciosPermisos en BD
+    └── Verifica con shiro-trie que el token tenga al menos un permiso requerido
+        ↓
+    ✓ Autorizado → Handler
+    ✗ Sin permisos → 403
+
+### Para user-token-2 (usuarios de Andes)
+
+Request con user-token-2
+        ↓
+smartAuth — detecta user-token-2, delega a passport
+        ↓
+passport.authenticate('jwt') — verifica firma con JWT_KEY
+        ↓
+extractTokenMiddleware — guarda token raw en req.token (clave de Redis)
+        ↓
+recoverPayloadMiddleware — carga permisos del usuario:
+    ├── Busca en Redis por req.token (cache del monolito, TTL 24hs)
+    └── Si no está en cache → consulta authUsers en MongoDB directamente
+        ↓
+authorizeByKey('nombre-del-microservicio')
+    ├── Busca permisos requeridos en Redis (TTL 1 hora)
+    ├── Si no está en cache → consulta microserviciosPermisos en BD
+    └── Verifica con shiro-trie que req.user.permisos incluya al menos uno
+        ↓
+    ✓ Autorizado → Handler
+    ✗ Sin permisos → 403
+    ✗ Redis y BD caídos → 500
+
+## Colección microserviciosPermisos
+
+Define qué permisos son necesarios para acceder a cada microservicio. Crear un documento por microservicio en la BD de Andes:
+
+* key — identificador único. Para user-token-2 coincide con el nombre del microservicio. Para app-token coincide con el nombre en authApps.
+* permisos — lista de permisos requeridos. Basta con tener uno para acceder. Soporta wildcards jerárquicos via shiro-trie (ej: huds:*).
 
 ---
 
-## Cómo funciona
+### Códigos de respuesta
 
-### `Middleware.authenticate({ recoverPayload: true })`
-
-1. Verifica la firma del JWT con `jwtKey`
-2. Si el token es `user-token-2`, carga los permisos del usuario:
-   - Primero intenta **Redis** usando el token como clave (mismo cache que el monolito)
-   - Si Redis no está disponible, consulta **MongoDB** directamente en `authUsers`
-3. Los permisos quedan disponibles en `req.user.permisos`
-
-### `Middleware.authorize(['permiso:requerido'])`
-
-- Usa `shiro-trie` para verificar permisos jerárquicos (ej: `huds:visualizacionParcialHuds:*`)
-- Los `app-token` pasan directamente sin pasar por `authorize()` porque sus permisos vienen embebidos en el payload del token — no necesitan consultar Redis ni la BD
-- Su control de acceso se maneja por separado mediante `appTokenProtected`, que verifica que el token esté activo en la colección `authApps`
-- Devuelve `403` si el usuario no tiene los permisos requeridos
-
-### Respuestas de error
-
-| Código | Causa |
-|--------|-------|
-| `401` | Token inválido, expirado o ausente |
-| `403` | Token válido pero sin permisos suficientes |
-| `500` | Redis y BD no disponibles — no se pudieron verificar permisos |
+| Código | Causa | Descripción |
+| :---: | :--- | :--- |
+| **401** | Token inválido, expirado o ausente | El cliente no está autenticado o la credencial no es correcta. |
+| **403** | Token válido pero sin permisos suficientes | El token existe pero no tiene el rol necesario, o fue revocado. |
+| **500** | Error interno del servidor | No se pudieron verificar los permisos — Redis y BD no disponibles. |
 
 ---
 
-## Permisos disponibles
+### Cache Redis
 
-Los permisos están definidos en la API de ANDES. Algunos ejemplos:
+El bootstrap usa el mismo servidor Redis que el monolito de Andes:
 
-| Permiso | Descripción |
-|---------|-------------|
-| `huds:visualizacionHuds` | Ver HUDS completa |
-| `huds:visualizacionParcialHuds:receta` | Ver solo recetas |
-| `visualizacionInformacion:biQueries` | Acceso a BI Queries |
+* Permisos de usuario (user-token-2) — cacheados por el monolito al hacer login con TTL de 24 horas. El bootstrap los lee directamente sin necesidad de consultar la BD.
+* Permisos de microservicio (microserviciosPermisos) — cacheados por el bootstrap con TTL de 1 hora. Si se modifica un documento, el cambio se refleja en máximo 1 hora.
 
----
-
-## Variables de entorno
-
-| Variable | Descripción | Default |
-|----------|-------------|---------|
-| `JWT_KEY` | Clave para firmar/verificar tokens JWT | vacío (requerido) |
-| `REDIS_HOST` | IP o hostname del servidor Redis | vacío |
-| `REDIS_PORT` | Puerto del servidor Redis | `6379` |
-| `REDIS` | Activar/desactivar Redis (`true`/`false`) | `true` |
+Si Redis no está disponible, ambos flujos hacen fallback a MongoDB automáticamente.
