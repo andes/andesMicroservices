@@ -15,6 +15,7 @@ mongoose.connect(MONGO_HOST, { useNewUrlParser: true, useUnifiedTopology: true, 
 mongoose.connection.on('error', (err: any) => console.error('Error MongoDB Andes:', err));
 
 async function appTokenProtected(req: any, res: any, next: any) {
+
     if (req.user?.type !== 'app-token') return next();
 
     try {
@@ -40,7 +41,6 @@ const recetasRateLimiter = rateLimit({
 });
 
 mongoose.connection.once('open', () => {
-    console.log('MongoDB Andes conectado');
 
     const pkg = require('./package.json');
     const ms = new Microservice(pkg);
@@ -51,7 +51,24 @@ mongoose.connection.once('open', () => {
         return res.status(status).json({ message: err?.message || 'Error interno del servidor' });
     }
 
-    const auth = [Middleware.authenticate(), recetasRateLimiter, appTokenProtected];
+    async function smartAuth(req: any, res: any, next: any) {
+        const authorization = req.headers?.authorization || '';
+        const token = authorization.startsWith('JWT ') ? authorization.substring(4) : authorization;
+
+        if (!token) return res.status(401).json({ message: 'No autorizado' });
+
+        const decoded: any = require('jsonwebtoken').decode(token);
+
+        if (decoded?.type === 'app-token') {
+            req.user = decoded;
+            req.token = token;
+            return next();
+        }
+
+        return Middleware.authenticate({ recoverPayload: true })[0](req, res, next);
+    }
+
+    const auth = [smartAuth, recetasRateLimiter, appTokenProtected, Middleware.authorizeByKey('ms-recetas')];
 
     // GET /modules/recetas — búsqueda por paciente (documento+sexo o pacienteId)
     router.group('/modules/recetas', (group: any) => {
