@@ -11,6 +11,7 @@ export type IPedidoSolic = {
         nombre: string;
     };
     efectorParticular?: string;
+    solicitante: any;
     paciente: any;
     adjuntos: {
         nombre: string;
@@ -25,16 +26,17 @@ export type IPedidoSolic = {
 export const PedidoSolicSchema = new mongoose.Schema(
     {
         institucion: {
-            id: { type: Number, required: true },
-            nombre: { type: String, required: true }
+            id: Number,
+            nombre: String
         },
-        descripcion: { type: String, required: true },
+        descripcion: String,
         efector: {
-            id: { type: Number, required: true },
-            nombre: { type: String, required: true }
+            id: Number,
+            nombre: String
         },
-        efectorParticular: { type: String },
-        paciente: { type: mongoose.Schema.Types.ObjectId, ref: 'solicitudPac' },
+        efectorParticular: String,
+        solicitante: { type: mongoose.Schema.Types.ObjectId, ref: 'solicitantes', required: true },
+        paciente: { type: mongoose.Schema.Types.ObjectId, ref: 'solicitudPac', required: true },
         adjuntos: [
             {
                 nombre: String,
@@ -44,7 +46,7 @@ export const PedidoSolicSchema = new mongoose.Schema(
                 fecha: { type: Date, default: Date.now }
             }
         ]
-    },
+    } as any,
     { timestamps: true }
 );
 

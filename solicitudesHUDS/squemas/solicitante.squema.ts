@@ -30,7 +30,7 @@ export const SolicitanteSchema = new mongoose.Schema({
         codigo: Number,
         otro: String,
     }, 
-});
+} as any);
 
 
 

@@ -1,5 +1,10 @@
 {
     "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "skipLibCheck": true,
+        "skipDefaultLibCheck": true,
+        "types": ["node", "express", "mongoose"]
+    },
     "include": [
         "**/*.ts"
     ]

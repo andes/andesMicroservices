@@ -23,7 +23,7 @@ export const SolicitudPacSchema = new mongoose.Schema({
         id: Number,
         tipo: String,
     },
-});
+} as any);
 
 
 

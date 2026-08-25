@@ -6,8 +6,8 @@
     "scripts": {
         "start": "../node_modules/concurrently/bin/concurrently.js -r \"npm run tsc:w\" \"npm run node\" ",
         "lint": "tslint --project .",
-        "tsc": "../node_modules/typescript/bin/tsc",
-        "tsc:w": "../node_modules/typescript/bin/tsc -w",
+        "tsc": "../node_modules/typescript/bin/tsc --skipLibCheck",
+        "tsc:w": "../node_modules/typescript/bin/tsc --skipLibCheck -w",
         "node": "nodemon -q ./index.js"
     },
     "author": "",
@@ -17,9 +17,11 @@
         "@andes/log": "^2.2.5",
         "@andes/match": "^1.1.12",
         "async": "^2.6.1",
+        "dotenv": "^16.4.7",
         "html-entities": "^1.2.1",
         "moment": "^2.22.0",
         "mongoose": "^5.3.12",
+        "nodemailer": "^6.9.16",
         "request": "^2.88.0"
     }
 }
