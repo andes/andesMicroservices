@@ -3,11 +3,13 @@ import * as mongoose from 'mongoose';
 import { crearSolicitud, listarSolicitudes, obtenerSolicitud } from './controller/solicitudes.controller';
 import { enviarEmailConfirmacion, enviarEmailCodigo } from './service/email.service';
 
-const MONGO_HOST = process.env.MONGO_HOST;
+require('dotenv').config();
+
+const MONGO_HOST = process.env.MONGO_HOST || 'mongodb://localhost:27017/andes';
 mongoose.connect(MONGO_HOST);
 
 // Map en memoria para almacenar códigos de verificación de email (TTL 15 min)
-const codigosVerificacion = new Map<string, { code: string; expiresAt: number }>();
+const codigosVerificacion = new Map<string, { code: string; expiresAt: number; verificado: boolean }>();
 
 // Registrar los schemas de Mongoose
 require('./squemas/solicitante.squema');
@@ -43,15 +45,41 @@ router.post('/verificacion-email', async (req, res) => {
             return res.status(400).json({ error: 'Debe ingresar un email válido' });
         }
         const emailNorm = email.trim().toLowerCase();
+        const record = codigosVerificacion.get(emailNorm);
+
+        if (record) {
+            if (Date.now() > record.expiresAt) {
+                codigosVerificacion.delete(emailNorm);
+            } else if (record.verificado) {
+                console.log(`[VERIFICACION] El email ${emailNorm} ya se encuentra verificado.`);
+                return res.json({
+                    ok: true,
+                    verificado: true,
+                    codigoPrueba: record.code,
+                    mensaje: 'Email verificado correctamente.'
+                });
+            } else {
+                console.log(`[VERIFICACION] Ya existe un código activo para ${emailNorm}`);
+                return res.json({
+                    ok: true,
+                    reenviado: false,
+                    codigoExistente: true,
+                    verificado: false,
+                    codigoPrueba: record.code,
+                    mensaje: 'Ya enviamos un código a este email. Por favor, revisá tu casilla de correo.'
+                });
+            }
+        }
+
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = Date.now() + 15 * 60 * 1000;
 
-        codigosVerificacion.set(emailNorm, { code: codigo, expiresAt });
+        codigosVerificacion.set(emailNorm, { code: codigo, expiresAt, verificado: false });
         console.log(`[VERIFICACION] Código generado para ${emailNorm}: ${codigo}`);
 
         await enviarEmailCodigo(emailNorm, codigo);
 
-        return res.json({ ok: true, mensaje: 'Código enviado exitosamente', codigoPrueba: codigo });
+        return res.json({ ok: true, verificado: false, mensaje: 'Código enviado exitosamente', codigoPrueba: codigo });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
@@ -79,12 +107,38 @@ router.post('/verificacion-email/validar', async (req, res) => {
             return res.status(400).json({ error: 'El código ha expirado. Solicitá uno nuevo.' });
         }
 
+        if (record.verificado) {
+            return res.json({ ok: true, verificado: true, mensaje: 'Email ya verificado correctamente.' });
+        }
+
         if (record.code !== String(codigo).trim()) {
             return res.status(400).json({ error: 'El código ingresado es incorrecto.' });
         }
 
-        codigosVerificacion.delete(emailNorm);
+        record.verificado = true;
         return res.json({ ok: true, verificado: true, mensaje: 'Email verificado correctamente' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * GET /verificacion-email/estado
+ * Consulta el estado de verificación de un email.
+ */
+router.get('/verificacion-email/estado', (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({ error: 'Debe ingresar un email válido' });
+        }
+        const emailNorm = email.trim().toLowerCase();
+        const record = codigosVerificacion.get(emailNorm);
+
+        if (record && Date.now() <= record.expiresAt && record.verificado) {
+            return res.json({ verificado: true });
+        }
+        return res.json({ verificado: false });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

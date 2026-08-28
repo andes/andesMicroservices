@@ -1,6 +1,8 @@
 # Archivos de configuración
 config.private.ts
-
+.env
+.env.*
+!.env.example
 # Logs
 logs
 **/*.log
