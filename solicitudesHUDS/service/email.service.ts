@@ -52,7 +52,7 @@ export async function enviarEmailConfirmacion(destinatario: Destinatario, solici
     const transporter = await getTransporter();
     const nombreCompleto = `${destinatario.nombre} ${destinatario.apellido}`.trim();
     const resultado = await transporter.sendMail({
-        from: process.env.SMTP_FROM || 'andes@hospitalneuquen.org.ar',
+        from: process.env.SMTP_FROM,
         to: destinatario.email,
         subject: 'Confirmación de solicitud HUDS',
         text: `Hola ${nombreCompleto}. Recibimos tu solicitud HUDS. Número de solicitud: ${solicitudId}.`,
@@ -66,3 +66,36 @@ export async function enviarEmailConfirmacion(destinatario: Destinatario, solici
 
     return { enviado: true, messageId: resultado.messageId, previewUrl: preview || null };
 }
+
+/** Envía un código de verificación de 6 dígitos por email. */
+export async function enviarEmailCodigo(email: string, codigo: string) {
+    if (!email) {
+        return { enviado: false, omitido: true };
+    }
+
+    try {
+        const transporter = await getTransporter();
+        const resultado = await transporter.sendMail({
+            from: process.env.SMTP_FROM,
+            to: email,
+            subject: 'Código de verificación - ANDES Solicitudes HUDS',
+            text: `Tu código de verificación para la solicitud HUDS es: ${codigo}`,
+            html: `<div style="font-family: Arial, sans-serif; padding: 20px; color: #334851;">
+                <h2 style="color: #6A972F;">Código de verificación</h2>
+                <p>Ingresá el siguiente código de 6 dígitos para validar tu correo electrónico:</p>
+                <div style="background-color: #F4F8F3; border: 2px dashed #83AC72; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; width: 200px;">
+                    <span style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #334851;">${escapeHtml(codigo)}</span>
+                </div>
+                <p style="font-size: 12px; color: #777;">Este código es válido por 15 minutos.</p>
+            </div>`
+        });
+
+        console.log(`[EMAIL] Código de verificación enviado a ${email}`);
+        return { enviado: true, messageId: resultado.messageId };
+    } catch (error) {
+        console.error('[EMAIL ERROR] Error enviando código por email:', error.message);
+        console.log(`[DEV FALLBACK] Código de verificación para ${email}: ${codigo}`);
+        return { enviado: false, error: error.message };
+    }
+}
+

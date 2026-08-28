@@ -1,10 +1,13 @@
 import { Microservice } from '@andes/bootstrap';
 import * as mongoose from 'mongoose';
 import { crearSolicitud, listarSolicitudes, obtenerSolicitud } from './controller/solicitudes.controller';
-import { enviarEmailConfirmacion } from './service/email.service';
+import { enviarEmailConfirmacion, enviarEmailCodigo } from './service/email.service';
 
-const MONGO_HOST = process.env.MONGO_HOST || 'mongodb://localhost:27017/andes';
+const MONGO_HOST = process.env.MONGO_HOST;
 mongoose.connect(MONGO_HOST);
+
+// Map en memoria para almacenar códigos de verificación de email (TTL 15 min)
+const codigosVerificacion = new Map<string, { code: string; expiresAt: number }>();
 
 // Registrar los schemas de Mongoose
 require('./squemas/solicitante.squema');
@@ -28,6 +31,65 @@ router.use((req, res, next) => {
     }
     next();
 });
+
+/**
+ * POST /verificacion-email
+ * Genera y envía un código de verificación al email.
+ */
+router.post('/verificacion-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({ error: 'Debe ingresar un email válido' });
+        }
+        const emailNorm = email.trim().toLowerCase();
+        const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 15 * 60 * 1000;
+
+        codigosVerificacion.set(emailNorm, { code: codigo, expiresAt });
+        console.log(`[VERIFICACION] Código generado para ${emailNorm}: ${codigo}`);
+
+        await enviarEmailCodigo(emailNorm, codigo);
+
+        return res.json({ ok: true, mensaje: 'Código enviado exitosamente', codigoPrueba: codigo });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * POST /verificacion-email/validar
+ * Valida el código enviado al email.
+ */
+router.post('/verificacion-email/validar', async (req, res) => {
+    try {
+        const { email, codigo } = req.body;
+        if (!email || !codigo) {
+            return res.status(400).json({ error: 'Email y código son requeridos' });
+        }
+        const emailNorm = email.trim().toLowerCase();
+        const record = codigosVerificacion.get(emailNorm);
+
+        if (!record) {
+            return res.status(400).json({ error: 'No se encontró un código para este email. Solicitá uno nuevo.' });
+        }
+
+        if (Date.now() > record.expiresAt) {
+            codigosVerificacion.delete(emailNorm);
+            return res.status(400).json({ error: 'El código ha expirado. Solicitá uno nuevo.' });
+        }
+
+        if (record.code !== String(codigo).trim()) {
+            return res.status(400).json({ error: 'El código ingresado es incorrecto.' });
+        }
+
+        codigosVerificacion.delete(emailNorm);
+        return res.json({ ok: true, verificado: true, mensaje: 'Email verificado correctamente' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 
 /**
  * POST /solicitudes
