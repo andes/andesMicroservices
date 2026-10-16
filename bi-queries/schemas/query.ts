@@ -26,11 +26,12 @@ export type IQuery = {
     };
     desdeAndes: boolean;
     data?: any;
-    inactiva:  {
+    inactiva: {
         estado: Boolean,
         fecha: Date,
         motivo: String
-    }
+    },
+    options: any
 };
 
 export interface IParams {
@@ -74,7 +75,8 @@ export const QuerySchema = new mongoose.Schema({
         estado: Boolean,
         fecha: Date,
         motivo: String
-    }
+    },
+    options: mongoose.SchemaTypes.Mixed // especificar opciones de agregación de MongoDB, como hint, allowDiskUse, etc.
 });
 
 export const Query = mongoose.model('queries', QuerySchema, 'queries');
