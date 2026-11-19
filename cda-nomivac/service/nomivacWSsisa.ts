@@ -1,5 +1,7 @@
-import { sisaDev } from '../config.private';
+import { sisaDev, userScheduler } from '../config.private';
+import { msCDANomivacLog } from '../logger/nomivacCDALog';
 const request = require('request');
+const log = msCDANomivacLog.startTrace();
 
 export async function sisaVacunas(paciente: any) {
     const sexoPaciente = paciente.sexo === 'masculino' ? 'M' : 'F';
@@ -8,7 +10,7 @@ export async function sisaVacunas(paciente: any) {
         idTipoDoc: '1',
         nroDoc: paciente.documento,
         sexo: sexoPaciente
-    }
+    };
 
     return new Promise((resolve: any, reject: any) => {
         const options = {
@@ -24,9 +26,13 @@ export async function sisaVacunas(paciente: any) {
             }
         };
         request(options, (error, response, body) => {
-            if (response.statusCode >= 200 && response.statusCode < 300) {
+            if (!error && response && response.statusCode >= 200 && response.statusCode < 300) {
+                if (body && body.resultado && body.resultado !== 'OK') {
+                    log.error('sisaVacunas:responseError', { data, statusCode: response.statusCode, body }, body.resultado, userScheduler);
+                }
                 return resolve(body);
             }
+            log.error('sisaVacunas:requestError', { data, statusCode: response?.statusCode, body }, error || body || 'Error al consultar SISA', userScheduler);
             return resolve([]);
         });
     });
