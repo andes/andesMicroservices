@@ -41,11 +41,13 @@ export function buildPipeline(queryData: IQuery, params: IParams[], mapping: IMa
     return pipeline;
 }
 
-export function execQueryStream(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = null) {
+export function execQueryStream(queryData: IQuery, params: IParams[], mapping: IMapping[] = [], fields: string = '') {
     const collection = mongoose.connection.collection(queryData.coleccion);
+    const options = queryData.options || {};
+    delete queryData.options;
     const pipeline = buildPipeline(queryData, params, mapping, fields);
 
-    const stream = collection.aggregate(pipeline);
+    const stream = collection.aggregate(pipeline, options);
     // const chain = new Chain(mapping.map(m => mappingStream(m.columnName, m.source, m.target)));
 
     return stream;
