@@ -22,7 +22,32 @@ export function postCDA(data: any) {
             if (error) {
                 log.error('postCDA:Nomivac', { data }, error, userScheduler);
             }
-            if (response.statusCode >= 200 && response.statusCode < 300) {
+            if (response && response.statusCode >= 200 && response.statusCode < 300) {
+                return resolve(body);
+            }
+            return resolve(error || body);
+        });
+    });
+}
+
+export function cleanVacunas(paciente: any) {
+    return new Promise((resolve: any, reject: any) => {
+        const url = `${ANDES_HOST}/modules/cda/clean-vacunas`;
+        const options = {
+            url,
+            method: 'POST',
+            json: true,
+            body: { paciente },
+            headers: {
+                Authorization: `JWT ${ANDES_KEY}`
+            }
+        };
+        request(options, (error, response, body) => {
+            if (error) {
+                log.error('cleanVacunas:Nomivac', { paciente }, error, userScheduler);
+                return reject(error);
+            }
+            if (response && response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
             return resolve(error || body);
@@ -43,7 +68,7 @@ export function postMongoDB(data: any) {
             }
         };
         request(options, (error, response, body) => {
-            if (response.statusCode >= 200 && response.statusCode < 300) {
+            if (response && response.statusCode >= 200 && response.statusCode < 300) {
                 return resolve(body);
             }
             log.error('postMongoDB:Nomivac', { data }, error, userScheduler);
